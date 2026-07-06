@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>VanSpend · 小票扫描记账</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root { --bg:#0f1419; --card:#1a2230; --line:#2a3548; --txt:#e6edf3; --mut:#8b98a9; --acc:#4f9cf9; --good:#2ea043; --warn:#e3b341; --bad:#f85149; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif; background:var(--bg); color:var(--txt); }
+  header { padding:16px 24px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  header h1 { font-size:18px; margin:0; }
+  header .meta { color:var(--mut); font-size:13px; }
+  .badge { font-size:12px; padding:2px 8px; border-radius:10px; }
+  .badge.ok { background:rgba(46,160,67,.15); color:var(--good); }
+  .badge.no { background:rgba(248,81,73,.15); color:var(--bad); }
+  .wrap { max-width:1180px; margin:0 auto; padding:24px; }
+  .grid { display:grid; gap:18px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; }
+  .card h2 { font-size:15px; margin:0 0 14px; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; }
+  button { background:var(--acc); color:#fff; border:0; border-radius:8px; padding:9px 16px; font-size:14px; cursor:pointer; }
+  button.ghost { background:transparent; border:1px solid var(--line); color:var(--txt); }
+  button.danger { background:transparent; border:1px solid var(--bad); color:var(--bad); padding:4px 10px; font-size:12px; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  input, select { background:#0d1117; border:1px solid var(--line); color:var(--txt); border-radius:7px; padding:7px 9px; font-size:13px; }
+  #drop { border:2px dashed var(--line); border-radius:12px; padding:34px; text-align:center; color:var(--mut); cursor:pointer; transition:.15s; }
+  #drop.hover { border-color:var(--acc); color:var(--txt); }
+  #preview { max-height:260px; border-radius:8px; margin-top:12px; display:none; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { text-align:left; padding:7px 8px; border-bottom:1px solid var(--line); }
+  th { color:var(--mut); font-weight:500; }
+  td input, td select { width:100%; padding:4px 6px; }
+  .num { text-align:right; }
+  .cards4 { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; }
+  .kpi { background:#0d1117; border:1px solid var(--line); border-radius:10px; padding:14px; }
+  .kpi .v { font-size:22px; font-weight:600; }
+  .kpi .l { color:var(--mut); font-size:12px; margin-top:4px; }
+  .chartbox { position:relative; height:280px; }
+  .muted { color:var(--mut); font-size:13px; }
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#0d1117; border:1px solid var(--line); padding:11px 18px; border-radius:8px; display:none; z-index:50; }
+  .tabs { display:flex; gap:8px; margin-bottom:18px; }
+  .tab { padding:8px 16px; border-radius:8px; cursor:pointer; color:var(--mut); border:1px solid transparent; }
+  .tab.active { background:var(--card); color:var(--txt); border-color:var(--line); }
+  .hide { display:none; }
+  a { color:var(--acc); }
+</style>
+</head>
+<body>
+<header>
+  <h1>🧾 VanSpend</h1>
+  <span class="meta">温哥华家庭小票精细化记账 · GST/PST 拆分</span>
+  <span id="keyBadge" class="badge no">Key 未配置</span>
+  <span class="meta" id="modelMeta"></span>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab active" data-tab="scan">上传识别</div>
+    <div class="tab" data-tab="dash">数据分析</div>
+    <div class="tab" data-tab="list">小票记录</div>
+  </div>
+
+  <!-- ============ 上传识别 ============ -->
+  <section id="tab-scan" class="grid">
+    <div class="card">
+      <h2>1 · 上传小票图片</h2>
+      <div id="drop">点击或拖拽小票图片到这里（支持 Costco / 大统华 等）</div>
+      <input type="file" id="file" accept="image/*" class="hide" />
+      <img id="preview" />
+      <div class="row" style="margin-top:14px">
+        <button id="scanBtn" disabled>AI 识别</button>
+        <span class="muted" id="scanHint"></span>
+      </div>
+    </div>
+
+    <div class="card hide" id="editCard">
+      <h2>2 · 核对并保存</h2>
+      <div class="row" style="margin-bottom:12px">
+        <label>商家 <input id="f-store" style="width:140px"></label>
+        <label>日期 <input id="f-date" type="date"></label>
+        <label>税前 <input id="f-subtotal" type="number" step="0.01" style="width:90px" class="num"></label>
+        <label>GST <input id="f-gst" type="number" step="0.01" style="width:80px" class="num"></label>
+        <label>PST <input id="f-pst" type="number" step="0.01" style="width:80px" class="num"></label>
+        <label>实付 <input id="f-total" type="number" step="0.01" style="width:90px" class="num"></label>
+      </div>
+      <table id="itemTable">
+        <thead><tr>
+          <th>原文品名</th><th>规范品名</th><th>分类</th><th>细分</th>
+          <th class="num">数量</th><th>单位</th><th class="num">单价</th><th class="num">金额</th><th>税</th><th></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="row" style="margin-top:14px">
+        <button id="addRow" class="ghost">+ 添加一行</button>
+        <button id="saveBtn">保存到账本</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 数据分析 ============ -->
+  <section id="tab-dash" class="grid hide">
+    <div class="card">
+      <div class="row">
+        <label>从 <input id="d-from" type="date"></label>
+        <label>到 <input id="d-to" type="date"></label>
+        <button id="applyRange">应用</button>
+        <button id="clearRange" class="ghost">全部时间</button>
+      </div>
+    </div>
+    <div class="cards4" id="kpis"></div>
+    <div class="grid" style="grid-template-columns:1fr 1fr">
+      <div class="card"><h2>各分类花费占比</h2><div class="chartbox"><canvas id="catChart"></canvas></div></div>
+      <div class="card">
+        <h2>细分花费 <select id="subSel" style="margin-left:8px"></select></h2>
+        <div class="chartbox"><canvas id="subChart"></canvas></div>
+      </div>
+    </div>
+    <div class="card"><h2>月度花费与税额</h2><div class="chartbox"><canvas id="monChart"></canvas></div></div>
+    <div class="card">
+      <h2>价格趋势</h2>
+      <div class="row" style="margin-bottom:12px">
+        <input id="trendName" list="nameList" placeholder="输入品名，如 牛肉 / 三文鱼" style="width:220px">
+        <datalist id="nameList"></datalist>
+        <input id="trendStore" placeholder="商家(可选)" style="width:140px">
+        <button id="trendBtn">查询</button>
+      </div>
+      <div class="chartbox"><canvas id="trendChart"></canvas></div>
+      <div id="trendTbl"></div>
+    </div>
+  </section>
+
+  <!-- ============ 小票记录 ============ -->
+  <section id="tab-list" class="grid hide">
+    <div class="card">
+      <h2>小票记录</h2>
+      <table id="recTable">
+        <thead><tr><th>日期</th><th>商家</th><th class="num">税前</th><th class="num">GST</th><th class="num">PST</th><th class="num">实付</th><th class="num">条目</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="card hide" id="recDetail"></div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const api = (u, o) => fetch(u, o).then(async r => { const j = await r.json(); if(!r.ok) throw new Error(j.error||'请求失败'); return j; });
+const fmt = (n) => (n==null||isNaN(n)) ? '-' : Number(n).toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2});
+let CFG = { categories:[] }, currentImage = null, charts = {};
+function toast(msg){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t._t); t._t=setTimeout(()=>t.style.display='none',2600); }
+
+// ---- tabs ----
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  ['scan','dash','list'].forEach(n => $('#tab-'+n).classList.toggle('hide', n!==t.dataset.tab));
+  if(t.dataset.tab==='dash') loadDashboard();
+  if(t.dataset.tab==='list') loadReceipts();
+});
+
+// ---- init ----
+api('/api/config').then(c => {
+  CFG = c;
+  $('#modelMeta').textContent = '模型: ' + c.model;
+  const b = $('#keyBadge');
+  b.className = 'badge ' + (c.hasKey?'ok':'no');
+  b.textContent = c.hasKey ? 'Key 已配置' : 'Key 未配置 (改 .env)';
+  $('#subSel').innerHTML = c.categories.map(x=>`<option>${x}</option>`).join('');
+  $('#subSel').value = '肉类';
+});
+
+// ---- upload ----
+const drop = $('#drop'), fileInput = $('#file');
+drop.onclick = () => fileInput.click();
+['dragover','dragenter'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('hover');}));
+['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('hover');}));
+drop.addEventListener('drop', ev => { if(ev.dataTransfer.files[0]) readImage(ev.dataTransfer.files[0]); });
+fileInput.onchange = () => { if(fileInput.files[0]) readImage(fileInput.files[0]); };
+function readImage(f){
+  const r = new FileReader();
+  r.onload = () => { currentImage = r.result; $('#preview').src = r.result; $('#preview').style.display='block'; $('#scanBtn').disabled=false; $('#scanHint').textContent=''; };
+  r.readAsDataURL(f);
+}
+
+$('#scanBtn').onclick = async () => {
+  if(!currentImage) return;
+  $('#scanBtn').disabled = true; $('#scanHint').textContent = 'AI 识别中，请稍候…';
+  try {
+    const { receipt, items, raw } = await api('/api/scan', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ image: currentImage }) });
+    fillEdit(receipt, items, raw);
+    $('#scanHint').textContent = '识别完成，请核对';
+  } catch(e){ $('#scanHint').textContent=''; toast('识别失败: '+e.message); }
+  $('#scanBtn').disabled = false;
+};
+
+let lastRaw = null;
+function fillEdit(r, items, raw){
+  lastRaw = raw;
+  $('#editCard').classList.remove('hide');
+  $('#f-store').value=r.store||''; $('#f-date').value=r.purchased_at||''; $('#f-subtotal').value=r.subtotal||0;
+  $('#f-gst').value=r.gst||0; $('#f-pst').value=r.pst||0; $('#f-total').value=r.total||0;
+  const tb = $('#itemTable tbody'); tb.innerHTML='';
+  items.forEach(addItemRow);
+}
+function addItemRow(it={}){
+  const tr = document.createElement('tr');
+  const opts = CFG.categories.map(c=>`<option ${c===it.category?'selected':''}>${c}</option>`).join('');
+  tr.innerHTML = `
+    <td><input value="${(it.name_raw||'').replace(/"/g,'&quot;')}"></td>
+    <td><input value="${(it.name_norm||'').replace(/"/g,'&quot;')}"></td>
+    <td><select>${opts}</select></td>
+    <td><input value="${(it.subcategory||'').replace(/"/g,'&quot;')}"></td>
+    <td><input type="number" step="0.01" class="num" value="${it.qty??1}"></td>
+    <td><input value="${it.unit||''}"></td>
+    <td><input type="number" step="0.01" class="num" value="${it.unit_price??''}"></td>
+    <td><input type="number" step="0.01" class="num" value="${it.amount??0}"></td>
+    <td style="text-align:center"><input type="checkbox" ${it.taxable?'checked':''}></td>
+    <td><button class="danger">×</button></td>`;
+  tr.querySelector('button.danger').onclick = () => tr.remove();
+  $('#itemTable tbody').appendChild(tr);
+}
+$('#addRow').onclick = () => addItemRow();
+
+$('#saveBtn').onclick = async () => {
+  const items = [...$('#itemTable tbody').querySelectorAll('tr')].map(tr=>{
+    const c = tr.querySelectorAll('input,select');
+    return { name_raw:c[0].value.trim()||'未知商品', name_norm:c[1].value.trim()||null, category:c[2].value,
+      subcategory:c[3].value.trim()||null, qty:+c[4].value||0, unit:c[5].value.trim()||null,
+      unit_price:c[6].value===''?null:+c[6].value, amount:+c[7].value||0, taxable:c[8].checked?1:0 };
+  });
+  const receipt = { store:$('#f-store').value.trim()||'未知', purchased_at:$('#f-date').value||new Date().toISOString().slice(0,10),
+    currency:CFG.currency||'CAD', subtotal:+$('#f-subtotal').value||0, gst:+$('#f-gst').value||0, pst:+$('#f-pst').value||0, total:+$('#f-total').value||0 };
+  try {
+    await api('/api/receipts', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ receipt, items, image: currentImage, raw: lastRaw }) });
+    toast('已保存 ✓');
+    $('#editCard').classList.add('hide'); $('#preview').style.display='none'; currentImage=null; $('#scanBtn').disabled=true; fileInput.value='';
+  } catch(e){ toast('保存失败: '+e.message); }
+};
+
+// ---- dashboard ----
+function range(){ const f=$('#d-from').value, t=$('#d-to').value; const q=[]; if(f)q.push('from='+f); if(t)q.push('to='+t); return q.length?'?'+q.join('&'):''; }
+$('#applyRange').onclick = loadDashboard;
+$('#clearRange').onclick = () => { $('#d-from').value=''; $('#d-to').value=''; loadDashboard(); };
+$('#subSel').onchange = loadSub;
+
+async function loadDashboard(){
+  const ov = await api('/api/stats/overview'+range());
+  $('#kpis').innerHTML = [
+    ['实付总额', '$'+fmt(ov.total)],['税额合计','$'+fmt(ov.tax)],['GST','$'+fmt(ov.gst)],
+    ['PST','$'+fmt(ov.pst)],['小票数',ov.receipts||0],['商品条目',ov.lines||0]
+  ].map(([l,v])=>`<div class="kpi"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+  loadCat(); loadSub(); loadMonthly(); loadNames();
+}
+const palette = ['#4f9cf9','#2ea043','#e3b341','#f85149','#a371f7','#39c5cf','#db61a2','#f0883e','#7ee787','#ff7b72','#79c0ff','#d2a8ff'];
+function drawChart(id, type, data, options){ if(charts[id]) charts[id].destroy(); charts[id]=new Chart($('#'+id), {type,data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#e6edf3'}}},...options}}); }
+const axes = { scales:{ x:{ticks:{color:'#8b98a9'},grid:{color:'#2a3548'}}, y:{ticks:{color:'#8b98a9'},grid:{color:'#2a3548'}} } };
+
+async function loadCat(){
+  const d = await api('/api/stats/category'+range());
+  drawChart('catChart','doughnut',{ labels:d.map(x=>x.label), datasets:[{data:d.map(x=>x.amount),backgroundColor:palette}] },{});
+}
+async function loadSub(){
+  const cat = $('#subSel').value; const sep = range()?'&':'?';
+  const d = await api('/api/stats/subcategory'+range()+sep+'category='+encodeURIComponent(cat));
+  drawChart('subChart','bar',{ labels:d.map(x=>x.label), datasets:[{label:'花费 $',data:d.map(x=>x.amount),backgroundColor:'#4f9cf9'}] },axes);
+}
+async function loadMonthly(){
+  const d = await api('/api/stats/monthly'+range());
+  drawChart('monChart','bar',{ labels:d.map(x=>x.month), datasets:[
+    {label:'税前',data:d.map(x=>x.subtotal),backgroundColor:'#4f9cf9',stack:'s'},
+    {label:'GST',data:d.map(x=>x.gst),backgroundColor:'#e3b341',stack:'s'},
+    {label:'PST',data:d.map(x=>x.pst),backgroundColor:'#f85149',stack:'s'}
+  ]},{ scales:{ x:{stacked:true,ticks:{color:'#8b98a9'},grid:{color:'#2a3548'}}, y:{stacked:true,ticks:{color:'#8b98a9'},grid:{color:'#2a3548'}} } });
+}
+async function loadNames(){ const d = await api('/api/items/names'); $('#nameList').innerHTML = d.map(x=>`<option value="${(x.name||'').replace(/"/g,'&quot;')}">`).join(''); }
+
+$('#trendBtn').onclick = async () => {
+  const name = $('#trendName').value.trim(); if(!name) return toast('请输入品名');
+  const store = $('#trendStore').value.trim();
+  const d = await api('/api/stats/trend?name='+encodeURIComponent(name)+(store?'&store='+encodeURIComponent(store):''));
+  if(!d.length){ toast('没有匹配记录'); }
+  drawChart('trendChart','line',{ labels:d.map(x=>x.date), datasets:[{label:name+' 单价 $',data:d.map(x=>x.unit_price),borderColor:'#2ea043',backgroundColor:'#2ea043',tension:.2}] },axes);
+  $('#trendTbl').innerHTML = '<table><thead><tr><th>日期</th><th>商家</th><th>品名</th><th class="num">数量</th><th class="num">单价</th><th class="num">金额</th></tr></thead><tbody>'+
+    d.map(x=>`<tr><td>${x.date}</td><td>${x.store}</td><td>${x.name}</td><td class="num">${x.qty??'-'}</td><td class="num">${fmt(x.unit_price)}</td><td class="num">${fmt(x.amount)}</td></tr>`).join('')+'</tbody></table>';
+};
+
+// ---- receipts list ----
+async function loadReceipts(){
+  const d = await api('/api/receipts');
+  $('#recTable tbody').innerHTML = d.map(r=>`<tr>
+    <td>${r.purchased_at}</td><td>${r.store}</td>
+    <td class="num">${fmt(r.subtotal)}</td><td class="num">${fmt(r.gst)}</td><td class="num">${fmt(r.pst)}</td>
+    <td class="num">${fmt(r.total)}</td><td class="num">${r.item_count}</td>
+    <td><button class="ghost" onclick="viewRec(${r.id})" style="padding:4px 10px;font-size:12px">明细</button>
+        <button class="danger" onclick="delRec(${r.id})">删</button></td></tr>`).join('') || '<tr><td colspan="8" class="muted">暂无记录</td></tr>';
+}
+window.viewRec = async (id) => {
+  const r = await api('/api/receipts/'+id);
+  $('#recDetail').classList.remove('hide');
+  $('#recDetail').innerHTML = `<h2>${r.store} · ${r.purchased_at}</h2>
+    <p class="muted">税前 $${fmt(r.subtotal)} ｜ GST $${fmt(r.gst)} ｜ PST $${fmt(r.pst)} ｜ 实付 $${fmt(r.total)}</p>
+    ${r.image_file?`<img src="/uploads/${r.image_file}" style="max-height:300px;border-radius:8px;float:right;margin-left:16px">`:''}
+    <table><thead><tr><th>品名</th><th>分类</th><th>细分</th><th class="num">数量</th><th class="num">单价</th><th class="num">金额</th><th>税</th></tr></thead><tbody>
+    ${r.items.map(i=>`<tr><td>${i.name_raw}${i.name_norm&&i.name_norm!==i.name_raw?' <span class="muted">('+i.name_norm+')</span>':''}</td><td>${i.category}</td><td>${i.subcategory||'-'}</td><td class="num">${i.qty}</td><td class="num">${fmt(i.unit_price)}</td><td class="num">${fmt(i.amount)}</td><td style="text-align:center">${i.taxable?'✓':''}</td></tr>`).join('')}
+    </tbody></table>`;
+  $('#recDetail').scrollIntoView({behavior:'smooth'});
+};
+window.delRec = async (id) => { if(!confirm('确认删除这张小票？')) return; await api('/api/receipts/'+id,{method:'DELETE'}); loadReceipts(); $('#recDetail').classList.add('hide'); };
+</script>
+</body>
+</html>

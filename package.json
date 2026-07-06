@@ -1,0 +1,18 @@
+{
+  "name": "vanspend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "本地单机版小票扫描与精细化记账 (温哥华 BC GST/PST 拆分)",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --no-warnings server.js",
+    "selfcheck": "node selfcheck.js"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  }
+}

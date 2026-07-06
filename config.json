@@ -1,0 +1,25 @@
+{
+  "model": "google/gemini-2.5-flash",
+  "openrouterBaseUrl": "https://openrouter.ai/api/v1",
+  "port": 5173,
+  "currency": "CAD",
+  "region": "BC",
+  "taxRates": {
+    "GST": 0.05,
+    "PST": 0.07
+  },
+  "categories": [
+    "肉类",
+    "海鲜",
+    "蔬菜",
+    "水果",
+    "乳制品蛋类",
+    "主食粮油",
+    "零食饮料",
+    "调味品",
+    "日用清洁",
+    "个护健康",
+    "餐厅外食",
+    "其他"
+  ]
+}
