@@ -108,6 +108,13 @@
         <button id="applyRange">应用</button>
         <button id="clearRange" class="ghost">全部时间</button>
       </div>
+      <div class="row" style="margin-top:10px">
+        <button class="ghost" data-preset="thisMonth">当月</button>
+        <button class="ghost" data-preset="lastMonth">上月</button>
+        <button class="ghost" data-preset="last3m">近3个月</button>
+        <button class="ghost" data-preset="last6m">近半年</button>
+        <button class="ghost" data-preset="last1y">近1年</button>
+      </div>
     </div>
     <div class="cards4" id="kpis"></div>
     <div class="grid" style="grid-template-columns:1fr 1fr">
@@ -135,6 +142,20 @@
   <section id="tab-list" class="grid hide">
     <div class="card">
       <h2>小票记录</h2>
+      <div class="row" style="margin-bottom:10px">
+        <label>从 <input id="r-from" type="date"></label>
+        <label>到 <input id="r-to" type="date"></label>
+        <input id="r-search" placeholder="搜索商家或品名" style="width:200px">
+        <button id="r-apply">筛选</button>
+        <button id="r-clear" class="ghost">清除</button>
+      </div>
+      <div class="row" style="margin-bottom:14px">
+        <button class="ghost" data-preset="thisMonth">当月</button>
+        <button class="ghost" data-preset="lastMonth">上月</button>
+        <button class="ghost" data-preset="last3m">近3个月</button>
+        <button class="ghost" data-preset="last6m">近半年</button>
+        <button class="ghost" data-preset="last1y">近1年</button>
+      </div>
       <table id="recTable">
         <thead><tr><th>日期</th><th>商家</th><th class="num">税前</th><th class="num">GST</th><th class="num">PST</th><th class="num">实付</th><th class="num">条目</th><th></th></tr></thead>
         <tbody></tbody>
@@ -247,6 +268,25 @@ $('#applyRange').onclick = loadDashboard;
 $('#clearRange').onclick = () => { $('#d-from').value=''; $('#d-to').value=''; loadDashboard(); };
 $('#subSel').onchange = loadSub;
 
+const pad2 = (n) => String(n).padStart(2,'0');
+const toISO = (d) => d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+function computePresetRange(kind){
+  const now = new Date();
+  let from, to = now;
+  if(kind==='thisMonth') from = new Date(now.getFullYear(), now.getMonth(), 1);
+  else if(kind==='lastMonth'){ from = new Date(now.getFullYear(), now.getMonth()-1, 1); to = new Date(now.getFullYear(), now.getMonth(), 0); }
+  else if(kind==='last3m') from = new Date(now.getFullYear(), now.getMonth()-3, now.getDate());
+  else if(kind==='last6m') from = new Date(now.getFullYear(), now.getMonth()-6, now.getDate());
+  else if(kind==='last1y') from = new Date(now.getFullYear()-1, now.getMonth(), now.getDate());
+  else return null;
+  return [toISO(from), toISO(to)];
+}
+document.querySelectorAll('#tab-dash [data-preset]').forEach(b => b.onclick = () => {
+  const r = computePresetRange(b.dataset.preset); if(!r) return;
+  $('#d-from').value = r[0]; $('#d-to').value = r[1];
+  loadDashboard();
+});
+
 async function loadDashboard(){
   const ov = await api('/api/stats/overview'+range());
   $('#kpis').innerHTML = [
@@ -289,8 +329,22 @@ $('#trendBtn').onclick = async () => {
 };
 
 // ---- receipts list ----
+function recQuery(){
+  const f=$('#r-from').value, t=$('#r-to').value, s=$('#r-search').value.trim();
+  const q=[]; if(f)q.push('from='+f); if(t)q.push('to='+t); if(s)q.push('search='+encodeURIComponent(s));
+  return q.length?'?'+q.join('&'):'';
+}
+$('#r-apply').onclick = loadReceipts;
+$('#r-clear').onclick = () => { $('#r-from').value=''; $('#r-to').value=''; $('#r-search').value=''; loadReceipts(); };
+$('#r-search').addEventListener('keydown', (e) => { if(e.key==='Enter') loadReceipts(); });
+document.querySelectorAll('#tab-list [data-preset]').forEach(b => b.onclick = () => {
+  const r = computePresetRange(b.dataset.preset); if(!r) return;
+  $('#r-from').value = r[0]; $('#r-to').value = r[1];
+  loadReceipts();
+});
+
 async function loadReceipts(){
-  const d = await api('/api/receipts');
+  const d = await api('/api/receipts'+recQuery());
   $('#recTable tbody').innerHTML = d.map(r=>`<tr>
     <td>${r.purchased_at}</td><td>${r.store}</td>
     <td class="num">${fmt(r.subtotal)}</td><td class="num">${fmt(r.gst)}</td><td class="num">${fmt(r.pst)}</td>

@@ -74,7 +74,9 @@ app.post('/api/receipts', wrap(async (req, res) => {
   res.json({ id });
 }));
 
-app.get('/api/receipts', wrap(async (req, res) => res.json(await dbApi.listReceipts())));
+app.get('/api/receipts', wrap(async (req, res) => res.json(await dbApi.listReceipts({
+  from: req.query.from, to: req.query.to, search: req.query.search
+}))));
 app.get('/api/receipts/:id', wrap(async (req, res) => {
   const r = await dbApi.getReceipt(+req.params.id);
   if (!r) return res.status(404).json({ error: '未找到' });

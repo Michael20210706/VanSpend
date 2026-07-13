@@ -117,13 +117,22 @@ function dateFilter(from, to) {
   return { where: clauses.length ? 'WHERE ' + clauses.join(' AND ') : '', params };
 }
 
-async function listReceipts(limit = 200) {
+async function listReceipts({ limit = 200, from, to, search } = {}) {
   await ready;
   const lim = Math.min(Math.max(parseInt(limit, 10) || 200, 1), 2000);
-  const [rows] = await pool.query(`
+  const { where, params } = dateFilter(from, to);
+  const clauses = where ? [where.slice('WHERE '.length)] : [];
+  if (search) {
+    clauses.push(`(r.store LIKE :search OR EXISTS (
+      SELECT 1 FROM items i2 WHERE i2.receipt_id = r.id AND (i2.name_raw LIKE :search OR i2.name_norm LIKE :search)
+    ))`);
+    params.search = '%' + search + '%';
+  }
+  const whereClause = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
+  const [rows] = await pool.execute(`
     SELECT r.*, (SELECT COUNT(*) FROM items i WHERE i.receipt_id = r.id) AS item_count
-    FROM receipts r ORDER BY r.purchased_at DESC, r.id DESC LIMIT ${lim}
-  `);
+    FROM receipts r ${whereClause} ORDER BY r.purchased_at DESC, r.id DESC LIMIT ${lim}
+  `, params);
   return rows;
 }
 
