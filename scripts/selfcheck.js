@@ -3,7 +3,7 @@
 // 用法: node selfcheck.js   (会写入 .env 配置的 MySQL 库，需提前在 .env 填好连接信息)
 
 const assert = require('assert');
-const { normalize } = require('./openrouter');
+const { normalize } = require('../src/openrouter');
 
 let pass = 0;
 const ok = (cond, name) => { assert.ok(cond, name); console.log('  ✓', name); pass++; };
@@ -28,7 +28,7 @@ async function main() {
 
   // ---- 2. 入库 + 统计 ----
   // 写入 .env 指向的 MySQL 库。自检结束后清掉本次插入。
-  const dbApi = require('./db');
+  const dbApi = require('../src/db');
 
   await dbApi.saveReceipt(
     { store: '__TEST_COSTCO', purchased_at: '2026-04-15', currency: 'CAD', subtotal: 30, gst: 0, pst: 0, total: 30, image_file: null, raw_json: '{}' },

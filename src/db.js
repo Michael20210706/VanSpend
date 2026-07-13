@@ -6,7 +6,7 @@ const mysql = require('mysql2/promise');
 
 // --- 极简 .env 加载 (与 server.js 一致，独立加载以支持 selfcheck.js 等单独入口) ---
 (function loadEnv() {
-  const envPath = path.join(__dirname, '.env');
+  const envPath = path.join(__dirname, '..', '.env');
   if (!fs.existsSync(envPath)) return;
   for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
     const m = line.match(/^\s*([\w.]+)\s*=\s*(.*)\s*$/);
@@ -29,8 +29,8 @@ const pool = mysql.createPool({
   decimalNumbers: true,  // DECIMAL 列以 JS number 返回，兼容既有前端逻辑
 });
 
-// 与 schema.sql 保持一致；应用启动时尝试自动建表，若数据库账号无 DDL 权限则忽略，
-// 此时需提前手动执行 schema.sql
+// 与 sql/schema.sql 保持一致；应用启动时尝试自动建表，若数据库账号无 DDL 权限则忽略，
+// 此时需提前手动执行 sql/schema.sql
 const SCHEMA_STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS receipts (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -76,7 +76,7 @@ async function initSchema() {
       conn.release();
     }
   } catch (e) {
-    console.warn('[db] 自动建表失败(账号可能无 DDL 权限)，请确认已手动执行 schema.sql:', e.message);
+    console.warn('[db] 自动建表失败(账号可能无 DDL 权限)，请确认已手动执行 sql/schema.sql:', e.message);
   }
 }
 const ready = initSchema();

@@ -3,7 +3,21 @@
 const fs = require('fs');
 const path = require('path');
 
-const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'config.json'), 'utf8'));
+// --- 极简 .env 加载 (与 server.js/db.js 一致，独立加载以支持单独引入本文件的场景) ---
+(function loadEnv() {
+  const envPath = path.join(__dirname, '..', '.env');
+  if (!fs.existsSync(envPath)) return;
+  for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
+    const m = line.match(/^\s*([\w.]+)\s*=\s*(.*)\s*$/);
+    if (m && !process.env[m[1]]) {
+      process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '');
+    }
+  }
+})();
+
+const config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'config', 'config.json'), 'utf8'));
+// OPENROUTER_MODEL 可在 .env 里覆盖 config.json 的 model，不改代码/配置文件即可切换模型
+if (process.env.OPENROUTER_MODEL) config.model = process.env.OPENROUTER_MODEL;
 
 // 让模型只做识别+归类，税额拆分我们这里给出 BC 规则说明，让模型按小票上的税码/税行还原
 function buildPrompt() {

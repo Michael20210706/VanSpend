@@ -4,9 +4,11 @@ const fs = require('fs');
 const path = require('path');
 const express = require('express');
 
+const ROOT_DIR = path.join(__dirname, '..');
+
 // --- 极简 .env 加载 (避免额外依赖) ---
 (function loadEnv() {
-  const envPath = path.join(__dirname, '.env');
+  const envPath = path.join(ROOT_DIR, '.env');
   if (!fs.existsSync(envPath)) return;
   for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
     const m = line.match(/^\s*([\w.]+)\s*=\s*(.*)\s*$/);
@@ -19,12 +21,12 @@ const express = require('express');
 const dbApi = require('./db');
 const { scanReceipt, config } = require('./openrouter');
 
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
+const UPLOAD_DIR = path.join(ROOT_DIR, 'uploads');
 if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const app = express();
 app.use(express.json({ limit: '25mb' })); // base64 图片可能较大
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(ROOT_DIR, 'public')));
 app.use('/uploads', express.static(UPLOAD_DIR));
 
 const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((e) => {

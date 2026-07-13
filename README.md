@@ -25,9 +25,32 @@ cp .env.example .env        # 编辑 .env: 填入 OPENROUTER_API_KEY 及 MYSQL_H
 
 # 首次使用需先建库建表: 若 MYSQL_USER 有 DDL 权限, 应用启动时会自动建表(CREATE TABLE IF NOT EXISTS);
 # 若账号权限受限，请先手动执行:
-mysql -h $MYSQL_HOST -u $MYSQL_USER -p < schema.sql
+mysql -h $MYSQL_HOST -u $MYSQL_USER -p < sql/schema.sql
 
 npm start                   # 打开 http://localhost:5173
+```
+
+### 用 Docker 运行
+
+```bash
+cp .env.example .env        # 同上，先填好 .env
+docker compose up -d        # 启动 app + 一个本地 MySQL(仅供试用/演示)
+```
+
+若已有外部 MySQL(生产场景推荐),编辑 `docker-compose.yml` 删掉 `mysql` 这个 service,
+并把 `.env` 里的 `MYSQL_HOST`/`MYSQL_PORT` 指向你的外部实例即可，`app` service 会通过
+`env_file: .env` 读取所有配置。也可以只用 `docker build -t vanspend .` 单独构建镜像。
+
+## 项目结构
+
+```
+src/            后端代码: server.js(路由) / db.js(MySQL 访问) / openrouter.js(AI 识别)
+config/         config.json(模型、端口、税率、分类)
+sql/            schema.sql(MySQL 建表 DDL)
+scripts/        selfcheck.js(离线自检)
+public/         前端静态页面(单文件 vanilla JS)
+uploads/        小票原图(运行时生成，不入库)
+Dockerfile, docker-compose.yml, .dockerignore   容器构建/发布
 ```
 
 ## 使用流程
@@ -47,7 +70,7 @@ npm start                   # 打开 http://localhost:5173
 
 | 字段 | 说明 |
 |------|------|
-| `model` | OpenRouter 模型 slug。换模型只改这里,如 `anthropic/claude-3.7-sonnet`、`openai/gpt-4o` |
+| `model` | OpenRouter 模型 slug。换模型改这里,如 `anthropic/claude-3.7-sonnet`、`openai/gpt-4o`;也可以不改配置文件,在 `.env` 里设 `OPENROUTER_MODEL` 覆盖(优先级更高) |
 | `port` | 网页端口,默认 5173 |
 | `taxRates` | GST/PST 税率(供识别提示参考) |
 | `categories` | 顶层分类清单。改这里会同步影响识别提示与前端下拉 |
@@ -57,7 +80,7 @@ npm start                   # 打开 http://localhost:5173
 - `receipts`:每张小票一行(商家、日期、税前、GST、PST、实付、原图、模型原始返回)。
 - `items`:每个商品一行,关联小票(原文名、规范名、分类、细分、数量、单位、单价、金额、是否计税)。
 
-直接用任意 MySQL 客户端连接 `.env` 里配置的库也能自由查询,表结构见 `schema.sql`。
+直接用任意 MySQL 客户端连接 `.env` 里配置的库也能自由查询,表结构见 `sql/schema.sql`。
 
 ## 自检
 

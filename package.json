@@ -4,10 +4,10 @@
   "private": true,
   "description": "本地单机版小票扫描与精细化记账 (温哥华 BC GST/PST 拆分)",
   "type": "commonjs",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node --no-warnings server.js",
-    "selfcheck": "node selfcheck.js"
+    "start": "node --no-warnings src/server.js",
+    "selfcheck": "node scripts/selfcheck.js"
   },
   "engines": {
     "node": ">=18.0.0"
