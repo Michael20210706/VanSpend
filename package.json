@@ -10,9 +10,10 @@
     "selfcheck": "node selfcheck.js"
   },
   "engines": {
-    "node": ">=22.5.0"
+    "node": ">=18.0.0"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "mysql2": "^3.22.6"
   }
 }

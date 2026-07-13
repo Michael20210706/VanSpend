@@ -1,77 +1,110 @@
 'use strict';
 
-const path = require('path');
 const fs = require('fs');
-const { DatabaseSync } = require('node:sqlite'); // Node 22.5+ 内置，无需编译
+const path = require('path');
+const mysql = require('mysql2/promise');
 
-const DATA_DIR = process.env.VANSPEND_DATA_DIR || path.join(__dirname, 'data');
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+// --- 极简 .env 加载 (与 server.js 一致，独立加载以支持 selfcheck.js 等单独入口) ---
+(function loadEnv() {
+  const envPath = path.join(__dirname, '.env');
+  if (!fs.existsSync(envPath)) return;
+  for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
+    const m = line.match(/^\s*([\w.]+)\s*=\s*(.*)\s*$/);
+    if (m && !process.env[m[1]]) {
+      process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '');
+    }
+  }
+})();
 
-const db = new DatabaseSync(path.join(DATA_DIR, 'vanspend.sqlite'));
-// WAL 在网络盘/云同步盘上可能失败，失败则回退默认模式
-try { db.exec('PRAGMA journal_mode = WAL'); } catch (_) { /* 回退 rollback journal */ }
-db.exec('PRAGMA foreign_keys = ON');
+const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST || '127.0.0.1',
+  port: Number(process.env.MYSQL_PORT || 3306),
+  user: process.env.MYSQL_USER,
+  password: process.env.MYSQL_PASSWORD,
+  database: process.env.MYSQL_DATABASE,
+  waitForConnections: true,
+  connectionLimit: 10,
+  namedPlaceholders: true,
+  dateStrings: true,     // purchased_at/created_at 以 'YYYY-MM-DD ...' 字符串返回，兼容既有前端逻辑
+  decimalNumbers: true,  // DECIMAL 列以 JS number 返回，兼容既有前端逻辑
+});
 
-db.exec(`
-CREATE TABLE IF NOT EXISTS receipts (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  store         TEXT    NOT NULL DEFAULT '未知',
-  purchased_at  TEXT    NOT NULL,            -- YYYY-MM-DD
-  currency      TEXT    NOT NULL DEFAULT 'CAD',
-  subtotal      REAL    NOT NULL DEFAULT 0,  -- 税前合计
-  gst           REAL    NOT NULL DEFAULT 0,
-  pst           REAL    NOT NULL DEFAULT 0,
-  total         REAL    NOT NULL DEFAULT 0,  -- 实付总额
-  image_file    TEXT,
-  raw_json      TEXT,                        -- 模型原始返回，便于复核/纠错
-  created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
-);
+// 与 schema.sql 保持一致；应用启动时尝试自动建表，若数据库账号无 DDL 权限则忽略，
+// 此时需提前手动执行 schema.sql
+const SCHEMA_STATEMENTS = [
+  `CREATE TABLE IF NOT EXISTS receipts (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    store         VARCHAR(255)  NOT NULL DEFAULT '未知',
+    purchased_at  DATE          NOT NULL,
+    currency      VARCHAR(10)   NOT NULL DEFAULT 'CAD',
+    subtotal      DECIMAL(10,2) NOT NULL DEFAULT 0,
+    gst           DECIMAL(10,2) NOT NULL DEFAULT 0,
+    pst           DECIMAL(10,2) NOT NULL DEFAULT 0,
+    total         DECIMAL(10,2) NOT NULL DEFAULT 0,
+    image_file    VARCHAR(255),
+    raw_json      LONGTEXT,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_receipts_date (purchased_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  `CREATE TABLE IF NOT EXISTS items (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    receipt_id    INT UNSIGNED  NOT NULL,
+    name_raw      VARCHAR(255)  NOT NULL,
+    name_norm     VARCHAR(255),
+    category      VARCHAR(100)  NOT NULL DEFAULT '其他',
+    subcategory   VARCHAR(100),
+    qty           DECIMAL(10,3) NOT NULL DEFAULT 1,
+    unit          VARCHAR(50),
+    unit_price    DECIMAL(10,4),
+    amount        DECIMAL(10,2) NOT NULL DEFAULT 0,
+    taxable       TINYINT(1)    NOT NULL DEFAULT 0,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_items_receipt  (receipt_id),
+    INDEX idx_items_category (category),
+    INDEX idx_items_subcat   (subcategory),
+    INDEX idx_items_norm     (name_norm),
+    CONSTRAINT fk_items_receipt FOREIGN KEY (receipt_id) REFERENCES receipts(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+];
 
-CREATE TABLE IF NOT EXISTS items (
-  id            INTEGER PRIMARY KEY AUTOINCREMENT,
-  receipt_id    INTEGER NOT NULL REFERENCES receipts(id) ON DELETE CASCADE,
-  name_raw      TEXT    NOT NULL,            -- 小票原文(可能是缩写/中文)
-  name_norm     TEXT,                        -- 规范化品名，用于跨时间比价
-  category      TEXT    NOT NULL DEFAULT '其他',
-  subcategory   TEXT,                        -- 细分: 牛肉/猪肉/鸡肉/三文鱼...
-  qty           REAL    NOT NULL DEFAULT 1,
-  unit          TEXT,                        -- 单位: 个/kg/lb/包
-  unit_price    REAL,                        -- 单价(原币)
-  amount        REAL    NOT NULL DEFAULT 0,  -- 该行小计(税前)
-  taxable       INTEGER NOT NULL DEFAULT 0,  -- 是否计税 0/1
-  created_at    TEXT    NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_items_receipt   ON items(receipt_id);
-CREATE INDEX IF NOT EXISTS idx_items_category  ON items(category);
-CREATE INDEX IF NOT EXISTS idx_items_subcat    ON items(subcategory);
-CREATE INDEX IF NOT EXISTS idx_items_norm      ON items(name_norm);
-CREATE INDEX IF NOT EXISTS idx_receipts_date   ON receipts(purchased_at);
-`);
+async function initSchema() {
+  try {
+    const conn = await pool.getConnection();
+    try {
+      for (const stmt of SCHEMA_STATEMENTS) await conn.query(stmt);
+    } finally {
+      conn.release();
+    }
+  } catch (e) {
+    console.warn('[db] 自动建表失败(账号可能无 DDL 权限)，请确认已手动执行 schema.sql:', e.message);
+  }
+}
+const ready = initSchema();
 
 // ---- 写入 ----
-const insertReceiptStmt = db.prepare(`
-  INSERT INTO receipts (store, purchased_at, currency, subtotal, gst, pst, total, image_file, raw_json)
-  VALUES (@store, @purchased_at, @currency, @subtotal, @gst, @pst, @total, @image_file, @raw_json)
-`);
-const insertItemStmt = db.prepare(`
-  INSERT INTO items (receipt_id, name_raw, name_norm, category, subcategory, qty, unit, unit_price, amount, taxable)
-  VALUES (@receipt_id, @name_raw, @name_norm, @category, @subcategory, @qty, @unit, @unit_price, @amount, @taxable)
-`);
-
-function saveReceipt(receipt, items) {
-  db.exec('BEGIN');
+async function saveReceipt(receipt, items) {
+  await ready;
+  const conn = await pool.getConnection();
   try {
-    const info = insertReceiptStmt.run(receipt);
-    const rid = Number(info.lastInsertRowid);
+    await conn.beginTransaction();
+    const [info] = await conn.execute(`
+      INSERT INTO receipts (store, purchased_at, currency, subtotal, gst, pst, total, image_file, raw_json)
+      VALUES (:store, :purchased_at, :currency, :subtotal, :gst, :pst, :total, :image_file, :raw_json)
+    `, receipt);
+    const rid = info.insertId;
     for (const it of items) {
-      insertItemStmt.run({ ...it, receipt_id: rid });
+      await conn.execute(`
+        INSERT INTO items (receipt_id, name_raw, name_norm, category, subcategory, qty, unit, unit_price, amount, taxable)
+        VALUES (:receipt_id, :name_raw, :name_norm, :category, :subcategory, :qty, :unit, :unit_price, :amount, :taxable)
+      `, { ...it, receipt_id: rid });
     }
-    db.exec('COMMIT');
+    await conn.commit();
     return rid;
   } catch (e) {
-    db.exec('ROLLBACK');
+    await conn.rollback();
     throw e;
+  } finally {
+    conn.release();
   }
 }
 
@@ -79,59 +112,72 @@ function saveReceipt(receipt, items) {
 function dateFilter(from, to) {
   const clauses = [];
   const params = {};
-  if (from) { clauses.push('r.purchased_at >= @from'); params.from = from; }
-  if (to)   { clauses.push('r.purchased_at <= @to');   params.to = to; }
+  if (from) { clauses.push('r.purchased_at >= :from'); params.from = from; }
+  if (to)   { clauses.push('r.purchased_at <= :to');   params.to = to; }
   return { where: clauses.length ? 'WHERE ' + clauses.join(' AND ') : '', params };
 }
 
-function listReceipts(limit = 200) {
-  return db.prepare(`
+async function listReceipts(limit = 200) {
+  await ready;
+  const lim = Math.min(Math.max(parseInt(limit, 10) || 200, 1), 2000);
+  const [rows] = await pool.query(`
     SELECT r.*, (SELECT COUNT(*) FROM items i WHERE i.receipt_id = r.id) AS item_count
-    FROM receipts r ORDER BY r.purchased_at DESC, r.id DESC LIMIT ?
-  `).all(limit);
+    FROM receipts r ORDER BY r.purchased_at DESC, r.id DESC LIMIT ${lim}
+  `);
+  return rows;
 }
 
-function getReceipt(id) {
-  const r = db.prepare('SELECT * FROM receipts WHERE id = ?').get(id);
+async function getReceipt(id) {
+  await ready;
+  const [rows] = await pool.execute('SELECT * FROM receipts WHERE id = :id', { id });
+  const r = rows[0];
   if (!r) return null;
-  r.items = db.prepare('SELECT * FROM items WHERE receipt_id = ? ORDER BY id').all(id);
+  const [items] = await pool.execute('SELECT * FROM items WHERE receipt_id = :id ORDER BY id', { id });
+  r.items = items;
   return r;
 }
 
-function deleteReceipt(id) {
-  return db.prepare('DELETE FROM receipts WHERE id = ?').run(id).changes;
+async function deleteReceipt(id) {
+  await ready;
+  const [result] = await pool.execute('DELETE FROM receipts WHERE id = :id', { id });
+  return result.affectedRows;
 }
 
 // 各分类花费(税前小计之和)
-function statsByCategory(from, to) {
+async function statsByCategory(from, to) {
+  await ready;
   const { where, params } = dateFilter(from, to);
-  return db.prepare(`
-    SELECT i.category AS label, ROUND(SUM(i.amount), 2) AS amount, COUNT(*) AS lines
+  const [rows] = await pool.execute(`
+    SELECT i.category AS label, ROUND(SUM(i.amount), 2) AS amount, COUNT(*) AS line_count
     FROM items i JOIN receipts r ON r.id = i.receipt_id
     ${where}
     GROUP BY i.category ORDER BY amount DESC
-  `).all(params);
+  `, params);
+  return rows.map(({ line_count, ...r }) => ({ ...r, lines: line_count }));
 }
 
 // 某大类下的细分花费(默认肉类的牛/猪/鸡...)
-function statsBySubcategory(category, from, to) {
+async function statsBySubcategory(category, from, to) {
+  await ready;
   const { where, params } = dateFilter(from, to);
-  const extra = category ? (where ? ' AND i.category = @category' : 'WHERE i.category = @category') : '';
+  const extra = category ? (where ? ' AND i.category = :category' : 'WHERE i.category = :category') : '';
   if (category) params.category = category;
-  return db.prepare(`
+  const [rows] = await pool.execute(`
     SELECT COALESCE(i.subcategory, '未分类') AS label,
-           ROUND(SUM(i.amount), 2) AS amount, COUNT(*) AS lines
+           ROUND(SUM(i.amount), 2) AS amount, COUNT(*) AS line_count
     FROM items i JOIN receipts r ON r.id = i.receipt_id
     ${where}${extra}
     GROUP BY i.subcategory ORDER BY amount DESC
-  `).all(params);
+  `, params);
+  return rows.map(({ line_count, ...r }) => ({ ...r, lines: line_count }));
 }
 
 // 月度: 税前/税额/实付
-function statsMonthly(from, to) {
+async function statsMonthly(from, to) {
+  await ready;
   const { where, params } = dateFilter(from, to);
-  return db.prepare(`
-    SELECT substr(r.purchased_at, 1, 7) AS month,
+  const [rows] = await pool.execute(`
+    SELECT DATE_FORMAT(r.purchased_at, '%Y-%m') AS month,
            ROUND(SUM(r.subtotal), 2) AS subtotal,
            ROUND(SUM(r.gst), 2) AS gst,
            ROUND(SUM(r.pst), 2) AS pst,
@@ -139,51 +185,57 @@ function statsMonthly(from, to) {
            COUNT(*) AS receipts
     FROM receipts r ${where}
     GROUP BY month ORDER BY month
-  `).all(params);
+  `, params);
+  return rows;
 }
 
 // 某品名的价格趋势 (按规范名匹配，跨时间)
-function priceTrend(nameNorm, store) {
+async function priceTrend(nameNorm, store) {
+  await ready;
   const params = { q: '%' + nameNorm + '%' };
   let storeClause = '';
-  if (store) { storeClause = ' AND r.store = @store'; params.store = store; }
-  return db.prepare(`
+  if (store) { storeClause = ' AND r.store = :store'; params.store = store; }
+  const [rows] = await pool.execute(`
     SELECT r.purchased_at AS date, r.store AS store,
            i.name_raw AS name, i.unit, i.qty,
            i.unit_price AS unit_price, i.amount AS amount
     FROM items i JOIN receipts r ON r.id = i.receipt_id
-    WHERE (i.name_norm LIKE @q OR i.name_raw LIKE @q)${storeClause}
+    WHERE (i.name_norm LIKE :q OR i.name_raw LIKE :q)${storeClause}
     ORDER BY r.purchased_at
-  `).all(params);
+  `, params);
+  return rows;
 }
 
 // 品名候选(用于趋势搜索下拉)
-function distinctItemNames() {
-  return db.prepare(`
+async function distinctItemNames() {
+  await ready;
+  const [rows] = await pool.query(`
     SELECT COALESCE(name_norm, name_raw) AS name, COUNT(*) AS n
     FROM items GROUP BY name ORDER BY n DESC LIMIT 300
-  `).all();
+  `);
+  return rows;
 }
 
 // 概览卡片
-function overview(from, to) {
+async function overview(from, to) {
+  await ready;
   const { where, params } = dateFilter(from, to);
-  const row = db.prepare(`
+  const [rows] = await pool.execute(`
     SELECT ROUND(SUM(r.total), 2) AS total,
            ROUND(SUM(r.gst + r.pst), 2) AS tax,
            ROUND(SUM(r.gst), 2) AS gst,
            ROUND(SUM(r.pst), 2) AS pst,
            COUNT(*) AS receipts
     FROM receipts r ${where}
-  `).get(params);
-  const items = db.prepare(`
-    SELECT COUNT(*) AS lines FROM items i JOIN receipts r ON r.id = i.receipt_id ${where}
-  `).get(params);
-  return { ...row, lines: items.lines };
+  `, params);
+  const [items] = await pool.execute(`
+    SELECT COUNT(*) AS line_count FROM items i JOIN receipts r ON r.id = i.receipt_id ${where}
+  `, params);
+  return { ...rows[0], lines: items[0].line_count };
 }
 
 module.exports = {
-  db, saveReceipt, listReceipts, getReceipt, deleteReceipt,
+  pool, saveReceipt, listReceipts, getReceipt, deleteReceipt,
   statsByCategory, statsBySubcategory, statsMonthly, priceTrend,
   distinctItemNames, overview
 };

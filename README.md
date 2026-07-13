@@ -1,8 +1,8 @@
 # VanSpend · 家庭小票扫描与精细化记账
 
-本地单机版。上传超市/餐厅小票图片 → 用 OpenRouter 多模态模型(Gemini 2.5 Flash)识别成 **逐行明细(line-items)** → 存入本地 SQLite → 在网页里做多维度统计与价格趋势分析。专门处理 Costco、大统华(T&T)等单张长小票，并按 BC 省规则拆分 **GST(5%) / PST(7%)**。
+单机单用户版。上传超市/餐厅小票图片 → 用 OpenRouter 多模态模型(Gemini 2.5 Flash)识别成 **逐行明细(line-items)** → 存入外部 MySQL 数据库 → 在网页里做多维度统计与价格趋势分析。专门处理 Costco、大统华(T&T)等单张长小票，并按 BC 省规则拆分 **GST(5%) / PST(7%)**。
 
-数据全部留在你自己电脑上(`data/vanspend.sqlite` + `uploads/`),不上云。
+结构化数据存在你指定的 MySQL 库里,小票原图留在本机 `uploads/` 目录。
 
 ## 解决的痛点
 
@@ -12,15 +12,21 @@
 
 ## 环境要求
 
-- **Node.js ≥ 22.5**(用到内置的 `node:sqlite`,无需任何 C++ 编译器)。检查版本:`node -v`。
+- Node.js ≥ 18。检查版本:`node -v`。
+- 一个可连接的 MySQL 数据库(8.0/5.7 均可),以及一个已提前建好、账号有读写权限的库。
 - 一个 OpenRouter API Key:https://openrouter.ai/keys
 
 ## 安装与启动
 
 ```bash
 cd VanSpend
-npm install                 # 只装 express,纯 JS,秒装
-cp .env.example .env        # 然后编辑 .env 填入你的 OPENROUTER_API_KEY
+npm install                 # express + mysql2
+cp .env.example .env        # 编辑 .env: 填入 OPENROUTER_API_KEY 及 MYSQL_HOST/PORT/USER/PASSWORD/DATABASE
+
+# 首次使用需先建库建表: 若 MYSQL_USER 有 DDL 权限, 应用启动时会自动建表(CREATE TABLE IF NOT EXISTS);
+# 若账号权限受限，请先手动执行:
+mysql -h $MYSQL_HOST -u $MYSQL_USER -p < schema.sql
+
 npm start                   # 打开 http://localhost:5173
 ```
 
@@ -51,7 +57,7 @@ npm start                   # 打开 http://localhost:5173
 - `receipts`:每张小票一行(商家、日期、税前、GST、PST、实付、原图、模型原始返回)。
 - `items`:每个商品一行,关联小票(原文名、规范名、分类、细分、数量、单位、单价、金额、是否计税)。
 
-直接用任意 SQLite 工具打开 `data/vanspend.sqlite` 也能自由查询。
+直接用任意 MySQL 客户端连接 `.env` 里配置的库也能自由查询,表结构见 `schema.sql`。
 
 ## 自检
 
@@ -68,12 +74,13 @@ npm run selfcheck   # 离线验证解析与统计逻辑(不消耗 API)
 - 每张小票一次模型调用,会产生 OpenRouter 费用(Gemini 2.5 Flash 很便宜,但非零)。
 
 **严格约束**
-- 需 Node ≥ 22.5(`node:sqlite` 为内置且仍标注 experimental;Anthropic/Node 后续版本 API 若变动需跟进)。
-- 单机单用户、无鉴权,默认只监听 localhost,不要直接暴露到公网。
-- 数据库放在云同步盘(如 iCloud/Dropbox)时,WAL 模式会自动回退;多设备同时写同一个库文件可能损坏,请避免。
+- 需要一个可达的外部 MySQL 服务;连接信息(`MYSQL_HOST/PORT/USER/PASSWORD/DATABASE`)放在 `.env`,不要提交到版本库。
+- 单用户、无鉴权,应用本身仍只监听 localhost,不要直接暴露到公网;MySQL 也不应对外网开放。
+- 小票原图仍存本地 `uploads/` 目录,不进 MySQL,只有文件名存在 `receipts.image_file` 里。
 
 **本期明确不包含**
-- 无用户系统、无多人协作、无云备份/同步。
+- 无用户系统、无多人协作、无 `uploads/` 目录的云备份/同步。
 - 无预算上限/提醒、无收入侧记账、无导出报表(PDF/Excel)。
 - 无自动批量导入(逐张上传);无银行/信用卡对账单对接。
 - 无离线 OCR 兜底:断网或无 API Key 时无法识别(但已有数据的查询分析不受影响)。
+- 无连接池调优、重试/退避、迁移框架 — 仅 `schema.sql` + 应用自身的 `CREATE TABLE IF NOT EXISTS`。

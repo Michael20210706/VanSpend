@@ -61,37 +61,37 @@ app.post('/api/scan', wrap(async (req, res) => {
 }));
 
 // 确认后保存
-app.post('/api/receipts', wrap((req, res) => {
+app.post('/api/receipts', wrap(async (req, res) => {
   const { receipt, items, image } = req.body;
   if (!receipt || !Array.isArray(items)) return res.status(400).json({ error: '数据格式错误' });
   const image_file = image ? saveImage(image) : null;
-  const id = dbApi.saveReceipt(
+  const id = await dbApi.saveReceipt(
     { ...receipt, image_file, raw_json: JSON.stringify(req.body.raw || { receipt, items }) },
     items
   );
   res.json({ id });
 }));
 
-app.get('/api/receipts', (req, res) => res.json(dbApi.listReceipts()));
-app.get('/api/receipts/:id', (req, res) => {
-  const r = dbApi.getReceipt(+req.params.id);
+app.get('/api/receipts', wrap(async (req, res) => res.json(await dbApi.listReceipts())));
+app.get('/api/receipts/:id', wrap(async (req, res) => {
+  const r = await dbApi.getReceipt(+req.params.id);
   if (!r) return res.status(404).json({ error: '未找到' });
   res.json(r);
-});
-app.delete('/api/receipts/:id', (req, res) => {
-  res.json({ deleted: dbApi.deleteReceipt(+req.params.id) });
-});
+}));
+app.delete('/api/receipts/:id', wrap(async (req, res) => {
+  res.json({ deleted: await dbApi.deleteReceipt(+req.params.id) });
+}));
 
 // 统计
-app.get('/api/stats/overview',    (req, res) => res.json(dbApi.overview(req.query.from, req.query.to)));
-app.get('/api/stats/category',    (req, res) => res.json(dbApi.statsByCategory(req.query.from, req.query.to)));
-app.get('/api/stats/subcategory', (req, res) => res.json(dbApi.statsBySubcategory(req.query.category, req.query.from, req.query.to)));
-app.get('/api/stats/monthly',     (req, res) => res.json(dbApi.statsMonthly(req.query.from, req.query.to)));
-app.get('/api/stats/trend',       (req, res) => {
+app.get('/api/stats/overview',    wrap(async (req, res) => res.json(await dbApi.overview(req.query.from, req.query.to))));
+app.get('/api/stats/category',    wrap(async (req, res) => res.json(await dbApi.statsByCategory(req.query.from, req.query.to))));
+app.get('/api/stats/subcategory', wrap(async (req, res) => res.json(await dbApi.statsBySubcategory(req.query.category, req.query.from, req.query.to))));
+app.get('/api/stats/monthly',     wrap(async (req, res) => res.json(await dbApi.statsMonthly(req.query.from, req.query.to))));
+app.get('/api/stats/trend',       wrap(async (req, res) => {
   if (!req.query.name) return res.status(400).json({ error: '缺少 name' });
-  res.json(dbApi.priceTrend(req.query.name, req.query.store));
-});
-app.get('/api/items/names', (req, res) => res.json(dbApi.distinctItemNames()));
+  res.json(await dbApi.priceTrend(req.query.name, req.query.store));
+}));
+app.get('/api/items/names', wrap(async (req, res) => res.json(await dbApi.distinctItemNames())));
 
 const port = process.env.PORT || config.port || 5173;
 app.listen(port, () => {
