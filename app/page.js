@@ -28,9 +28,9 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
-    api('/api/config').then(setCfg);
-  }, [user]);
+    // /api/config 是公开接口，不管有没有登录都请求一次，这样退出登录后头部的 Key 徽章仍能反映真实配置
+    api('/api/config').then(setCfg).catch(() => {});
+  }, []);
 
   async function handleLogout() {
     await api('/api/auth/logout', { method: 'POST' });

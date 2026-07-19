@@ -8,11 +8,18 @@
   --radius: 12px;
 }
 * { box-sizing:border-box; }
-body { margin:0; font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif; background:
-  radial-gradient(1100px 480px at 12% -10%, rgba(57,135,229,.10), transparent 60%),
-  var(--bg); color:var(--txt); -webkit-font-smoothing:antialiased; line-height:1.5; }
+body { margin:0; font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
+  background-color:var(--bg);
+  /* 两处柔光钉在视口上(fixed)，而不是跟着文档滚动——无论页面多长、切到哪个 tab/页面，
+     背景观感都是连续一致的，不会滚过一屏就变回纯色 */
+  background-image:
+    radial-gradient(1100px 480px at 12% -8%, rgba(57,135,229,.14), transparent 60%),
+    radial-gradient(900px 520px at 90% 105%, rgba(144,133,233,.09), transparent 62%);
+  background-repeat:no-repeat; background-attachment:fixed;
+  color:var(--txt); -webkit-font-smoothing:antialiased; line-height:1.5; }
 header { padding:16px 24px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:16px; flex-wrap:wrap;
-  background:rgba(255,255,255,.02); backdrop-filter:blur(6px); position:sticky; top:0; z-index:40; }
+  background:rgba(255,255,255,.02); backdrop-filter:blur(6px); position:sticky; top:0; z-index:40;
+  box-shadow:0 8px 24px -18px rgba(0,0,0,.6); }
 header h1 { font-size:18px; margin:0; font-weight:650; letter-spacing:.2px; }
 header .meta { color:var(--mut); font-size:13px; }
 .badge { font-size:12px; padding:3px 10px; border-radius:20px; font-weight:600; letter-spacing:.2px; }

@@ -25,7 +25,8 @@ export default function AdminPage() {
 
   async function handleLogout() {
     await api('/api/auth/logout', { method: 'POST' });
-    setUser(null);
+    // 退出后跳回首页登录，而不是留在 /admin 上把"已退出"误显示成"无权限"
+    window.location.href = '/';
   }
 
   if (user === undefined) return null;
