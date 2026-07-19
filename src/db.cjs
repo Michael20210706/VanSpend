@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
+const bcrypt = require('bcryptjs');
 
 // --- 极简 .env 加载 ---
 // Next.js 路由处理器会自动加载 .env，但 scripts/selfcheck.js 用纯 node 直接运行、不经过 Next，
@@ -42,6 +43,7 @@ const SCHEMA_STATEMENTS = [
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     username      VARCHAR(100)  NOT NULL UNIQUE,
     password_hash VARCHAR(255)  NOT NULL,
+    is_admin      TINYINT(1)    NOT NULL DEFAULT 0,
     created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS receipts (
@@ -94,15 +96,48 @@ async function migrateReceiptsUserId(conn) {
   await conn.query('ALTER TABLE receipts ADD CONSTRAINT fk_receipts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE');
 }
 
+// 升级路径: 功能上线前建的 users 表没有 is_admin 列，需要在已有表上补齐
+async function migrateUsersIsAdmin(conn) {
+  const [rows] = await conn.query(`
+    SELECT COUNT(*) AS n FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'is_admin'
+  `);
+  if (rows[0].n > 0) return;
+  await conn.query('ALTER TABLE users ADD COLUMN is_admin TINYINT(1) NOT NULL DEFAULT 0');
+}
+
+// 初始化管理员账号: 只在 ADMIN_USERNAME/ADMIN_PASSWORD 都配置了、且该用户名还不存在时创建一次；
+// 已存在的账号(不管是不是管理员)不会被覆盖密码/角色
+async function seedAdmin() {
+  const username = process.env.ADMIN_USERNAME;
+  const password = process.env.ADMIN_PASSWORD;
+  if (!username || !password) return;
+  const [rows] = await pool.execute('SELECT id, is_admin FROM users WHERE username = :username', { username });
+  if (rows.length) {
+    if (!rows[0].is_admin) {
+      console.warn(`[db] ADMIN_USERNAME(${username}) 已存在但不是管理员，未自动提权(如需提权请手动执行 UPDATE users SET is_admin=1 WHERE username='${username}')`);
+    }
+    return;
+  }
+  const passwordHash = await bcrypt.hash(password, 10);
+  await pool.execute(
+    'INSERT INTO users (username, password_hash, is_admin) VALUES (:username, :password_hash, 1)',
+    { username, password_hash: passwordHash }
+  );
+  console.log(`[db] 已初始化管理员账号: ${username}`);
+}
+
 async function initSchema() {
   try {
     const conn = await pool.getConnection();
     try {
       for (const stmt of SCHEMA_STATEMENTS) await conn.query(stmt);
       await migrateReceiptsUserId(conn);
+      await migrateUsersIsAdmin(conn);
     } finally {
       conn.release();
     }
+    await seedAdmin();
   } catch (e) {
     console.warn('[db] 自动建表失败(账号可能无 DDL 权限)，请确认已手动执行 sql/schema.sql:', e.message);
   }
@@ -166,13 +201,14 @@ async function saveReceipt(receipt, items) {
 }
 
 // ---- 查询 ----
-// userId 必填: 每个用户只能查到自己名下的小票/统计数据
+// userId 传了就只查该用户名下的数据；不传(管理后台用)则不加这个过滤，查全部用户
 function dateFilter(from, to, userId) {
-  const clauses = ['r.user_id = :userId'];
-  const params = { userId };
+  const clauses = [];
+  const params = {};
+  if (userId) { clauses.push('r.user_id = :userId'); params.userId = userId; }
   if (from) { clauses.push('r.purchased_at >= :from'); params.from = from; }
   if (to)   { clauses.push('r.purchased_at <= :to');   params.to = to; }
-  return { where: 'WHERE ' + clauses.join(' AND '), params };
+  return { where: clauses.length ? 'WHERE ' + clauses.join(' AND ') : '', params };
 }
 
 async function listReceipts({ limit = 200, from, to, search, userId } = {}) {
@@ -188,15 +224,20 @@ async function listReceipts({ limit = 200, from, to, search, userId } = {}) {
   }
   const whereClause = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
   const [rows] = await pool.execute(`
-    SELECT r.*, (SELECT COUNT(*) FROM items i WHERE i.receipt_id = r.id) AS item_count
-    FROM receipts r ${whereClause} ORDER BY r.purchased_at DESC, r.id DESC LIMIT ${lim}
+    SELECT r.*, u.username AS owner_username, (SELECT COUNT(*) FROM items i WHERE i.receipt_id = r.id) AS item_count
+    FROM receipts r LEFT JOIN users u ON u.id = r.user_id
+    ${whereClause} ORDER BY r.purchased_at DESC, r.id DESC LIMIT ${lim}
   `, params);
   return rows;
 }
 
 async function getReceipt(id, userId) {
   await ready;
-  const [rows] = await pool.execute('SELECT * FROM receipts WHERE id = :id AND user_id = :userId', { id, userId });
+  const clause = userId ? 'r.id = :id AND r.user_id = :userId' : 'r.id = :id';
+  const params = userId ? { id, userId } : { id };
+  const [rows] = await pool.execute(`
+    SELECT r.*, u.username AS owner_username FROM receipts r LEFT JOIN users u ON u.id = r.user_id WHERE ${clause}
+  `, params);
   const r = rows[0];
   if (!r) return null;
   const [items] = await pool.execute('SELECT * FROM items WHERE receipt_id = :id ORDER BY id', { id });
@@ -206,7 +247,9 @@ async function getReceipt(id, userId) {
 
 async function deleteReceipt(id, userId) {
   await ready;
-  const [result] = await pool.execute('DELETE FROM receipts WHERE id = :id AND user_id = :userId', { id, userId });
+  const clause = userId ? 'id = :id AND user_id = :userId' : 'id = :id';
+  const params = userId ? { id, userId } : { id };
+  const [result] = await pool.execute(`DELETE FROM receipts WHERE ${clause}`, params);
   return result.affectedRows;
 }
 
@@ -227,8 +270,11 @@ async function statsByCategory(from, to, userId) {
 async function statsBySubcategory(category, from, to, userId) {
   await ready;
   const { where, params } = dateFilter(from, to, userId);
-  const extra = category ? ' AND i.category = :category' : '';
-  if (category) params.category = category;
+  let extra = '';
+  if (category) {
+    extra = where ? ' AND i.category = :category' : 'WHERE i.category = :category';
+    params.category = category;
+  }
   const [rows] = await pool.execute(`
     SELECT COALESCE(i.subcategory, '未分类') AS label,
            ROUND(SUM(i.amount), 2) AS amount, COUNT(*) AS line_count
@@ -303,9 +349,53 @@ async function overview(from, to, userId) {
   return { ...rows[0], lines: items[0].line_count };
 }
 
+// ---- 管理后台 ----
+// 用户列表: 附带每个用户的小票数与总花费
+async function listUsers() {
+  await ready;
+  const [rows] = await pool.execute(`
+    SELECT u.id, u.username, u.is_admin, u.created_at,
+           COUNT(r.id) AS receipt_count,
+           ROUND(COALESCE(SUM(r.total), 0), 2) AS total_spend
+    FROM users u
+    LEFT JOIN receipts r ON r.user_id = u.id
+    GROUP BY u.id, u.username, u.is_admin, u.created_at
+    ORDER BY u.created_at
+  `);
+  return rows;
+}
+
+async function deleteUser(id) {
+  await ready;
+  const [result] = await pool.execute('DELETE FROM users WHERE id = :id', { id });
+  return result.affectedRows;
+}
+
+// 各用户花费: LEFT JOIN 保证没有小票的用户也会出现(花费为 0)，日期条件放在 ON 里而非 WHERE，
+// 否则会把这些用户过滤掉
+async function statsByUser(from, to) {
+  await ready;
+  const clauses = [];
+  const params = {};
+  if (from) { clauses.push('r.purchased_at >= :from'); params.from = from; }
+  if (to)   { clauses.push('r.purchased_at <= :to');   params.to = to; }
+  const dateCond = clauses.length ? ' AND ' + clauses.join(' AND ') : '';
+  const [rows] = await pool.execute(`
+    SELECT u.id AS user_id, u.username,
+           ROUND(COALESCE(SUM(r.total), 0), 2) AS total,
+           COUNT(r.id) AS receipts
+    FROM users u
+    LEFT JOIN receipts r ON r.user_id = u.id${dateCond}
+    GROUP BY u.id, u.username
+    ORDER BY total DESC
+  `, params);
+  return rows;
+}
+
 module.exports = {
   pool, saveReceipt, listReceipts, getReceipt, deleteReceipt,
   statsByCategory, statsBySubcategory, statsMonthly, priceTrend,
   distinctItemNames, overview,
-  createUser, findUserByUsername, countUsers, backfillOwnerlessReceipts
+  createUser, findUserByUsername, countUsers, backfillOwnerlessReceipts,
+  listUsers, deleteUser, statsByUser
 };

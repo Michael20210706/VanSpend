@@ -1,0 +1,15 @@
+import { NextResponse } from 'next/server';
+import dbApi from '@/src/db.cjs';
+import { requireAdmin } from '@/src/session';
+import { wrap } from '@/src/http';
+
+// userId 可选: 不传就是全部用户汇总
+export const GET = wrap(async (request) => {
+  const { response } = await requireAdmin();
+  if (response) return response;
+
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
+  const data = await dbApi.overview(searchParams.get('from') || undefined, searchParams.get('to') || undefined, userId ? +userId : undefined);
+  return NextResponse.json(data);
+});

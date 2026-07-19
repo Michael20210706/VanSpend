@@ -16,6 +16,7 @@ export const POST = wrap(async (request) => {
   const session = await getSession();
   session.userId = user.id;
   session.username = user.username;
+  session.isAdmin = !!user.is_admin;
   await session.save();
-  return NextResponse.json({ id: user.id, username: user.username });
+  return NextResponse.json({ id: user.id, username: user.username, isAdmin: session.isAdmin });
 });

@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 
 export default function Header({ cfg, user, onLogout }) {
   return (
@@ -10,6 +11,7 @@ export default function Header({ cfg, user, onLogout }) {
       <span style={{ flex: 1 }} />
       {user ? (
         <span className="meta">
+          {user.isAdmin ? <><Link href="/admin">管理后台</Link> · </> : null}
           {user.username} · <a href="#" onClick={(e) => { e.preventDefault(); onLogout(); }}>退出</a>
         </span>
       ) : null}

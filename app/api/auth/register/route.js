@@ -18,6 +18,7 @@ export const POST = wrap(async (request) => {
   const session = await getSession();
   session.userId = id;
   session.username = username;
+  session.isAdmin = false; // 自助注册永远不能是管理员，只能通过 ADMIN_USERNAME/ADMIN_PASSWORD 启动时初始化
   await session.save();
-  return NextResponse.json({ id, username });
+  return NextResponse.json({ id, username, isAdmin: false });
 });

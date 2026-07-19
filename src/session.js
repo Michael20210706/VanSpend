@@ -19,7 +19,7 @@ export const sessionOptions = {
   },
 };
 
-// session.userId / session.username 由 auth 路由写入；未登录时两者均为 undefined
+// session.userId / session.username / session.isAdmin 由 auth 路由写入；未登录时均为 undefined
 export async function getSession() {
   return getIronSession(await cookies(), sessionOptions);
 }
@@ -29,6 +29,18 @@ export async function requireSession() {
   const session = await getSession();
   if (!session.userId) {
     return { session: null, response: NextResponse.json({ error: '未登录' }, { status: 401 }) };
+  }
+  return { session, response: null };
+}
+
+// 管理后台路由用: 未登录 401，登录了但不是管理员 403
+export async function requireAdmin() {
+  const session = await getSession();
+  if (!session.userId) {
+    return { session: null, response: NextResponse.json({ error: '未登录' }, { status: 401 }) };
+  }
+  if (!session.isAdmin) {
+    return { session: null, response: NextResponse.json({ error: '无权限' }, { status: 403 }) };
   }
   return { session, response: null };
 }
