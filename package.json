@@ -3,20 +3,24 @@
   "version": "1.0.0",
   "private": true,
   "description": "本地单机版小票扫描与精细化记账 (温哥华 BC GST/PST 拆分)",
-  "type": "commonjs",
-  "main": "src/server.js",
+  "type": "module",
   "scripts": {
-    "start": "node --no-warnings src/server.js",
-    "selfcheck": "node scripts/selfcheck.js"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "selfcheck": "node scripts/selfcheck.cjs"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "express": "^4.19.2",
-    "express-mysql-session": "^3.0.3",
-    "express-session": "^1.19.0",
-    "mysql2": "^3.22.6"
+    "chart.js": "^4.5.1",
+    "iron-session": "^8.0.4",
+    "mysql2": "^3.22.6",
+    "next": "^16.2.10",
+    "react": "^19.2.7",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^19.2.7"
   }
 }

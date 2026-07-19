@@ -1,0 +1,75 @@
+'use client';
+import { useCallback, useEffect, useState } from 'react';
+import Header from '../components/Header';
+import AuthGate from '../components/AuthGate';
+import Toast from '../components/Toast';
+import ScanTab from '../components/ScanTab';
+import DashboardTab from '../components/DashboardTab';
+import ReceiptsTab from '../components/ReceiptsTab';
+import { api, setUnauthorizedHandler } from '../lib/api';
+
+const TABS = [
+  { key: 'scan', label: '上传识别' },
+  { key: 'dash', label: '数据分析' },
+  { key: 'list', label: '小票记录' },
+];
+
+export default function Home() {
+  const [user, setUser] = useState(undefined); // undefined=加载中, null=未登录
+  const [cfg, setCfg] = useState({ categories: [], currency: 'CAD', model: '', hasKey: false });
+  const [tab, setTab] = useState('scan');
+
+  const showAuth = useCallback(() => setUser(null), []);
+
+  useEffect(() => { setUnauthorizedHandler(showAuth); }, [showAuth]);
+
+  useEffect(() => {
+    api('/api/auth/me').then(setUser).catch(() => setUser(null));
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    api('/api/config').then(setCfg);
+  }, [user]);
+
+  async function handleLogout() {
+    await api('/api/auth/logout', { method: 'POST' });
+    setUser(null);
+  }
+
+  return (
+    <>
+      <Header cfg={cfg} user={user} onLogout={handleLogout} />
+
+      {user === undefined ? null : !user ? (
+        <div className="wrap" style={{ maxWidth: 380 }}>
+          <AuthGate onLoggedIn={setUser} />
+        </div>
+      ) : (
+        <div className="wrap">
+          <div className="tabs">
+            {TABS.map((t) => (
+              <div
+                key={t.key}
+                className={'tab' + (tab === t.key ? ' active' : '')}
+                onClick={() => setTab(t.key)}
+              >{t.label}</div>
+            ))}
+          </div>
+
+          <section className={'grid' + (tab !== 'scan' ? ' hide' : '')}>
+            <ScanTab cfg={cfg} />
+          </section>
+          <section className={'grid' + (tab !== 'dash' ? ' hide' : '')}>
+            <DashboardTab cfg={cfg} active={tab === 'dash'} />
+          </section>
+          <section className={'grid' + (tab !== 'list' ? ' hide' : '')}>
+            <ReceiptsTab active={tab === 'list'} />
+          </section>
+        </div>
+      )}
+
+      <Toast />
+    </>
+  );
+}

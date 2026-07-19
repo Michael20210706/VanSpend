@@ -1,9 +1,9 @@
 'use strict';
 // 离线自检: 不调用 OpenRouter，只验证 normalize 解析、入库、各项统计逻辑是否正确。
-// 用法: node selfcheck.js   (会写入 .env 配置的 MySQL 库，需提前在 .env 填好连接信息)
+// 用法: node scripts/selfcheck.cjs   (会写入 .env 配置的 MySQL 库，需提前在 .env 填好连接信息)
 
 const assert = require('assert');
-const { normalize } = require('../src/openrouter');
+const { normalize } = require('../src/openrouter.cjs');
 
 let pass = 0;
 const ok = (cond, name) => { assert.ok(cond, name); console.log('  ✓', name); pass++; };
@@ -28,7 +28,7 @@ async function main() {
 
   // ---- 2. 入库 + 统计 ----
   // 写入 .env 指向的 MySQL 库。自检结束后清掉本次插入(含测试账号)。
-  const dbApi = require('../src/db');
+  const dbApi = require('../src/db.cjs');
 
   const TEST_USER = '__test_selfcheck__';
   // findUserByUsername 内部会先 await 建表/迁移完成，避免和 initSchema() 出现竞态

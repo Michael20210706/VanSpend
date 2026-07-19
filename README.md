@@ -20,14 +20,15 @@
 
 ```bash
 cd VanSpend
-npm install                 # express + mysql2 + express-session + express-mysql-session + bcryptjs
-cp .env.example .env        # 编辑 .env: 填入 OPENROUTER_API_KEY、MYSQL_HOST/PORT/USER/PASSWORD/DATABASE、SESSION_SECRET
+npm install                 # next + react + react-dom + react-chartjs-2 + chart.js + iron-session + mysql2 + bcryptjs
+cp .env.example .env        # 编辑 .env: 填入 OPENROUTER_API_KEY、MYSQL_HOST/PORT/USER/PASSWORD/DATABASE、SESSION_SECRET、PORT
 
 # 首次使用需先建库建表: 若 MYSQL_USER 有 DDL 权限, 应用启动时会自动建表(CREATE TABLE IF NOT EXISTS);
 # 若账号权限受限，请先手动执行:
 mysql -h $MYSQL_HOST -u $MYSQL_USER -p < sql/schema.sql
 
-npm start                   # 打开 http://localhost:5173，首次打开会先要求注册/登录
+npm run build && npm start  # 打开 http://localhost:5173(端口取 .env 里的 PORT，默认 5173)，首次打开会先要求注册/登录
+# 开发时可以用 npm run dev 代替 build+start(带热更新)
 ```
 
 首次打开会看到登录/注册卡片。任何人都可以自助注册(无需邀请码);第一个注册的账号会自动接管升级前(无归属)的旧小票数据。之后每个账号只能看到自己上传的小票和统计数据。
@@ -45,14 +46,18 @@ docker compose up -d        # 启动 app + 一个本地 MySQL(仅供试用/演�
 
 ## 项目结构
 
+VanSpend 是一个 Next.js(App Router)全栈应用: 前端页面和 API 路由都在同一个项目里。
+
 ```
-src/            后端代码: server.js(路由) / db.js(MySQL 访问) / openrouter.js(AI 识别)
-config/         config.json(模型、端口、税率、分类)
+app/            页面 + API 路由: page.js/layout.js(前端) , api/**/route.js(接口), uploads/[...file]/route.js(小票原图)
+components/     React 组件: Header / AuthGate / ScanTab / DashboardTab / ReceiptsTab / Toast
+lib/            前端小工具: api.js(fetch 封装) / toast.js / dateRange.js
+src/            后端逻辑: db.cjs(MySQL 访问) / openrouter.cjs(AI 识别) / uploads.cjs / session.js(登录会话)
+config/         config.json(模型、税率、分类；端口现在由 .env 的 PORT 控制)
 sql/            schema.sql(MySQL 建表 DDL)
-scripts/        selfcheck.js(离线自检)
-public/         前端静态页面(单文件 vanilla JS)
+scripts/        selfcheck.cjs(离线自检)
 uploads/        小票原图(运行时生成，不入库)
-Dockerfile, docker-compose.yml, .dockerignore   容器构建/发布
+Dockerfile, docker-compose.yml, .dockerignore   容器构建/发布(多阶段构建，next build 产物)
 ```
 
 ## 使用流程
@@ -73,9 +78,10 @@ Dockerfile, docker-compose.yml, .dockerignore   容器构建/发布
 | 字段 | 说明 |
 |------|------|
 | `model` | OpenRouter 模型 slug。换模型改这里,如 `anthropic/claude-3.7-sonnet`、`openai/gpt-4o`;也可以不改配置文件,在 `.env` 里设 `OPENROUTER_MODEL` 覆盖(优先级更高) |
-| `port` | 网页端口,默认 5173 |
 | `taxRates` | GST/PST 税率(供识别提示参考) |
 | `categories` | 顶层分类清单。改这里会同步影响识别提示与前端下拉 |
+
+网页端口不再由 `config.json` 控制,改成 `.env` 里的 `PORT`(Next.js 原生读取,默认 5173)。
 
 ## 数据结构
 
@@ -88,7 +94,7 @@ Dockerfile, docker-compose.yml, .dockerignore   容器构建/发布
 ## 自检
 
 ```bash
-npm run selfcheck   # 离线验证解析与统计逻辑(不消耗 API)
+npm run selfcheck   # node scripts/selfcheck.cjs，离线验证解析与统计逻辑(不消耗 API，不经过 Next.js)
 ```
 
 ## Scope Boundaries(边界与取舍)
@@ -98,6 +104,8 @@ npm run selfcheck   # 离线验证解析与统计逻辑(不消耗 API)
 - GST/PST 拆分依赖小票上印出的税行/税码。若小票只印了一个合计税,程序按 5%/7% 比例估算;拆不出的填 0,需人工补。
 - 品名规范化(`name_norm`)由模型给出,跨时间比价靠模糊匹配。同一商品若两次识别出的规范名差异较大,趋势图可能漏算——必要时在核对步骤统一品名。
 - 每张小票一次模型调用,会产生 OpenRouter 费用(Gemini 2.5 Flash 很便宜,但非零)。
+- 登录会话是无状态的签名/加密 cookie(iron-session),不在数据库里存会话记录;没有服务端强制踢下线某个会话的能力(cookie 到期前一直有效)。
+- 换成 Next.js 后需要 `next build` 构建步骤,镜像体积/构建耗时比旧版零构建的静态文件版本更大。
 
 **严格约束**
 - 需要一个可达的外部 MySQL 服务;连接信息(`MYSQL_HOST/PORT/USER/PASSWORD/DATABASE`)放在 `.env`,不要提交到版本库。

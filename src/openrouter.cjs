@@ -3,9 +3,10 @@
 const fs = require('fs');
 const path = require('path');
 
-// --- 极简 .env 加载 (与 server.js/db.js 一致，独立加载以支持单独引入本文件的场景) ---
+// --- 极简 .env 加载 (与 db.js 一致，独立加载以支持单独引入本文件的场景) ---
 (function loadEnv() {
-  const envPath = path.join(__dirname, '..', '.env');
+  // process.cwd() 而非 __dirname: 避免被 Next.js/Turbopack 打包后虚拟化的路径影响(见 uploads.cjs 注释)
+  const envPath = path.join(process.cwd(), '.env');
   if (!fs.existsSync(envPath)) return;
   for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
     const m = line.match(/^\s*([\w.]+)\s*=\s*(.*)\s*$/);
@@ -15,7 +16,9 @@ const path = require('path');
   }
 })();
 
-const config = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'config', 'config.json'), 'utf8'));
+// require() 而非 fs.readFileSync(__dirname 拼路径): 静态 JSON 依赖能被 Next.js 的构建打包直接内联，
+// 避免 __dirname 在 Turbopack 构建期数据收集阶段被虚拟化成非真实路径而读取失败
+const config = require('../config/config.json');
 // OPENROUTER_MODEL 可在 .env 里覆盖 config.json 的 model，不改代码/配置文件即可切换模型
 if (process.env.OPENROUTER_MODEL) config.model = process.env.OPENROUTER_MODEL;
 

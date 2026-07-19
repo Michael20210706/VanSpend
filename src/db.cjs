@@ -4,9 +4,12 @@ const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql2/promise');
 
-// --- 极简 .env 加载 (与 server.js 一致，独立加载以支持 selfcheck.js 等单独入口) ---
+// --- 极简 .env 加载 ---
+// Next.js 路由处理器会自动加载 .env，但 scripts/selfcheck.js 用纯 node 直接运行、不经过 Next，
+// 仍需要这份手写 loader；两边同时存在时靠 `!process.env[key]` 保护，不会重复覆盖。
 (function loadEnv() {
-  const envPath = path.join(__dirname, '..', '.env');
+  // process.cwd() 而非 __dirname: 避免被 Next.js/Turbopack 打包后虚拟化的路径影响(见 uploads.cjs 注释)
+  const envPath = path.join(process.cwd(), '.env');
   if (!fs.existsSync(envPath)) return;
   for (const line of fs.readFileSync(envPath, 'utf8').split('\n')) {
     const m = line.match(/^\s*([\w.]+)\s*=\s*(.*)\s*$/);
@@ -16,7 +19,9 @@ const mysql = require('mysql2/promise');
   }
 })();
 
-const pool = mysql.createPool({
+// 开发模式下 `next dev` 的模块热重载会重新执行本文件；用 globalThis 挂一个单例，
+// 避免每次热重载都新建一个连接池、耗尽 MySQL 连接数(Next.js 官方推荐的做法，Prisma 等库同理)。
+const pool = globalThis.__vanspendPool || mysql.createPool({
   host: process.env.MYSQL_HOST || '127.0.0.1',
   port: Number(process.env.MYSQL_PORT || 3306),
   user: process.env.MYSQL_USER,
@@ -28,6 +33,7 @@ const pool = mysql.createPool({
   dateStrings: true,     // purchased_at/created_at 以 'YYYY-MM-DD ...' 字符串返回，兼容既有前端逻辑
   decimalNumbers: true,  // DECIMAL 列以 JS number 返回，兼容既有前端逻辑
 });
+if (process.env.NODE_ENV !== 'production') globalThis.__vanspendPool = pool;
 
 // 与 sql/schema.sql 保持一致；应用启动时尝试自动建表，若数据库账号无 DDL 权限则忽略，
 // 此时需提前手动执行 sql/schema.sql
