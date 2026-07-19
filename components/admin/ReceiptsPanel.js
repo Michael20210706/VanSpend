@@ -81,6 +81,7 @@ export default function ReceiptsPanel({ active }) {
         <div className="row" style={{ marginBottom: 14 }}>
           {PRESETS.map((p) => <button key={p.key} className="ghost" onClick={() => applyPreset(p.key)}>{p.label}</button>)}
         </div>
+        <div className="table-scroll">
         <table>
           <thead>
             <tr><th>日期</th><th>用户</th><th>商家</th><th className="num">税前</th><th className="num">GST</th><th className="num">PST</th><th className="num">实付</th><th className="num">条目</th><th></th></tr>
@@ -101,6 +102,7 @@ export default function ReceiptsPanel({ active }) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {detail && (
@@ -108,8 +110,9 @@ export default function ReceiptsPanel({ active }) {
           <h2>{detail.store} · {detail.purchased_at} · <span className="muted">{detail.owner_username}</span></h2>
           <p className="muted">税前 ${fmt(detail.subtotal)} ｜ GST ${fmt(detail.gst)} ｜ PST ${fmt(detail.pst)} ｜ 实付 ${fmt(detail.total)}</p>
           {detail.image_file && (
-            <img src={'/uploads/' + detail.image_file} style={{ maxHeight: 300, borderRadius: 8, float: 'right', marginLeft: 16 }} alt="" />
+            <img src={'/uploads/' + detail.image_file} className="receipt-image" alt="" />
           )}
+          <div className="table-scroll">
           <table>
             <thead><tr><th>品名</th><th>分类</th><th>细分</th><th className="num">数量</th><th className="num">单价</th><th className="num">金额</th><th>税</th></tr></thead>
             <tbody>
@@ -123,6 +126,7 @@ export default function ReceiptsPanel({ active }) {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </>

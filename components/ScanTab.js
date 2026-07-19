@@ -156,6 +156,7 @@ export default function ScanTab({ cfg }) {
           <label>PST <input type="number" step="0.01" className="num" style={{ width: 80 }} value={pst} onChange={(e) => setPst(e.target.value)} /></label>
           <label>实付 <input type="number" step="0.01" className="num" style={{ width: 90 }} value={total} onChange={(e) => setTotal(e.target.value)} /></label>
         </div>
+        <div className="table-scroll">
         <table>
           <thead>
             <tr>
@@ -186,6 +187,7 @@ export default function ScanTab({ cfg }) {
             ))}
           </tbody>
         </table>
+        </div>
         <div className="row" style={{ marginTop: 14 }}>
           <button className="ghost" onClick={addRow}>+ 添加一行</button>
           <button onClick={save}>保存到账本</button>

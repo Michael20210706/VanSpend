@@ -114,7 +114,7 @@ export default function StatsPanel({ active, cfg }) {
         ))}
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
         <div className="card">
           <h2>各分类花费占比{userId ? '' : '(全部用户)'}</h2>
           <div className="chartbox">
@@ -145,7 +145,7 @@ export default function StatsPanel({ active, cfg }) {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
         <div className="card">
           <h2>月度花费与税额{userId ? '' : '(全部用户)'}</h2>
           <div className="chartbox">

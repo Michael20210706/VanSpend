@@ -117,7 +117,7 @@ export default function DashboardTab({ cfg, active }) {
         ))}
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
+      <div className="grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
         <div className="card">
           <h2>各分类花费占比</h2>
           <div className="chartbox">
@@ -189,6 +189,7 @@ export default function DashboardTab({ cfg, active }) {
           )}
         </div>
         {trendData !== null && (
+          <div className="table-scroll">
           <table>
             <thead><tr><th>日期</th><th>商家</th><th>品名</th><th className="num">数量</th><th className="num">单价</th><th className="num">金额</th></tr></thead>
             <tbody>
@@ -200,6 +201,7 @@ export default function DashboardTab({ cfg, active }) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </>

@@ -26,6 +26,7 @@ export default function UsersPanel({ active }) {
   return (
     <div className="card">
       <h2>用户管理</h2>
+      <div className="table-scroll">
       <table>
         <thead>
           <tr><th>用户名</th><th>角色</th><th>注册时间</th><th className="num">小票数</th><th className="num">累计花费</th><th></th></tr>
@@ -45,6 +46,7 @@ export default function UsersPanel({ active }) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
