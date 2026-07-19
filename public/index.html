@@ -83,9 +83,24 @@
   <span class="meta">温哥华家庭小票精细化记账 · GST/PST 拆分</span>
   <span id="keyBadge" class="badge no">Key 未配置</span>
   <span class="meta" id="modelMeta"></span>
+  <span style="flex:1"></span>
+  <span class="meta hide" id="userBox"><span id="userName"></span> · <a href="#" id="logoutBtn">退出</a></span>
 </header>
 
-<div class="wrap">
+<div class="wrap hide" id="authWrap" style="max-width:380px">
+  <div class="card">
+    <h2 id="authTitle">登录</h2>
+    <div class="row" style="flex-direction:column;align-items:stretch;gap:10px">
+      <input id="auth-username" placeholder="用户名" autocomplete="username">
+      <input id="auth-password" type="password" placeholder="密码" autocomplete="current-password">
+      <button id="authSubmit">登录</button>
+      <span id="authErr" style="color:var(--bad);font-size:13px"></span>
+      <a href="#" id="authToggle" class="meta">没有账号？点此注册</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap hide" id="appWrap">
   <div class="tabs">
     <div class="tab active" data-tab="scan">上传识别</div>
     <div class="tab" data-tab="dash">数据分析</div>
@@ -199,10 +214,52 @@
 
 <script>
 const $ = (s) => document.querySelector(s);
-const api = (u, o) => fetch(u, o).then(async r => { const j = await r.json(); if(!r.ok) throw new Error(j.error||'请求失败'); return j; });
+const api = (u, o) => fetch(u, o).then(async r => {
+  const j = await r.json();
+  if(!r.ok) { if(r.status===401) showAuth(); throw new Error(j.error||'请求失败'); }
+  return j;
+});
 const fmt = (n) => (n==null||isNaN(n)) ? '-' : Number(n).toLocaleString('en-CA',{minimumFractionDigits:2,maximumFractionDigits:2});
 let CFG = { categories:[] }, currentImage = null, charts = {};
 function toast(msg){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t._t); t._t=setTimeout(()=>t.style.display='none',2600); }
+
+// ---- 登录 / 注册 ----
+function showApp(username){
+  $('#authWrap').classList.add('hide');
+  $('#appWrap').classList.remove('hide');
+  $('#userBox').classList.remove('hide');
+  $('#userName').textContent = username;
+}
+function showAuth(){
+  $('#appWrap').classList.add('hide');
+  $('#userBox').classList.add('hide');
+  $('#authWrap').classList.remove('hide');
+  $('#auth-password').value = '';
+}
+let authMode = 'login';
+function setAuthMode(mode){
+  authMode = mode;
+  $('#authTitle').textContent = mode==='login' ? '登录' : '注册';
+  $('#authSubmit').textContent = mode==='login' ? '登录' : '注册';
+  $('#authToggle').textContent = mode==='login' ? '没有账号？点此注册' : '已有账号？点此登录';
+  $('#authErr').textContent = '';
+}
+$('#authToggle').onclick = (e) => { e.preventDefault(); setAuthMode(authMode==='login'?'register':'login'); };
+$('#authSubmit').onclick = async () => {
+  const username = $('#auth-username').value.trim();
+  const password = $('#auth-password').value;
+  if(!username || !password){ $('#authErr').textContent = '请输入用户名和密码'; return; }
+  try {
+    const u = await api('/api/auth/'+authMode, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ username, password }) });
+    showApp(u.username);
+    initApp();
+  } catch(e){ $('#authErr').textContent = e.message; }
+};
+$('#logoutBtn').onclick = async (e) => {
+  e.preventDefault();
+  await api('/api/auth/logout', { method:'POST' });
+  location.reload();
+};
 
 // ---- tabs ----
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
@@ -214,15 +271,18 @@ document.querySelectorAll('.tab').forEach(t => t.onclick = () => {
 });
 
 // ---- init ----
-api('/api/config').then(c => {
-  CFG = c;
-  $('#modelMeta').textContent = '模型: ' + c.model;
-  const b = $('#keyBadge');
-  b.className = 'badge ' + (c.hasKey?'ok':'no');
-  b.textContent = c.hasKey ? 'Key 已配置' : 'Key 未配置 (改 .env)';
-  $('#subSel').innerHTML = c.categories.map(x=>`<option>${x}</option>`).join('');
-  $('#subSel').value = '肉类';
-});
+function initApp(){
+  api('/api/config').then(c => {
+    CFG = c;
+    $('#modelMeta').textContent = '模型: ' + c.model;
+    const b = $('#keyBadge');
+    b.className = 'badge ' + (c.hasKey?'ok':'no');
+    b.textContent = c.hasKey ? 'Key 已配置' : 'Key 未配置 (改 .env)';
+    $('#subSel').innerHTML = c.categories.map(x=>`<option>${x}</option>`).join('');
+    $('#subSel').value = '肉类';
+  });
+}
+api('/api/auth/me').then(u => { showApp(u.username); initApp(); }).catch(() => showAuth());
 
 // ---- upload ----
 const drop = $('#drop'), fileInput = $('#file');

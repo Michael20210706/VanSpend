@@ -6,8 +6,16 @@
 CREATE DATABASE IF NOT EXISTS vanspend CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE vanspend;
 
+CREATE TABLE IF NOT EXISTS users (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  username      VARCHAR(100)  NOT NULL UNIQUE,
+  password_hash VARCHAR(255)  NOT NULL,
+  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS receipts (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id       INT UNSIGNED,                       -- 归属用户；旧数据迁移时回填给首个注册账号
   store         VARCHAR(255)  NOT NULL DEFAULT '未知',
   purchased_at  DATE          NOT NULL,
   currency      VARCHAR(10)   NOT NULL DEFAULT 'CAD',
@@ -18,7 +26,9 @@ CREATE TABLE IF NOT EXISTS receipts (
   image_file    VARCHAR(255),
   raw_json      LONGTEXT,                           -- 模型原始返回，便于复核/纠错
   created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_receipts_date (purchased_at)
+  INDEX idx_receipts_date (purchased_at),
+  INDEX idx_receipts_user (user_id),
+  CONSTRAINT fk_receipts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS items (

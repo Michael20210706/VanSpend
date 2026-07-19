@@ -32,8 +32,15 @@ const pool = mysql.createPool({
 // 与 sql/schema.sql 保持一致；应用启动时尝试自动建表，若数据库账号无 DDL 权限则忽略，
 // 此时需提前手动执行 sql/schema.sql
 const SCHEMA_STATEMENTS = [
+  `CREATE TABLE IF NOT EXISTS users (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    username      VARCHAR(100)  NOT NULL UNIQUE,
+    password_hash VARCHAR(255)  NOT NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS receipts (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id       INT UNSIGNED,
     store         VARCHAR(255)  NOT NULL DEFAULT '未知',
     purchased_at  DATE          NOT NULL,
     currency      VARCHAR(10)   NOT NULL DEFAULT 'CAD',
@@ -44,7 +51,9 @@ const SCHEMA_STATEMENTS = [
     image_file    VARCHAR(255),
     raw_json      LONGTEXT,
     created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_receipts_date (purchased_at)
+    INDEX idx_receipts_date (purchased_at),
+    INDEX idx_receipts_user (user_id),
+    CONSTRAINT fk_receipts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS items (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -67,11 +76,24 @@ const SCHEMA_STATEMENTS = [
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 ];
 
+// 升级路径: 功能上线前建的 receipts 表没有 user_id 列，需要在已有表上补齐
+async function migrateReceiptsUserId(conn) {
+  const [rows] = await conn.query(`
+    SELECT COUNT(*) AS n FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'receipts' AND COLUMN_NAME = 'user_id'
+  `);
+  if (rows[0].n > 0) return;
+  await conn.query('ALTER TABLE receipts ADD COLUMN user_id INT UNSIGNED AFTER id');
+  await conn.query('ALTER TABLE receipts ADD INDEX idx_receipts_user (user_id)');
+  await conn.query('ALTER TABLE receipts ADD CONSTRAINT fk_receipts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE');
+}
+
 async function initSchema() {
   try {
     const conn = await pool.getConnection();
     try {
       for (const stmt of SCHEMA_STATEMENTS) await conn.query(stmt);
+      await migrateReceiptsUserId(conn);
     } finally {
       conn.release();
     }
@@ -81,6 +103,35 @@ async function initSchema() {
 }
 const ready = initSchema();
 
+// ---- 用户 ----
+async function createUser(username, passwordHash) {
+  await ready;
+  const [info] = await pool.execute(
+    'INSERT INTO users (username, password_hash) VALUES (:username, :password_hash)',
+    { username, password_hash: passwordHash }
+  );
+  return info.insertId;
+}
+
+async function findUserByUsername(username) {
+  await ready;
+  const [rows] = await pool.execute('SELECT * FROM users WHERE username = :username', { username });
+  return rows[0] || null;
+}
+
+async function countUsers() {
+  await ready;
+  const [rows] = await pool.query('SELECT COUNT(*) AS n FROM users');
+  return rows[0].n;
+}
+
+// 迁移: 把功能上线前的无主小票全部归给首个注册账号
+async function backfillOwnerlessReceipts(userId) {
+  await ready;
+  const [result] = await pool.execute('UPDATE receipts SET user_id = :userId WHERE user_id IS NULL', { userId });
+  return result.affectedRows;
+}
+
 // ---- 写入 ----
 async function saveReceipt(receipt, items) {
   await ready;
@@ -88,8 +139,8 @@ async function saveReceipt(receipt, items) {
   try {
     await conn.beginTransaction();
     const [info] = await conn.execute(`
-      INSERT INTO receipts (store, purchased_at, currency, subtotal, gst, pst, total, image_file, raw_json)
-      VALUES (:store, :purchased_at, :currency, :subtotal, :gst, :pst, :total, :image_file, :raw_json)
+      INSERT INTO receipts (user_id, store, purchased_at, currency, subtotal, gst, pst, total, image_file, raw_json)
+      VALUES (:user_id, :store, :purchased_at, :currency, :subtotal, :gst, :pst, :total, :image_file, :raw_json)
     `, receipt);
     const rid = info.insertId;
     for (const it of items) {
@@ -109,18 +160,19 @@ async function saveReceipt(receipt, items) {
 }
 
 // ---- 查询 ----
-function dateFilter(from, to) {
-  const clauses = [];
-  const params = {};
+// userId 必填: 每个用户只能查到自己名下的小票/统计数据
+function dateFilter(from, to, userId) {
+  const clauses = ['r.user_id = :userId'];
+  const params = { userId };
   if (from) { clauses.push('r.purchased_at >= :from'); params.from = from; }
   if (to)   { clauses.push('r.purchased_at <= :to');   params.to = to; }
-  return { where: clauses.length ? 'WHERE ' + clauses.join(' AND ') : '', params };
+  return { where: 'WHERE ' + clauses.join(' AND '), params };
 }
 
-async function listReceipts({ limit = 200, from, to, search } = {}) {
+async function listReceipts({ limit = 200, from, to, search, userId } = {}) {
   await ready;
   const lim = Math.min(Math.max(parseInt(limit, 10) || 200, 1), 2000);
-  const { where, params } = dateFilter(from, to);
+  const { where, params } = dateFilter(from, to, userId);
   const clauses = where ? [where.slice('WHERE '.length)] : [];
   if (search) {
     clauses.push(`(r.store LIKE :search OR EXISTS (
@@ -136,9 +188,9 @@ async function listReceipts({ limit = 200, from, to, search } = {}) {
   return rows;
 }
 
-async function getReceipt(id) {
+async function getReceipt(id, userId) {
   await ready;
-  const [rows] = await pool.execute('SELECT * FROM receipts WHERE id = :id', { id });
+  const [rows] = await pool.execute('SELECT * FROM receipts WHERE id = :id AND user_id = :userId', { id, userId });
   const r = rows[0];
   if (!r) return null;
   const [items] = await pool.execute('SELECT * FROM items WHERE receipt_id = :id ORDER BY id', { id });
@@ -146,16 +198,16 @@ async function getReceipt(id) {
   return r;
 }
 
-async function deleteReceipt(id) {
+async function deleteReceipt(id, userId) {
   await ready;
-  const [result] = await pool.execute('DELETE FROM receipts WHERE id = :id', { id });
+  const [result] = await pool.execute('DELETE FROM receipts WHERE id = :id AND user_id = :userId', { id, userId });
   return result.affectedRows;
 }
 
 // 各分类花费(税前小计之和)
-async function statsByCategory(from, to) {
+async function statsByCategory(from, to, userId) {
   await ready;
-  const { where, params } = dateFilter(from, to);
+  const { where, params } = dateFilter(from, to, userId);
   const [rows] = await pool.execute(`
     SELECT i.category AS label, ROUND(SUM(i.amount), 2) AS amount, COUNT(*) AS line_count
     FROM items i JOIN receipts r ON r.id = i.receipt_id
@@ -166,10 +218,10 @@ async function statsByCategory(from, to) {
 }
 
 // 某大类下的细分花费(默认肉类的牛/猪/鸡...)
-async function statsBySubcategory(category, from, to) {
+async function statsBySubcategory(category, from, to, userId) {
   await ready;
-  const { where, params } = dateFilter(from, to);
-  const extra = category ? (where ? ' AND i.category = :category' : 'WHERE i.category = :category') : '';
+  const { where, params } = dateFilter(from, to, userId);
+  const extra = category ? ' AND i.category = :category' : '';
   if (category) params.category = category;
   const [rows] = await pool.execute(`
     SELECT COALESCE(i.subcategory, '未分类') AS label,
@@ -182,9 +234,9 @@ async function statsBySubcategory(category, from, to) {
 }
 
 // 月度: 税前/税额/实付
-async function statsMonthly(from, to) {
+async function statsMonthly(from, to, userId) {
   await ready;
-  const { where, params } = dateFilter(from, to);
+  const { where, params } = dateFilter(from, to, userId);
   const [rows] = await pool.execute(`
     SELECT DATE_FORMAT(r.purchased_at, '%Y-%m') AS month,
            ROUND(SUM(r.subtotal), 2) AS subtotal,
@@ -199,9 +251,9 @@ async function statsMonthly(from, to) {
 }
 
 // 某品名的价格趋势 (按规范名匹配，跨时间)
-async function priceTrend(nameNorm, store) {
+async function priceTrend(nameNorm, store, userId) {
   await ready;
-  const params = { q: '%' + nameNorm + '%' };
+  const params = { q: '%' + nameNorm + '%', userId };
   let storeClause = '';
   if (store) { storeClause = ' AND r.store = :store'; params.store = store; }
   const [rows] = await pool.execute(`
@@ -209,26 +261,28 @@ async function priceTrend(nameNorm, store) {
            i.name_raw AS name, i.unit, i.qty,
            i.unit_price AS unit_price, i.amount AS amount
     FROM items i JOIN receipts r ON r.id = i.receipt_id
-    WHERE (i.name_norm LIKE :q OR i.name_raw LIKE :q)${storeClause}
+    WHERE r.user_id = :userId AND (i.name_norm LIKE :q OR i.name_raw LIKE :q)${storeClause}
     ORDER BY r.purchased_at
   `, params);
   return rows;
 }
 
 // 品名候选(用于趋势搜索下拉)
-async function distinctItemNames() {
+async function distinctItemNames(userId) {
   await ready;
-  const [rows] = await pool.query(`
-    SELECT COALESCE(name_norm, name_raw) AS name, COUNT(*) AS n
-    FROM items GROUP BY name ORDER BY n DESC LIMIT 300
-  `);
+  const [rows] = await pool.execute(`
+    SELECT COALESCE(i.name_norm, i.name_raw) AS name, COUNT(*) AS n
+    FROM items i JOIN receipts r ON r.id = i.receipt_id
+    WHERE r.user_id = :userId
+    GROUP BY name ORDER BY n DESC LIMIT 300
+  `, { userId });
   return rows;
 }
 
 // 概览卡片
-async function overview(from, to) {
+async function overview(from, to, userId) {
   await ready;
-  const { where, params } = dateFilter(from, to);
+  const { where, params } = dateFilter(from, to, userId);
   const [rows] = await pool.execute(`
     SELECT ROUND(SUM(r.total), 2) AS total,
            ROUND(SUM(r.gst + r.pst), 2) AS tax,
@@ -246,5 +300,6 @@ async function overview(from, to) {
 module.exports = {
   pool, saveReceipt, listReceipts, getReceipt, deleteReceipt,
   statsByCategory, statsBySubcategory, statsMonthly, priceTrend,
-  distinctItemNames, overview
+  distinctItemNames, overview,
+  createUser, findUserByUsername, countUsers, backfillOwnerlessReceipts
 };

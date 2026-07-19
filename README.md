@@ -1,6 +1,6 @@
 # VanSpend · 家庭小票扫描与精细化记账
 
-单机单用户版。上传超市/餐厅小票图片 → 用 OpenRouter 多模态模型(Gemini 2.5 Flash)识别成 **逐行明细(line-items)** → 存入外部 MySQL 数据库 → 在网页里做多维度统计与价格趋势分析。专门处理 Costco、大统华(T&T)等单张长小票，并按 BC 省规则拆分 **GST(5%) / PST(7%)**。
+单机多用户版：家庭成员各自注册账号登录，各自上传的小票/明细只归自己可见。上传超市/餐厅小票图片 → 用 OpenRouter 多模态模型(Gemini 2.5 Flash)识别成 **逐行明细(line-items)** → 存入外部 MySQL 数据库 → 在网页里做多维度统计与价格趋势分析。专门处理 Costco、大统华(T&T)等单张长小票，并按 BC 省规则拆分 **GST(5%) / PST(7%)**。
 
 结构化数据存在你指定的 MySQL 库里,小票原图留在本机 `uploads/` 目录。
 
@@ -20,15 +20,17 @@
 
 ```bash
 cd VanSpend
-npm install                 # express + mysql2
-cp .env.example .env        # 编辑 .env: 填入 OPENROUTER_API_KEY 及 MYSQL_HOST/PORT/USER/PASSWORD/DATABASE
+npm install                 # express + mysql2 + express-session + express-mysql-session + bcryptjs
+cp .env.example .env        # 编辑 .env: 填入 OPENROUTER_API_KEY、MYSQL_HOST/PORT/USER/PASSWORD/DATABASE、SESSION_SECRET
 
 # 首次使用需先建库建表: 若 MYSQL_USER 有 DDL 权限, 应用启动时会自动建表(CREATE TABLE IF NOT EXISTS);
 # 若账号权限受限，请先手动执行:
 mysql -h $MYSQL_HOST -u $MYSQL_USER -p < sql/schema.sql
 
-npm start                   # 打开 http://localhost:5173
+npm start                   # 打开 http://localhost:5173，首次打开会先要求注册/登录
 ```
+
+首次打开会看到登录/注册卡片。任何人都可以自助注册(无需邀请码);第一个注册的账号会自动接管升级前(无归属)的旧小票数据。之后每个账号只能看到自己上传的小票和统计数据。
 
 ### 用 Docker 运行
 
@@ -77,7 +79,8 @@ Dockerfile, docker-compose.yml, .dockerignore   容器构建/发布
 
 ## 数据结构
 
-- `receipts`:每张小票一行(商家、日期、税前、GST、PST、实付、原图、模型原始返回)。
+- `users`:账号(用户名、密码哈希)。
+- `receipts`:每张小票一行(归属用户、商家、日期、税前、GST、PST、实付、原图、模型原始返回)。
 - `items`:每个商品一行,关联小票(原文名、规范名、分类、细分、数量、单位、单价、金额、是否计税)。
 
 直接用任意 MySQL 客户端连接 `.env` 里配置的库也能自由查询,表结构见 `sql/schema.sql`。
@@ -98,11 +101,14 @@ npm run selfcheck   # 离线验证解析与统计逻辑(不消耗 API)
 
 **严格约束**
 - 需要一个可达的外部 MySQL 服务;连接信息(`MYSQL_HOST/PORT/USER/PASSWORD/DATABASE`)放在 `.env`,不要提交到版本库。
-- 单用户、无鉴权,应用本身仍只监听 localhost,不要直接暴露到公网;MySQL 也不应对外网开放。
-- 小票原图仍存本地 `uploads/` 目录,不进 MySQL,只有文件名存在 `receipts.image_file` 里。
+- 每人一个账号、会话式登录(cookie),应用本身仍只监听 localhost,不要直接暴露到公网;MySQL 也不应对外网开放。会话 cookie 未开 `secure`,与"仅本机使用、无 TLS"的定位一致;若要暴露到公网需先加 TLS。
+- 开放自助注册,无邀请码/管理员审批,无角色权限;每个账号平等,只能看到自己的数据,没有"家庭共享可见"模式。
+- 小票原图仍存本地 `uploads/` 目录,不进 MySQL,只有文件名存在 `receipts.image_file` 里;`/uploads` 静态目录本身不做按用户的访问控制(文件名带时间戳+随机串,非顺序但也非加密级别的保密),在"仅本机、家庭内部可信"的前提下可接受。
 
 **本期明确不包含**
-- 无用户系统、无多人协作、无 `uploads/` 目录的云备份/同步。
+- 无密码重置/邮箱验证,无登录失败限流。
+- 无角色权限、无跨账号的家庭共享可见模式。
+- 无 `uploads/` 目录的云备份/同步。
 - 无预算上限/提醒、无收入侧记账、无导出报表(PDF/Excel)。
 - 无自动批量导入(逐张上传);无银行/信用卡对账单对接。
 - 无离线 OCR 兜底:断网或无 API Key 时无法识别(但已有数据的查询分析不受影响)。
