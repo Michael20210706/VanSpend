@@ -22,7 +22,7 @@ header .meta { color:var(--mut); font-size:13px; }
 .grid { display:grid; gap:18px; animation:fadeIn .32s ease; }
 @keyframes fadeIn { from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none; } }
 .card { background:linear-gradient(180deg, var(--card), var(--card2)); border:1px solid var(--line); border-radius:var(--radius);
-  padding:18px; box-shadow:var(--shadow); transition:border-color .15s ease; }
+  padding:18px; box-shadow:var(--shadow); transition:border-color .15s ease; min-width:0; }
 .card h2 { font-size:15px; margin:0 0 14px; font-weight:600; }
 .row { display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
 button { background:var(--acc); color:var(--acc-ink); border:0; border-radius:8px; padding:9px 16px; font-size:14px;
