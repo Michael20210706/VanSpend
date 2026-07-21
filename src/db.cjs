@@ -166,6 +166,17 @@ async function countUsers() {
   return rows[0].n;
 }
 
+async function findUserById(id) {
+  await ready;
+  const [rows] = await pool.execute('SELECT * FROM users WHERE id = :id', { id });
+  return rows[0] || null;
+}
+
+async function updatePassword(id, passwordHash) {
+  await ready;
+  await pool.execute('UPDATE users SET password_hash = :password_hash WHERE id = :id', { id, password_hash: passwordHash });
+}
+
 // 迁移: 把功能上线前的无主小票全部归给首个注册账号
 async function backfillOwnerlessReceipts(userId) {
   await ready;
@@ -396,6 +407,7 @@ module.exports = {
   pool, saveReceipt, listReceipts, getReceipt, deleteReceipt,
   statsByCategory, statsBySubcategory, statsMonthly, priceTrend,
   distinctItemNames, overview,
-  createUser, findUserByUsername, countUsers, backfillOwnerlessReceipts,
+  createUser, findUserByUsername, findUserById, countUsers, backfillOwnerlessReceipts,
+  updatePassword,
   listUsers, deleteUser, statsByUser
 };

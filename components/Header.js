@@ -1,7 +1,11 @@
 'use client';
 import Link from 'next/link';
+import { useState } from 'react';
+import ChangePasswordModal from './ChangePasswordModal';
 
 export default function Header({ cfg, user, onLogout }) {
+  const [showPwd, setShowPwd] = useState(false);
+
   return (
     <header>
       <h1>🧾 VanSpend</h1>
@@ -12,9 +16,11 @@ export default function Header({ cfg, user, onLogout }) {
       {user ? (
         <span className="meta">
           {user.isAdmin ? <><Link href="/admin">管理后台</Link> · </> : null}
-          {user.username} · <a href="#" onClick={(e) => { e.preventDefault(); onLogout(); }}>退出</a>
+          {user.username} · <a href="#" onClick={(e) => { e.preventDefault(); setShowPwd(true); }}>修改密码</a>
+          {' · '}<a href="#" onClick={(e) => { e.preventDefault(); onLogout(); }}>退出</a>
         </span>
       ) : null}
+      {showPwd ? <ChangePasswordModal onClose={() => setShowPwd(false)} /> : null}
     </header>
   );
 }
