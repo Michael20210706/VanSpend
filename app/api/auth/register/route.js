@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import dbApi from '@/src/db.cjs';
+import captchaApi from '@/src/captcha.cjs';
 import { getSession } from '@/src/session';
 import { wrap } from '@/src/http';
 
@@ -9,6 +10,9 @@ export const POST = wrap(async (request) => {
   const username = (body.username || '').trim();
   const password = body.password || '';
   if (!username || !password) return NextResponse.json({ error: '用户名和密码不能为空' }, { status: 400 });
+  if (!captchaApi.verify(body.captchaToken, body.captchaAnswer)) {
+    return NextResponse.json({ error: '验证码错误或已过期，请重新验证' }, { status: 400 });
+  }
   if (await dbApi.findUserByUsername(username)) return NextResponse.json({ error: '用户名已存在' }, { status: 400 });
   const isFirstUser = (await dbApi.countUsers()) === 0;
   const passwordHash = await bcrypt.hash(password, 10);
