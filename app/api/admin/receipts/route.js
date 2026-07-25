@@ -14,7 +14,7 @@ export const GET = wrap(async (request) => {
     from: searchParams.get('from') || undefined,
     to: searchParams.get('to') || undefined,
     search: searchParams.get('search') || undefined,
-    userId: userId ? +userId : undefined,
+    scope: userId ? { userId: +userId } : undefined,
   });
   return NextResponse.json(rows);
 });

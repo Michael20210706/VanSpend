@@ -19,7 +19,10 @@ export const sessionOptions = {
   },
 };
 
-// session.userId / session.username / session.isAdmin 由 auth 路由写入；未登录时均为 undefined
+// session.userId / session.username / session.isAdmin / session.familyId / session.familyName /
+// session.familyRole / session.accountType / session.isFamilyCreator 由 auth 路由写入；未登录时均为 undefined。
+// 家庭字段和 isAdmin 一样只在登录/注册时写入一次: 之后创建家庭/被邀请/审核通过都不会实时刷新已登录会话的 cookie，
+// 要等下次重新登录才生效(与 isAdmin 撤权的滞后性同理)。
 export async function getSession() {
   return getIronSession(await cookies(), sessionOptions);
 }
@@ -40,6 +43,18 @@ export async function requireAdmin() {
     return { session: null, response: NextResponse.json({ error: '未登录' }, { status: 401 }) };
   }
   if (!session.isAdmin) {
+    return { session: null, response: NextResponse.json({ error: '无权限' }, { status: 403 }) };
+  }
+  return { session, response: null };
+}
+
+// 家庭管理路由(邀请/审核申请)用: 未登录 401，登录了但不是本家庭创建者 403
+export async function requireFamilyCreator() {
+  const session = await getSession();
+  if (!session.userId) {
+    return { session: null, response: NextResponse.json({ error: '未登录' }, { status: 401 }) };
+  }
+  if (!session.familyId || !session.isFamilyCreator) {
     return { session: null, response: NextResponse.json({ error: '无权限' }, { status: 403 }) };
   }
   return { session, response: null };

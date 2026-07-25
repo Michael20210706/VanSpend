@@ -38,17 +38,45 @@ if (process.env.NODE_ENV !== 'production') globalThis.__vanspendPool = pool;
 
 // 与 sql/schema.sql 保持一致；应用启动时尝试自动建表，若数据库账号无 DDL 权限则忽略，
 // 此时需提前手动执行 sql/schema.sql
+// family_id 的外键放在 users 表建完之后单独 ALTER(见 migrateUsersFamilyFk)：
+// users 依赖 families，families.creator_id 又依赖 users，建表顺序上只能先建 users(不带该外键)。
 const SCHEMA_STATEMENTS = [
   `CREATE TABLE IF NOT EXISTS users (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     username      VARCHAR(100)  NOT NULL UNIQUE,
     password_hash VARCHAR(255)  NOT NULL,
     is_admin      TINYINT(1)    NOT NULL DEFAULT 0,
-    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+    family_id     INT UNSIGNED,
+    family_role   ENUM('dad','mom','child','other'),
+    account_type  ENUM('individual','family') NOT NULL DEFAULT 'individual',
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_users_family (family_id)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  `CREATE TABLE IF NOT EXISTS families (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name          VARCHAR(100)  NOT NULL UNIQUE,
+    creator_id    INT UNSIGNED  NOT NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_families_creator FOREIGN KEY (creator_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  `CREATE TABLE IF NOT EXISTS family_join_requests (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    family_id     INT UNSIGNED  NOT NULL,
+    user_id       INT UNSIGNED  NOT NULL,
+    status        ENUM('pending','approved','rejected') NOT NULL DEFAULT 'pending',
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    decided_at    TIMESTAMP     NULL,
+    INDEX idx_fjr_family_status (family_id, status),
+    CONSTRAINT fk_fjr_family FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE CASCADE,
+    CONSTRAINT fk_fjr_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS receipts (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id       INT UNSIGNED,
+    family_id     INT UNSIGNED,
+    family_name   VARCHAR(100),
+    family_role   ENUM('dad','mom','child','other'),
+    account_type  ENUM('individual','family') NOT NULL DEFAULT 'individual',
     store         VARCHAR(255)  NOT NULL DEFAULT '未知',
     purchased_at  DATE          NOT NULL,
     currency      VARCHAR(10)   NOT NULL DEFAULT 'CAD',
@@ -61,11 +89,17 @@ const SCHEMA_STATEMENTS = [
     created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_receipts_date (purchased_at),
     INDEX idx_receipts_user (user_id),
-    CONSTRAINT fk_receipts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    INDEX idx_receipts_family (family_id),
+    CONSTRAINT fk_receipts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_receipts_family FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE SET NULL
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS items (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     receipt_id    INT UNSIGNED  NOT NULL,
+    family_id     INT UNSIGNED,
+    family_name   VARCHAR(100),
+    family_role   ENUM('dad','mom','child','other'),
+    account_type  ENUM('individual','family') NOT NULL DEFAULT 'individual',
     name_raw      VARCHAR(255)  NOT NULL,
     name_norm     VARCHAR(255),
     category      VARCHAR(100)  NOT NULL DEFAULT '其他',
@@ -80,7 +114,17 @@ const SCHEMA_STATEMENTS = [
     INDEX idx_items_category (category),
     INDEX idx_items_subcat   (subcategory),
     INDEX idx_items_norm     (name_norm),
-    CONSTRAINT fk_items_receipt FOREIGN KEY (receipt_id) REFERENCES receipts(id) ON DELETE CASCADE
+    INDEX idx_items_family   (family_id),
+    CONSTRAINT fk_items_receipt FOREIGN KEY (receipt_id) REFERENCES receipts(id) ON DELETE CASCADE,
+    CONSTRAINT fk_items_family FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE SET NULL
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  `CREATE TABLE IF NOT EXISTS feedback (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id       INT UNSIGNED  NOT NULL,
+    content       TEXT          NOT NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_feedback_user (user_id),
+    CONSTRAINT fk_feedback_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 ];
 
@@ -104,6 +148,55 @@ async function migrateUsersIsAdmin(conn) {
   `);
   if (rows[0].n > 0) return;
   await conn.query('ALTER TABLE users ADD COLUMN is_admin TINYINT(1) NOT NULL DEFAULT 0');
+}
+
+async function columnExists(conn, table, column) {
+  const [rows] = await conn.query(`
+    SELECT COUNT(*) AS n FROM information_schema.COLUMNS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column
+  `, { table, column });
+  return rows[0].n > 0;
+}
+
+// 升级路径: 功能上线前建的 users 表没有家庭相关列，需要在已有表上补齐
+async function migrateUsersFamilyColumns(conn) {
+  if (await columnExists(conn, 'users', 'family_id')) return;
+  await conn.query('ALTER TABLE users ADD COLUMN family_id INT UNSIGNED AFTER is_admin');
+  await conn.query(`ALTER TABLE users ADD COLUMN family_role ENUM('dad','mom','child','other') AFTER family_id`);
+  await conn.query(`ALTER TABLE users ADD COLUMN account_type ENUM('individual','family') NOT NULL DEFAULT 'individual' AFTER family_role`);
+  await conn.query('ALTER TABLE users ADD INDEX idx_users_family (family_id)');
+}
+
+// users.family_id 的外键: families 表建完之后才能补上(见 SCHEMA_STATEMENTS 顶部注释)，fresh install 和升级路径都要走这一步
+async function migrateUsersFamilyFk(conn) {
+  const [rows] = await conn.query(`
+    SELECT COUNT(*) AS n FROM information_schema.TABLE_CONSTRAINTS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND CONSTRAINT_NAME = 'fk_users_family'
+  `);
+  if (rows[0].n > 0) return;
+  await conn.query('ALTER TABLE users ADD CONSTRAINT fk_users_family FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE SET NULL');
+}
+
+// 升级路径: 功能上线前建的 receipts 表没有家庭冗余列，需要在已有表上补齐
+async function migrateReceiptsFamilyColumns(conn) {
+  if (await columnExists(conn, 'receipts', 'family_id')) return;
+  await conn.query('ALTER TABLE receipts ADD COLUMN family_id INT UNSIGNED AFTER user_id');
+  await conn.query('ALTER TABLE receipts ADD COLUMN family_name VARCHAR(100) AFTER family_id');
+  await conn.query(`ALTER TABLE receipts ADD COLUMN family_role ENUM('dad','mom','child','other') AFTER family_name`);
+  await conn.query(`ALTER TABLE receipts ADD COLUMN account_type ENUM('individual','family') NOT NULL DEFAULT 'individual' AFTER family_role`);
+  await conn.query('ALTER TABLE receipts ADD INDEX idx_receipts_family (family_id)');
+  await conn.query('ALTER TABLE receipts ADD CONSTRAINT fk_receipts_family FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE SET NULL');
+}
+
+// 升级路径: 功能上线前建的 items 表没有家庭冗余列，需要在已有表上补齐
+async function migrateItemsFamilyColumns(conn) {
+  if (await columnExists(conn, 'items', 'family_id')) return;
+  await conn.query('ALTER TABLE items ADD COLUMN family_id INT UNSIGNED AFTER receipt_id');
+  await conn.query('ALTER TABLE items ADD COLUMN family_name VARCHAR(100) AFTER family_id');
+  await conn.query(`ALTER TABLE items ADD COLUMN family_role ENUM('dad','mom','child','other') AFTER family_name`);
+  await conn.query(`ALTER TABLE items ADD COLUMN account_type ENUM('individual','family') NOT NULL DEFAULT 'individual' AFTER family_role`);
+  await conn.query('ALTER TABLE items ADD INDEX idx_items_family (family_id)');
+  await conn.query('ALTER TABLE items ADD CONSTRAINT fk_items_family FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE SET NULL');
 }
 
 // 初始化管理员账号: 只在 ADMIN_USERNAME/ADMIN_PASSWORD 都配置了、且该用户名还不存在时创建一次；
@@ -134,6 +227,10 @@ async function initSchema() {
       for (const stmt of SCHEMA_STATEMENTS) await conn.query(stmt);
       await migrateReceiptsUserId(conn);
       await migrateUsersIsAdmin(conn);
+      await migrateUsersFamilyColumns(conn);
+      await migrateUsersFamilyFk(conn);
+      await migrateReceiptsFamilyColumns(conn);
+      await migrateItemsFamilyColumns(conn);
     } finally {
       conn.release();
     }
@@ -145,13 +242,123 @@ async function initSchema() {
 const ready = initSchema();
 
 // ---- 用户 ----
-async function createUser(username, passwordHash) {
+async function createUser(username, passwordHash, { familyRole } = {}) {
   await ready;
   const [info] = await pool.execute(
-    'INSERT INTO users (username, password_hash) VALUES (:username, :password_hash)',
-    { username, password_hash: passwordHash }
+    'INSERT INTO users (username, password_hash, family_role) VALUES (:username, :password_hash, :family_role)',
+    { username, password_hash: passwordHash, family_role: familyRole || null }
   );
   return info.insertId;
+}
+
+// ---- 家庭 ----
+async function findFamilyByName(name) {
+  await ready;
+  const [rows] = await pool.execute('SELECT * FROM families WHERE name = :name', { name });
+  return rows[0] || null;
+}
+
+async function findFamilyById(id) {
+  await ready;
+  const [rows] = await pool.execute('SELECT * FROM families WHERE id = :id', { id });
+  return rows[0] || null;
+}
+
+// 创建家庭，创建者本人立即成为成员(唯一有权邀请/审核的人)
+async function createFamily(name, creatorId) {
+  await ready;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [info] = await conn.execute('INSERT INTO families (name, creator_id) VALUES (:name, :creator_id)', { name, creator_id: creatorId });
+    const familyId = info.insertId;
+    await conn.execute(`UPDATE users SET family_id = :familyId, account_type = 'family' WHERE id = :creatorId`, { familyId, creatorId });
+    await conn.commit();
+    return familyId;
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
+// 创建者邀请一个已注册且尚未加入任何家庭的用户，立即生效(邀请人本身即审核人，无需二次确认)
+async function inviteMember(familyId, username) {
+  await ready;
+  const [result] = await pool.execute(
+    `UPDATE users SET family_id = :familyId, account_type = 'family' WHERE username = :username AND family_id IS NULL`,
+    { familyId, username }
+  );
+  return result.affectedRows > 0;
+}
+
+// 用户主动申请加入某个家庭，需创建者审核；重复申请(仍 pending)不产生新记录
+async function applyToFamily(familyId, userId) {
+  await ready;
+  const [existing] = await pool.execute(
+    `SELECT id FROM family_join_requests WHERE family_id = :familyId AND user_id = :userId AND status = 'pending'`,
+    { familyId, userId }
+  );
+  if (existing.length) return existing[0].id;
+  const [info] = await pool.execute(
+    'INSERT INTO family_join_requests (family_id, user_id) VALUES (:familyId, :userId)',
+    { familyId, userId }
+  );
+  return info.insertId;
+}
+
+async function listFamilyMembers(familyId) {
+  await ready;
+  const [rows] = await pool.execute(
+    'SELECT id, username, family_role, created_at FROM users WHERE family_id = :familyId ORDER BY created_at',
+    { familyId }
+  );
+  return rows;
+}
+
+async function listPendingRequests(familyId) {
+  await ready;
+  const [rows] = await pool.execute(`
+    SELECT fjr.id, fjr.user_id, u.username, fjr.created_at
+    FROM family_join_requests fjr JOIN users u ON u.id = fjr.user_id
+    WHERE fjr.family_id = :familyId AND fjr.status = 'pending'
+    ORDER BY fjr.created_at
+  `, { familyId });
+  return rows;
+}
+
+// approve=true 通过并把申请人拉进家庭，false 仅标记拒绝；familyId 由调用方(创建者本人)传入，
+// 保证只能审核自己家庭下的申请，不会被猜 requestId 越权批准别的家庭
+async function decideRequest(requestId, familyId, approve) {
+  await ready;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [rows] = await conn.execute(
+      `SELECT * FROM family_join_requests WHERE id = :requestId AND family_id = :familyId AND status = 'pending'`,
+      { requestId, familyId }
+    );
+    const reqRow = rows[0];
+    if (!reqRow) { await conn.rollback(); return false; }
+    await conn.execute(
+      `UPDATE family_join_requests SET status = :status, decided_at = NOW() WHERE id = :requestId`,
+      { requestId, status: approve ? 'approved' : 'rejected' }
+    );
+    if (approve) {
+      await conn.execute(
+        `UPDATE users SET family_id = :familyId, account_type = 'family' WHERE id = :userId AND family_id IS NULL`,
+        { familyId, userId: reqRow.user_id }
+      );
+    }
+    await conn.commit();
+    return true;
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
 }
 
 async function findUserByUsername(username) {
@@ -185,21 +392,34 @@ async function backfillOwnerlessReceipts(userId) {
 }
 
 // ---- 写入 ----
+// receipt.family_id/family_name/family_role/account_type: 建票时从上传者当前的 users 行拷贝下来的冗余字段
+// (调用方——route handler——负责从 session 填好；selfcheck.cjs 等不传时落到下面的默认值，等同"个人账号")，
+// 目的是家庭内可见性/统计能直接按 receipts/items 的列过滤或分组，不必每次 JOIN users
 async function saveReceipt(receipt, items) {
   await ready;
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
     const [info] = await conn.execute(`
-      INSERT INTO receipts (user_id, store, purchased_at, currency, subtotal, gst, pst, total, image_file, raw_json)
-      VALUES (:user_id, :store, :purchased_at, :currency, :subtotal, :gst, :pst, :total, :image_file, :raw_json)
-    `, receipt);
+      INSERT INTO receipts (user_id, family_id, family_name, family_role, account_type, store, purchased_at, currency, subtotal, gst, pst, total, image_file, raw_json)
+      VALUES (:user_id, :family_id, :family_name, :family_role, :account_type, :store, :purchased_at, :currency, :subtotal, :gst, :pst, :total, :image_file, :raw_json)
+    `, {
+      family_id: null, family_name: null, family_role: null, account_type: 'individual',
+      ...receipt,
+    });
     const rid = info.insertId;
     for (const it of items) {
       await conn.execute(`
-        INSERT INTO items (receipt_id, name_raw, name_norm, category, subcategory, qty, unit, unit_price, amount, taxable)
-        VALUES (:receipt_id, :name_raw, :name_norm, :category, :subcategory, :qty, :unit, :unit_price, :amount, :taxable)
-      `, { ...it, receipt_id: rid });
+        INSERT INTO items (receipt_id, family_id, family_name, family_role, account_type, name_raw, name_norm, category, subcategory, qty, unit, unit_price, amount, taxable)
+        VALUES (:receipt_id, :family_id, :family_name, :family_role, :account_type, :name_raw, :name_norm, :category, :subcategory, :qty, :unit, :unit_price, :amount, :taxable)
+      `, {
+        ...it,
+        receipt_id: rid,
+        family_id: receipt.family_id ?? null,
+        family_name: receipt.family_name ?? null,
+        family_role: receipt.family_role ?? null,
+        account_type: receipt.account_type || 'individual',
+      });
     }
     await conn.commit();
     return rid;
@@ -212,20 +432,23 @@ async function saveReceipt(receipt, items) {
 }
 
 // ---- 查询 ----
-// userId 传了就只查该用户名下的数据；不传(管理后台用)则不加这个过滤，查全部用户
-function dateFilter(from, to, userId) {
+// scope: { familyId } 家庭内互相可见(按 family_id 过滤，看得到所有家庭成员的数据)；
+//        { userId } 只看自己(个人账号，或未在家庭里)；
+//        都不传(管理后台用)则不加这个过滤，查全部用户
+function dateFilter(from, to, scope) {
   const clauses = [];
   const params = {};
-  if (userId) { clauses.push('r.user_id = :userId'); params.userId = userId; }
+  if (scope && scope.familyId) { clauses.push('r.family_id = :familyId'); params.familyId = scope.familyId; }
+  else if (scope && scope.userId) { clauses.push('r.user_id = :userId'); params.userId = scope.userId; }
   if (from) { clauses.push('r.purchased_at >= :from'); params.from = from; }
   if (to)   { clauses.push('r.purchased_at <= :to');   params.to = to; }
   return { where: clauses.length ? 'WHERE ' + clauses.join(' AND ') : '', params };
 }
 
-async function listReceipts({ limit = 200, from, to, search, userId } = {}) {
+async function listReceipts({ limit = 200, from, to, search, scope } = {}) {
   await ready;
   const lim = Math.min(Math.max(parseInt(limit, 10) || 200, 1), 2000);
-  const { where, params } = dateFilter(from, to, userId);
+  const { where, params } = dateFilter(from, to, scope);
   const clauses = where ? [where.slice('WHERE '.length)] : [];
   if (search) {
     clauses.push(`(r.store LIKE :search OR EXISTS (
@@ -242,10 +465,12 @@ async function listReceipts({ limit = 200, from, to, search, userId } = {}) {
   return rows;
 }
 
-async function getReceipt(id, userId) {
+async function getReceipt(id, scope) {
   await ready;
-  const clause = userId ? 'r.id = :id AND r.user_id = :userId' : 'r.id = :id';
-  const params = userId ? { id, userId } : { id };
+  let clause = 'r.id = :id';
+  const params = { id };
+  if (scope && scope.familyId) { clause += ' AND r.family_id = :familyId'; params.familyId = scope.familyId; }
+  else if (scope && scope.userId) { clause += ' AND r.user_id = :userId'; params.userId = scope.userId; }
   const [rows] = await pool.execute(`
     SELECT r.*, u.username AS owner_username FROM receipts r LEFT JOIN users u ON u.id = r.user_id WHERE ${clause}
   `, params);
@@ -265,9 +490,9 @@ async function deleteReceipt(id, userId) {
 }
 
 // 各分类花费(税前小计之和)
-async function statsByCategory(from, to, userId) {
+async function statsByCategory(from, to, scope) {
   await ready;
-  const { where, params } = dateFilter(from, to, userId);
+  const { where, params } = dateFilter(from, to, scope);
   const [rows] = await pool.execute(`
     SELECT i.category AS label, ROUND(SUM(i.amount), 2) AS amount, COUNT(*) AS line_count
     FROM items i JOIN receipts r ON r.id = i.receipt_id
@@ -278,9 +503,9 @@ async function statsByCategory(from, to, userId) {
 }
 
 // 某大类下的细分花费(默认肉类的牛/猪/鸡...)
-async function statsBySubcategory(category, from, to, userId) {
+async function statsBySubcategory(category, from, to, scope) {
   await ready;
-  const { where, params } = dateFilter(from, to, userId);
+  const { where, params } = dateFilter(from, to, scope);
   let extra = '';
   if (category) {
     extra = where ? ' AND i.category = :category' : 'WHERE i.category = :category';
@@ -297,9 +522,9 @@ async function statsBySubcategory(category, from, to, userId) {
 }
 
 // 月度: 税前/税额/实付
-async function statsMonthly(from, to, userId) {
+async function statsMonthly(from, to, scope) {
   await ready;
-  const { where, params } = dateFilter(from, to, userId);
+  const { where, params } = dateFilter(from, to, scope);
   const [rows] = await pool.execute(`
     SELECT DATE_FORMAT(r.purchased_at, '%Y-%m') AS month,
            ROUND(SUM(r.subtotal), 2) AS subtotal,
@@ -313,10 +538,13 @@ async function statsMonthly(from, to, userId) {
   return rows;
 }
 
-// 某品名的价格趋势 (按规范名匹配，跨时间)
-async function priceTrend(nameNorm, store, userId) {
+// 某品名的价格趋势 (按规范名匹配，跨时间); scope 语义同 dateFilter
+async function priceTrend(nameNorm, store, scope) {
   await ready;
-  const params = { q: '%' + nameNorm + '%', userId };
+  const params = { q: '%' + nameNorm + '%' };
+  let scopeClause;
+  if (scope && scope.familyId) { scopeClause = 'r.family_id = :familyId'; params.familyId = scope.familyId; }
+  else { scopeClause = 'r.user_id = :userId'; params.userId = scope && scope.userId; }
   let storeClause = '';
   if (store) { storeClause = ' AND r.store = :store'; params.store = store; }
   const [rows] = await pool.execute(`
@@ -324,28 +552,31 @@ async function priceTrend(nameNorm, store, userId) {
            i.name_raw AS name, i.unit, i.qty,
            i.unit_price AS unit_price, i.amount AS amount
     FROM items i JOIN receipts r ON r.id = i.receipt_id
-    WHERE r.user_id = :userId AND (i.name_norm LIKE :q OR i.name_raw LIKE :q)${storeClause}
+    WHERE ${scopeClause} AND (i.name_norm LIKE :q OR i.name_raw LIKE :q)${storeClause}
     ORDER BY r.purchased_at
   `, params);
   return rows;
 }
 
-// 品名候选(用于趋势搜索下拉)
-async function distinctItemNames(userId) {
+// 品名候选(用于趋势搜索下拉); scope 语义同 dateFilter
+async function distinctItemNames(scope) {
   await ready;
+  let scopeClause, params;
+  if (scope && scope.familyId) { scopeClause = 'r.family_id = :familyId'; params = { familyId: scope.familyId }; }
+  else { scopeClause = 'r.user_id = :userId'; params = { userId: scope && scope.userId }; }
   const [rows] = await pool.execute(`
     SELECT COALESCE(i.name_norm, i.name_raw) AS name, COUNT(*) AS n
     FROM items i JOIN receipts r ON r.id = i.receipt_id
-    WHERE r.user_id = :userId
+    WHERE ${scopeClause}
     GROUP BY name ORDER BY n DESC LIMIT 300
-  `, { userId });
+  `, params);
   return rows;
 }
 
 // 概览卡片
-async function overview(from, to, userId) {
+async function overview(from, to, scope) {
   await ready;
-  const { where, params } = dateFilter(from, to, userId);
+  const { where, params } = dateFilter(from, to, scope);
   const [rows] = await pool.execute(`
     SELECT ROUND(SUM(r.total), 2) AS total,
            ROUND(SUM(r.gst + r.pst), 2) AS tax,
@@ -365,12 +596,13 @@ async function overview(from, to, userId) {
 async function listUsers() {
   await ready;
   const [rows] = await pool.execute(`
-    SELECT u.id, u.username, u.is_admin, u.created_at,
+    SELECT u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name AS family_name, u.created_at,
            COUNT(r.id) AS receipt_count,
            ROUND(COALESCE(SUM(r.total), 0), 2) AS total_spend
     FROM users u
     LEFT JOIN receipts r ON r.user_id = u.id
-    GROUP BY u.id, u.username, u.is_admin, u.created_at
+    LEFT JOIN families f ON f.id = u.family_id
+    GROUP BY u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name, u.created_at
     ORDER BY u.created_at
   `);
   return rows;
@@ -403,11 +635,35 @@ async function statsByUser(from, to) {
   return rows;
 }
 
+// ---- 反馈 ----
+async function addFeedback(userId, content) {
+  await ready;
+  const [info] = await pool.execute('INSERT INTO feedback (user_id, content) VALUES (:userId, :content)', { userId, content });
+  return info.insertId;
+}
+
+async function listFeedbackByUser(userId) {
+  await ready;
+  const [rows] = await pool.execute('SELECT * FROM feedback WHERE user_id = :userId ORDER BY created_at DESC', { userId });
+  return rows;
+}
+
+async function listAllFeedback() {
+  await ready;
+  const [rows] = await pool.execute(`
+    SELECT f.*, u.username FROM feedback f JOIN users u ON u.id = f.user_id ORDER BY f.created_at DESC
+  `);
+  return rows;
+}
+
 module.exports = {
   pool, saveReceipt, listReceipts, getReceipt, deleteReceipt,
   statsByCategory, statsBySubcategory, statsMonthly, priceTrend,
   distinctItemNames, overview,
   createUser, findUserByUsername, findUserById, countUsers, backfillOwnerlessReceipts,
   updatePassword,
-  listUsers, deleteUser, statsByUser
+  listUsers, deleteUser, statsByUser,
+  findFamilyByName, findFamilyById, createFamily, inviteMember, applyToFamily,
+  listFamilyMembers, listPendingRequests, decideRequest,
+  addFeedback, listFeedbackByUser, listAllFeedback,
 };

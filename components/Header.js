@@ -2,9 +2,11 @@
 import Link from 'next/link';
 import { useState } from 'react';
 import ChangePasswordModal from './ChangePasswordModal';
+import FeedbackModal from './FeedbackModal';
 
 export default function Header({ cfg, user, onLogout }) {
   const [showPwd, setShowPwd] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
 
   return (
     <>
@@ -18,11 +20,13 @@ export default function Header({ cfg, user, onLogout }) {
           <span className="meta">
             {user.isAdmin ? <><Link href="/admin">管理后台</Link> · </> : null}
             {user.username} · <a href="#" onClick={(e) => { e.preventDefault(); setShowPwd(true); }}>修改密码</a>
+            {' · '}<a href="#" onClick={(e) => { e.preventDefault(); setShowFeedback(true); }}>意见反馈</a>
             {' · '}<a href="#" onClick={(e) => { e.preventDefault(); onLogout(); }}>退出</a>
           </span>
         ) : null}
       </header>
       {showPwd ? <ChangePasswordModal onClose={() => setShowPwd(false)} /> : null}
+      {showFeedback ? <FeedbackModal onClose={() => setShowFeedback(false)} /> : null}
     </>
   );
 }

@@ -11,7 +11,7 @@ function query(from, to, search) {
   return q.length ? '?' + q.join('&') : '';
 }
 
-export default function ReceiptsTab({ active }) {
+export default function ReceiptsTab({ active, showOwner }) {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [search, setSearch] = useState('');
@@ -68,14 +68,17 @@ export default function ReceiptsTab({ active }) {
         <div className="table-scroll">
         <table>
           <thead>
-            <tr><th>日期</th><th>商家</th><th className="num">税前</th><th className="num">GST</th><th className="num">PST</th><th className="num">实付</th><th className="num">条目</th><th></th></tr>
+            <tr>
+              <th>日期</th><th>商家</th>{showOwner ? <th>所属成员</th> : null}
+              <th className="num">税前</th><th className="num">GST</th><th className="num">PST</th><th className="num">实付</th><th className="num">条目</th><th></th>
+            </tr>
           </thead>
           <tbody>
             {receipts.length === 0 ? (
-              <tr><td colSpan={8} className="empty">暂无记录</td></tr>
+              <tr><td colSpan={showOwner ? 9 : 8} className="empty">暂无记录</td></tr>
             ) : receipts.map((r) => (
               <tr key={r.id}>
-                <td>{r.purchased_at}</td><td>{r.store}</td>
+                <td>{r.purchased_at}</td><td>{r.store}</td>{showOwner ? <td>{r.owner_username}</td> : null}
                 <td className="num">{fmt(r.subtotal)}</td><td className="num">{fmt(r.gst)}</td><td className="num">{fmt(r.pst)}</td>
                 <td className="num">{fmt(r.total)}</td><td className="num">{r.item_count}</td>
                 <td>
@@ -92,7 +95,10 @@ export default function ReceiptsTab({ active }) {
       {detail && (
         <div className="card" ref={detailRef}>
           <h2>{detail.store} · {detail.purchased_at}</h2>
-          <p className="muted">税前 ${fmt(detail.subtotal)} ｜ GST ${fmt(detail.gst)} ｜ PST ${fmt(detail.pst)} ｜ 实付 ${fmt(detail.total)}</p>
+          <p className="muted">
+            税前 ${fmt(detail.subtotal)} ｜ GST ${fmt(detail.gst)} ｜ PST ${fmt(detail.pst)} ｜ 实付 ${fmt(detail.total)}
+            {showOwner ? <> ｜ 所属成员: {detail.owner_username}</> : null}
+          </p>
           {detail.image_file && (
             <img src={'/uploads/' + detail.image_file} className="receipt-image" alt="" />
           )}

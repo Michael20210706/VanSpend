@@ -5,12 +5,14 @@ import Toast from '../../components/Toast';
 import UsersPanel from '../../components/admin/UsersPanel';
 import ReceiptsPanel from '../../components/admin/ReceiptsPanel';
 import StatsPanel from '../../components/admin/StatsPanel';
+import FeedbackPanel from '../../components/admin/FeedbackPanel';
 import { api } from '../../lib/api';
 
 const TABS = [
   { key: 'stats', label: '统计' },
   { key: 'users', label: '用户管理' },
   { key: 'receipts', label: '票据管理' },
+  { key: 'feedback', label: '用户反馈' },
 ];
 
 export default function AdminPage() {
@@ -67,6 +69,9 @@ export default function AdminPage() {
         </section>
         <section className={'grid' + (tab !== 'receipts' ? ' hide' : '')}>
           <ReceiptsPanel active={tab === 'receipts'} />
+        </section>
+        <section className={'grid' + (tab !== 'feedback' ? ' hide' : '')}>
+          <FeedbackPanel active={tab === 'feedback'} />
         </section>
       </div>
       <Toast />

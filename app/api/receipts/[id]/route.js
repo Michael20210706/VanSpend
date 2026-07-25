@@ -8,7 +8,8 @@ export const GET = wrap(async (request, { params }) => {
   if (response) return response;
 
   const { id } = await params;
-  const r = await dbApi.getReceipt(+id, session.userId);
+  const scope = session.familyId ? { familyId: session.familyId } : { userId: session.userId };
+  const r = await dbApi.getReceipt(+id, scope);
   if (!r) return NextResponse.json({ error: '未找到' }, { status: 404 });
   return NextResponse.json(r);
 });

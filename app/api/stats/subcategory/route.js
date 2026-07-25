@@ -8,11 +8,12 @@ export const GET = wrap(async (request) => {
   if (response) return response;
 
   const { searchParams } = new URL(request.url);
+  const scope = session.familyId ? { familyId: session.familyId } : { userId: session.userId };
   const data = await dbApi.statsBySubcategory(
     searchParams.get('category') || undefined,
     searchParams.get('from') || undefined,
     searchParams.get('to') || undefined,
-    session.userId
+    scope
   );
   return NextResponse.json(data);
 });

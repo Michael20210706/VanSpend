@@ -13,7 +13,7 @@ export const GET = wrap(async (request) => {
     searchParams.get('category') || undefined,
     searchParams.get('from') || undefined,
     searchParams.get('to') || undefined,
-    userId ? +userId : undefined
+    userId ? { userId: +userId } : undefined
   );
   return NextResponse.json(data);
 });

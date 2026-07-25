@@ -6,12 +6,14 @@ import Toast from '../components/Toast';
 import ScanTab from '../components/ScanTab';
 import DashboardTab from '../components/DashboardTab';
 import ReceiptsTab from '../components/ReceiptsTab';
+import FamilyPanel from '../components/FamilyPanel';
 import { api, setUnauthorizedHandler } from '../lib/api';
 
 const TABS = [
   { key: 'scan', label: '上传识别' },
   { key: 'dash', label: '数据分析' },
   { key: 'list', label: '小票记录' },
+  { key: 'family', label: '家庭' },
 ];
 
 export default function Home() {
@@ -64,7 +66,10 @@ export default function Home() {
             <DashboardTab cfg={cfg} active={tab === 'dash'} />
           </section>
           <section className={'grid' + (tab !== 'list' ? ' hide' : '')}>
-            <ReceiptsTab active={tab === 'list'} />
+            <ReceiptsTab active={tab === 'list'} showOwner={!!user?.familyId} />
+          </section>
+          <section className={'grid' + (tab !== 'family' ? ' hide' : '')}>
+            <FamilyPanel active={tab === 'family'} />
           </section>
         </div>
       )}

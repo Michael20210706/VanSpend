@@ -8,6 +8,7 @@ export const GET = wrap(async (request) => {
   if (response) return response;
 
   const { searchParams } = new URL(request.url);
-  const data = await dbApi.statsByCategory(searchParams.get('from') || undefined, searchParams.get('to') || undefined, session.userId);
+  const scope = session.familyId ? { familyId: session.familyId } : { userId: session.userId };
+  const data = await dbApi.statsByCategory(searchParams.get('from') || undefined, searchParams.get('to') || undefined, scope);
   return NextResponse.json(data);
 });

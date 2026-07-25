@@ -10,6 +10,6 @@ export const GET = wrap(async (request) => {
 
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
-  const data = await dbApi.overview(searchParams.get('from') || undefined, searchParams.get('to') || undefined, userId ? +userId : undefined);
+  const data = await dbApi.overview(searchParams.get('from') || undefined, searchParams.get('to') || undefined, userId ? { userId: +userId } : undefined);
   return NextResponse.json(data);
 });

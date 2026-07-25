@@ -1,6 +1,8 @@
 'use client';
 import { useState } from 'react';
 import { api } from '../lib/api';
+import { showToast } from '../lib/toast';
+import { FAMILY_ROLES } from '../lib/familyRoles';
 
 export default function AuthGate({ onLoggedIn }) {
   const [mode, setMode] = useState('login');
@@ -9,6 +11,10 @@ export default function AuthGate({ onLoggedIn }) {
   const [err, setErr] = useState('');
   const [captcha, setCaptcha] = useState(null); // { image, token }
   const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const [familyRole, setFamilyRole] = useState('');
+  const [accountType, setAccountType] = useState('individual');
+  const [familyAction, setFamilyAction] = useState('create');
+  const [familyName, setFamilyName] = useState('');
 
   async function loadCaptcha() {
     setCaptchaAnswer('');
@@ -23,12 +29,17 @@ export default function AuthGate({ onLoggedIn }) {
     setUsername('');
     setPassword('');
     setCaptchaAnswer('');
+    setFamilyRole('');
+    setAccountType('individual');
+    setFamilyAction('create');
+    setFamilyName('');
     setErr('');
   }
 
   async function submit() {
     if (!username.trim() || !password) { setErr('请输入用户名和密码'); return; }
     if (mode === 'register' && !captchaAnswer.trim()) { setErr('请完成验证码'); return; }
+    if (mode === 'register' && accountType === 'family' && !familyName.trim()) { setErr('请填写家庭名称'); return; }
     try {
       const u = await api('/api/auth/' + mode, {
         method: 'POST',
@@ -36,11 +47,17 @@ export default function AuthGate({ onLoggedIn }) {
         body: JSON.stringify({
           username: username.trim(),
           password,
-          ...(mode === 'register' ? { captchaToken: captcha?.token, captchaAnswer } : {}),
+          ...(mode === 'register' ? {
+            captchaToken: captcha?.token, captchaAnswer,
+            familyRole: familyRole || undefined,
+            accountType,
+            ...(accountType === 'family' ? { familyAction, familyName: familyName.trim() } : {}),
+          } : {}),
         }),
       });
       resetForm();
       onLoggedIn(u);
+      if (u.pendingFamilyRequest) showToast('已提交加入家庭的申请，等待创建者审核');
     } catch (e) {
       setErr(e.message);
       if (mode === 'register') {
@@ -63,6 +80,41 @@ export default function AuthGate({ onLoggedIn }) {
       <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
         <input placeholder="用户名" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} />
         <input type="password" placeholder="密码" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        {mode === 'register' && (
+          <>
+            <label className="row" style={{ gap: 8 }}>
+              家庭角色
+              <select value={familyRole} onChange={(e) => setFamilyRole(e.target.value)}>
+                {FAMILY_ROLES.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+              </select>
+            </label>
+            <div className="row" style={{ gap: 14 }}>
+              <label className="row" style={{ gap: 4 }}>
+                <input type="radio" name="accountType" checked={accountType === 'individual'} onChange={() => setAccountType('individual')} />个人
+              </label>
+              <label className="row" style={{ gap: 4 }}>
+                <input type="radio" name="accountType" checked={accountType === 'family'} onChange={() => setAccountType('family')} />家庭
+              </label>
+            </div>
+            {accountType === 'family' && (
+              <>
+                <div className="row" style={{ gap: 14 }}>
+                  <label className="row" style={{ gap: 4 }}>
+                    <input type="radio" name="familyAction" checked={familyAction === 'create'} onChange={() => setFamilyAction('create')} />创建新家庭
+                  </label>
+                  <label className="row" style={{ gap: 4 }}>
+                    <input type="radio" name="familyAction" checked={familyAction === 'apply'} onChange={() => setFamilyAction('apply')} />申请加入已有家庭
+                  </label>
+                </div>
+                <input
+                  placeholder={familyAction === 'create' ? '家庭名称(需唯一)' : '要加入的家庭名称'}
+                  value={familyName}
+                  onChange={(e) => setFamilyName(e.target.value)}
+                />
+              </>
+            )}
+          </>
+        )}
         {mode === 'register' && (
           <div className="row" style={{ gap: 10, alignItems: 'center' }}>
             {captcha ? (

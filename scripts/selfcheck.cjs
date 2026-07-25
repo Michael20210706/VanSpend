@@ -48,25 +48,25 @@ async function main() {
     [ { receipt_id: 0, name_raw: 'BEEF', name_norm: '牛肉', category: '肉类', subcategory: '牛肉', qty: 1, unit: 'kg', unit_price: 22, amount: 22, taxable: 0 } ]
   );
 
-  const cat = (await dbApi.statsByCategory('2026-01-01', '2026-12-31', userId)).find(x => x.label === '肉类');
+  const cat = (await dbApi.statsByCategory('2026-01-01', '2026-12-31', { userId })).find(x => x.label === '肉类');
   ok(cat && cat.amount === 52, '肉类总花费 = 52 (18+12+22)');
 
-  const sub = await dbApi.statsBySubcategory('肉类', '2026-01-01', '2026-12-31', userId);
+  const sub = await dbApi.statsBySubcategory('肉类', '2026-01-01', '2026-12-31', { userId });
   const beef = sub.find(x => x.label === '牛肉');
   ok(beef && beef.amount === 40, '牛肉细分 = 40 (18+22)');
 
-  const mon = await dbApi.statsMonthly('2026-01-01', '2026-12-31', userId);
+  const mon = await dbApi.statsMonthly('2026-01-01', '2026-12-31', { userId });
   ok(mon.some(m => m.month === '2026-04') && mon.some(m => m.month === '2026-05'), '月度按 YYYY-MM 分组');
 
-  const trend = await dbApi.priceTrend('牛肉', '__TEST_COSTCO', userId);
+  const trend = await dbApi.priceTrend('牛肉', '__TEST_COSTCO', { userId });
   ok(trend.length === 2 && trend[0].unit_price === 18 && trend[1].unit_price === 22, '牛肉价格趋势按时间升序: 18 → 22');
 
-  const otherUserTrend = await dbApi.priceTrend('牛肉', '__TEST_COSTCO', userId + 1);
+  const otherUserTrend = await dbApi.priceTrend('牛肉', '__TEST_COSTCO', { userId: userId + 1 });
   ok(otherUserTrend.length === 0, '其他用户看不到本账号的数据(按 user_id 隔离)');
 
   // ---- 清理本次测试数据: 删除测试账号，receipts/items 通过外键级联清掉 ----
   await dbApi.pool.query('DELETE FROM users WHERE id = :id', { id: userId });
-  ok((await dbApi.priceTrend('牛肉', '__TEST_COSTCO', userId)).length === 0, '测试数据已清理');
+  ok((await dbApi.priceTrend('牛肉', '__TEST_COSTCO', { userId })).length === 0, '测试数据已清理');
 
   console.log(`\n全部 ${pass} 项自检通过 ✓`);
   await dbApi.pool.end();

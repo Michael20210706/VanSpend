@@ -9,11 +9,12 @@ export const GET = wrap(async (request) => {
   if (response) return response;
 
   const { searchParams } = new URL(request.url);
+  const scope = session.familyId ? { familyId: session.familyId } : { userId: session.userId };
   const rows = await dbApi.listReceipts({
     from: searchParams.get('from') || undefined,
     to: searchParams.get('to') || undefined,
     search: searchParams.get('search') || undefined,
-    userId: session.userId,
+    scope,
   });
   return NextResponse.json(rows);
 });
@@ -28,7 +29,16 @@ export const POST = wrap(async (request) => {
   if (!receipt || !Array.isArray(items)) return NextResponse.json({ error: '数据格式错误' }, { status: 400 });
   const image_file = image ? saveImage(image) : null;
   const id = await dbApi.saveReceipt(
-    { ...receipt, user_id: session.userId, image_file, raw_json: JSON.stringify(raw || { receipt, items }) },
+    {
+      ...receipt,
+      user_id: session.userId,
+      family_id: session.familyId || null,
+      family_name: session.familyName || null,
+      family_role: session.familyRole || null,
+      account_type: session.accountType || 'individual',
+      image_file,
+      raw_json: JSON.stringify(raw || { receipt, items }),
+    },
     items
   );
   return NextResponse.json({ id });

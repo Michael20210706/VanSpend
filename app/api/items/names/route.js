@@ -7,6 +7,7 @@ export const GET = wrap(async () => {
   const { session, response } = await requireSession();
   if (response) return response;
 
-  const data = await dbApi.distinctItemNames(session.userId);
+  const scope = session.familyId ? { familyId: session.familyId } : { userId: session.userId };
+  const data = await dbApi.distinctItemNames(scope);
   return NextResponse.json(data);
 });

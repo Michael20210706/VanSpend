@@ -4,5 +4,10 @@ import { getSession } from '@/src/session';
 export async function GET() {
   const session = await getSession();
   if (!session.userId) return NextResponse.json({ error: '未登录' }, { status: 401 });
-  return NextResponse.json({ id: session.userId, username: session.username, isAdmin: !!session.isAdmin });
+  return NextResponse.json({
+    id: session.userId, username: session.username, isAdmin: !!session.isAdmin,
+    familyId: session.familyId || null, familyName: session.familyName || null,
+    familyRole: session.familyRole || null, accountType: session.accountType || 'individual',
+    isFamilyCreator: !!session.isFamilyCreator,
+  });
 }
