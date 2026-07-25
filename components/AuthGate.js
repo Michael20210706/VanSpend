@@ -76,7 +76,10 @@ export default function AuthGate({ onLoggedIn }) {
 
   return (
     <div className="card">
-      <h2>{mode === 'login' ? '登录' : '注册'}</h2>
+      <h2 style={{ marginBottom: 6 }}>{mode === 'login' ? '登录' : '注册'}</h2>
+      <p className="muted" style={{ margin: '0 0 14px', fontSize: 12 }}>
+        {mode === 'login' ? '欢迎回来，登录后继续记账' : '开放自助注册，注册完就能传第一张小票'}
+      </p>
       <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
         <input placeholder="用户名" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} />
         <input type="password" placeholder="密码" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />

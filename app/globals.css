@@ -76,6 +76,43 @@ td input, td select { width:100%; padding:4px 6px; }
 a { color:var(--acc); }
 .receipt-image { max-height:300px; border-radius:8px; float:right; margin-left:16px; }
 
+/* ---- 未登录落地页(components/AuthLanding.js) ---- */
+.auth-hero { text-align:center; padding:8px 0 26px; animation:fadeIn .32s ease; }
+.auth-hero h1 { font-size:38px; margin:0; font-weight:700; letter-spacing:.5px; }
+.auth-tagline { margin:8px 0 0; font-size:17px; font-weight:600;
+  background:linear-gradient(90deg, var(--acc), var(--s5)); -webkit-background-clip:text; background-clip:text;
+  -webkit-text-fill-color:transparent; color:var(--acc); }
+.auth-lede { margin:12px auto 0; max-width:620px; color:var(--mut); font-size:14px; }
+.auth-pills { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:16px; }
+.auth-pill { font-size:12px; color:var(--mut); background:rgba(255,255,255,.04); border:1px solid var(--line);
+  border-radius:20px; padding:4px 12px; }
+.auth-cols { display:grid; gap:18px; align-items:start; }
+.auth-intro, .auth-form { display:grid; gap:18px; align-content:start; min-width:0; }
+.auth-form { animation:fadeIn .32s ease; }
+.auth-note { margin:12px 0 0; font-size:12px; line-height:1.6; }
+.auth-note code { background:rgba(255,255,255,.06); border-radius:4px; padding:1px 5px; font-size:11px; }
+.feat-list, .steps { list-style:none; margin:0; padding:0; display:grid; gap:14px; }
+.feat, .steps li { display:flex; gap:12px; align-items:flex-start; }
+.feat-ico { font-size:20px; line-height:1.2; flex-shrink:0; width:26px; text-align:center; }
+.step-n { flex-shrink:0; width:24px; height:24px; border-radius:50%; background:rgba(57,135,229,.16); color:var(--acc);
+  font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; }
+.feat b, .steps b { font-size:14px; font-weight:600; }
+.feat p, .steps p { margin:3px 0 0; color:var(--mut); font-size:13px; }
+@media (min-width:900px) {
+  .auth-cols { grid-template-columns:minmax(0,1fr) 372px; gap:22px; }
+  .feat-list { grid-template-columns:1fr 1fr; gap:16px 20px; }
+}
+@media (max-width:899px) {
+  /* 窄屏把表单排到介绍之前，回访用户不用先划过一屏宣传才能登录 */
+  .auth-form { order:-1; }
+}
+@media (max-width:480px) {
+  .auth-hero { padding:4px 0 18px; }
+  .auth-hero h1 { font-size:28px; }
+  .auth-tagline { font-size:15px; }
+  .auth-lede { font-size:13px; }
+}
+
 /* 宽表格(如逐行明细编辑表)在窄屏下允许横向滑动，而不是挤压/换行破坏布局 */
 .table-scroll { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
 .table-scroll table { min-width:640px; }

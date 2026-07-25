@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import Header from '../components/Header';
-import AuthGate from '../components/AuthGate';
+import AuthLanding from '../components/AuthLanding';
 import Toast from '../components/Toast';
 import ScanTab from '../components/ScanTab';
 import DashboardTab from '../components/DashboardTab';
@@ -44,8 +44,8 @@ export default function Home() {
       <Header cfg={cfg} user={user} onLogout={handleLogout} />
 
       {user === undefined ? null : !user ? (
-        <div className="wrap" style={{ maxWidth: 380 }}>
-          <AuthGate onLoggedIn={setUser} />
+        <div className="wrap">
+          <AuthLanding cfg={cfg} onLoggedIn={setUser} />
         </div>
       ) : (
         <div className="wrap">
