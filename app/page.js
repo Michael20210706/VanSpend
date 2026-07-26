@@ -1,7 +1,7 @@
 'use client';
 import { useCallback, useEffect, useState } from 'react';
 import Header from '../components/Header';
-import AuthLanding from '../components/AuthLanding';
+import Landing from '../components/landing/Landing';
 import Toast from '../components/Toast';
 import ScanTab from '../components/ScanTab';
 import DashboardTab from '../components/DashboardTab';
@@ -23,56 +23,54 @@ export default function Home() {
 
   const showAuth = useCallback(() => setUser(null), []);
 
-  useEffect(() => { setUnauthorizedHandler(showAuth); }, [showAuth]);
+  useEffect(() => setUnauthorizedHandler(showAuth), [showAuth]);
 
   useEffect(() => {
     api('/api/auth/me').then(setUser).catch(() => setUser(null));
   }, []);
 
   useEffect(() => {
-    // /api/config 是公开接口，不管有没有登录都请求一次，这样退出登录后头部的 Key 徽章仍能反映真实配置
-    api('/api/config').then(setCfg).catch(() => {});
-  }, []);
+    // 只有登录后才需要 cfg(分类下拉、头部的 Key 徽章和模型名)；未登录时渲染的是落地页，
+    // 不该把 .env 的配置状态透给匿名访客
+    if (user) api('/api/config').then(setCfg).catch(() => {});
+  }, [user]);
 
   async function handleLogout() {
     await api('/api/auth/logout', { method: 'POST' });
     setUser(null);
   }
 
+  if (user === undefined) return null; // 等 /api/auth/me 落地，避免落地页和应用互闪
+  if (!user) return <Landing />; // 未登录 = 宣传落地页；它自带导航和页脚，不挂 Header
+
   return (
     <>
       <Header cfg={cfg} user={user} onLogout={handleLogout} />
 
-      {user === undefined ? null : !user ? (
-        <div className="wrap">
-          <AuthLanding cfg={cfg} onLoggedIn={setUser} />
+      <div className="wrap">
+        <div className="tabs">
+          {TABS.map((t) => (
+            <div
+              key={t.key}
+              className={'tab' + (tab === t.key ? ' active' : '')}
+              onClick={() => setTab(t.key)}
+            >{t.label}</div>
+          ))}
         </div>
-      ) : (
-        <div className="wrap">
-          <div className="tabs">
-            {TABS.map((t) => (
-              <div
-                key={t.key}
-                className={'tab' + (tab === t.key ? ' active' : '')}
-                onClick={() => setTab(t.key)}
-              >{t.label}</div>
-            ))}
-          </div>
 
-          <section className={'grid' + (tab !== 'scan' ? ' hide' : '')}>
-            <ScanTab cfg={cfg} />
-          </section>
-          <section className={'grid' + (tab !== 'dash' ? ' hide' : '')}>
-            <DashboardTab cfg={cfg} active={tab === 'dash'} />
-          </section>
-          <section className={'grid' + (tab !== 'list' ? ' hide' : '')}>
-            <ReceiptsTab active={tab === 'list'} showOwner={!!user?.familyId} />
-          </section>
-          <section className={'grid' + (tab !== 'family' ? ' hide' : '')}>
-            <FamilyPanel active={tab === 'family'} />
-          </section>
-        </div>
-      )}
+        <section className={'grid' + (tab !== 'scan' ? ' hide' : '')}>
+          <ScanTab cfg={cfg} />
+        </section>
+        <section className={'grid' + (tab !== 'dash' ? ' hide' : '')}>
+          <DashboardTab cfg={cfg} active={tab === 'dash'} />
+        </section>
+        <section className={'grid' + (tab !== 'list' ? ' hide' : '')}>
+          <ReceiptsTab active={tab === 'list'} showOwner={!!user?.familyId} />
+        </section>
+        <section className={'grid' + (tab !== 'family' ? ' hide' : '')}>
+          <FamilyPanel active={tab === 'family'} />
+        </section>
+      </div>
 
       <Toast />
     </>

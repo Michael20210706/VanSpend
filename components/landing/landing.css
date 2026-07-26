@@ -1,0 +1,458 @@
+/* ===========================================================================
+   落地页(.lp)与登录页(.lp-auth)的全部样式。
+
+   这两块是浅色的，而 app/globals.css 是硬编码深色主题，且带一批裸元素选择器
+   (button / input / select / a / table / header)会渗进来。所以这里的每条规则
+   都以 .lp 或 .lp-auth 打头——特异性 (0,1,1) 稳压 globals 的 (0,0,1)。
+
+   两条硬规矩，写新段落时别破坏：
+   1. .lp 里不要用 <header> 和 <table>——globals 把它们做成了深色 sticky 栏和
+      深色表格。导航用 <nav>，票据行用 div。
+   2. .lp 和 .lp-auth 不要互相嵌套——两者的 button reset 特异性相同，
+      嵌套后谁赢取决于源码顺序。
+   =========================================================================== */
+
+/* ---- 画布：盖掉 body 的深色底和两层 fixed 径向渐变 ---- */
+body:has(.lp) { background-color: #fff; background-image: none; }
+body:has(.lp-auth) { background-color: #f5f5f7; background-image: none; }
+
+/* ---- .lp 根 + 去污染 ---- */
+.lp {
+  --lp-blue: #0071e3;
+  --lp-ink: #1d1d1f;
+  --lp-mut: #6e6e73;
+  --lp-mut2: #86868b;
+  --acc: #0071e3; /* 重绑 globals 的变量，让 a{color:var(--acc)} 之类自动变浅色蓝 */
+  color: var(--lp-ink);
+  background: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "Helvetica Neue", "PingFang SC", "Noto Sans SC", "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-wrap: pretty;
+  overflow-x: clip; /* clip 而非 hidden：不生成滚动容器，sticky 导航仍然生效 */
+}
+.lp a { color: inherit; text-decoration: none; }
+/* 用 :where() 把这条重置的特异性压成 0——否则 (0,1,1) 会盖掉下面各种 .lp-xxx{margin-top}
+   (0,1,0) 的布局间距，段落之间会全部挤在一起 */
+:where(.lp) :where(h1, h2, h3, p, ul, ol, li) { margin: 0; padding: 0; }
+:where(.lp) :where(ul, ol) { list-style: none; }
+/* 中英混排里 OpenRouter 这类长英文词在窄卡片里会顶破边界 */
+.lp p, .lp li, .lp h1, .lp h2, .lp h3 { overflow-wrap: anywhere; }
+.lp button {
+  background: none; border: 0; padding: 0; color: inherit; font: inherit;
+  border-radius: 999px; cursor: pointer; transition: none;
+}
+/* globals 的 button:hover:not(:disabled) 是 (0,2,1)，赢过 .lp button (0,1,1)，
+   得用同形状选择器 (0,3,1) 才压得住它的 brightness/translateY */
+.lp button:hover:not(:disabled),
+.lp button:active:not(:disabled) { filter: none; transform: none; }
+
+/* ---- 版心与段落 ---- */
+.lp-wrap { max-width: 1120px; margin: 0 auto; padding: 0 40px; }
+.lp-sec { padding: 110px 0; }
+/* 导航是 sticky 的，锚点跳过来别让标题藏到导航底下 */
+.lp section[id] { scroll-margin-top: 68px; }
+.lp-sec--tint { background: #f5f5f7; }
+.lp-sec--dark { background: #000; color: #f5f5f7; }
+.lp-sec--dark .lp-eyebrow { color: #a1a1a6; }
+.lp-sec--dark .lp-lede, .lp-sec--dark .lp-sub { color: #a1a1a6; }
+
+.lp-eyebrow { font-size: 19px; font-weight: 600; color: var(--lp-mut); margin-bottom: 16px; }
+.lp-h1 { font-size: clamp(38px, 8.4vw, 84px); line-height: 1.05; letter-spacing: -.022em; font-weight: 700; text-wrap: balance; }
+/* 比 1a 的居中大标题小一号：1b 是左右分栏，文字列只有 ~590px，
+   再大"超市里花掉了多少？"会甩出一个"少？"孤字 */
+.lp-h1--b { font-size: clamp(34px, 5.8vw, 60px); }
+.lp-h2 { font-size: clamp(30px, 5.4vw, 56px); line-height: 1.08; letter-spacing: -.018em; font-weight: 700; text-wrap: balance; }
+.lp-h3 { font-size: clamp(20px, 2.4vw, 26px); font-weight: 600; letter-spacing: -.01em; }
+.lp-lede { font-size: clamp(17px, 2.1vw, 21px); line-height: 1.5; color: var(--lp-mut); }
+.lp-sub { font-size: 15px; color: var(--lp-mut2); }
+.lp-num { font-variant-numeric: tabular-nums; }
+
+/* ---- 按钮 ---- */
+.lp-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--lp-blue); color: #fff; border-radius: 999px;
+  padding: 14px 28px; font-size: 17px; font-weight: 500; min-height: 48px;
+  transition: background-color .15s ease;
+}
+.lp-btn:hover { background: #0077ed; color: #fff; }
+.lp-btn--sm { padding: 8px 17px; font-size: 14px; min-height: 0; }
+.lp-btn--light { background: #f5f5f7; color: var(--lp-ink); }
+.lp-btn--light:hover { background: #fff; color: var(--lp-ink); }
+.lp-link { font-size: 17px; font-weight: 500; color: var(--lp-blue); }
+.lp-link:hover { color: #0058b8; }
+.lp-sec--dark .lp-link { color: #0a84ff; }
+.lp-cta-row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+
+/* ---- 导航 ---- */
+.lp-nav {
+  position: sticky; top: 0; z-index: 40; height: 56px; display: flex; align-items: center; gap: 32px;
+  padding: 0 40px; background: rgba(255,255,255,.82); backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+.lp-nav--dark { background: rgba(0,0,0,.86); border-bottom-color: rgba(255,255,255,.12); color: #f5f5f7; }
+.lp-nav-mark { font-size: 19px; font-weight: 600; letter-spacing: -.01em; }
+.lp-nav-links { display: flex; gap: 28px; font-size: 14px; }
+.lp-nav-links a:hover { color: var(--lp-blue); }
+.lp-nav--dark .lp-nav-links a:hover { color: #0a84ff; }
+.lp-nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.lp-lang {
+  border: 1px solid rgba(0,0,0,.18); border-radius: 999px; padding: 5px 12px;
+  font-size: 13px; font-weight: 500; min-height: 32px;
+}
+.lp-lang:hover { border-color: var(--lp-ink); }
+.lp-nav--dark .lp-lang { border-color: rgba(255,255,255,.32); }
+.lp-nav--dark .lp-lang:hover { border-color: #f5f5f7; }
+.lp-nav-login { font-size: 14px; font-weight: 500; }
+
+/* ---- Hero A ---- */
+.lp-heroA { padding: 100px 0 0; text-align: center; }
+.lp-heroA .lp-eyebrow { color: var(--lp-blue); }
+.lp-heroA .lp-h1 { max-width: 900px; margin: 0 auto; }
+.lp-heroA .lp-lede { max-width: 620px; margin: 26px auto 0; font-size: clamp(17px, 2.3vw, 22px); }
+.lp-heroA .lp-cta-row { justify-content: center; margin-top: 34px; }
+.lp-heroA-note { margin-top: 18px; font-size: 14px; color: var(--lp-mut2); }
+.lp-heroA-stage { position: relative; display: flex; justify-content: center; padding: 56px 0 96px; }
+.lp-heroA-glow {
+  position: absolute; bottom: 96px; width: min(760px, 92vw); height: 300px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0,113,227,.16), rgba(0,113,227,0));
+}
+
+/* ---- Hero B ---- */
+.lp-heroB { background: #000; color: #f5f5f7; position: relative; overflow: hidden; padding: 104px 0 92px; }
+.lp-heroB-glow {
+  position: absolute; top: -140px; right: -120px; width: 620px; height: 620px; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(10,132,255,.34), rgba(10,132,255,0)); pointer-events: none;
+}
+.lp-heroB-grid { position: relative; display: grid; grid-template-columns: 1.2fr .8fr; gap: 64px; align-items: center; }
+.lp-heroB .lp-eyebrow { color: #0a84ff; }
+.lp-heroB .lp-lede { color: #a1a1a6; max-width: 520px; font-size: clamp(17px, 2.3vw, 22px); }
+.lp-heroB-note { margin-top: 18px; font-size: 14px; color: var(--lp-mut); }
+.lp-heroB-stage { display: flex; justify-content: center; position: relative; }
+
+/* ---- 三步 ---- */
+.lp-steps { margin-top: 68px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+.lp-step { background: #1c1c1e; border-radius: 24px; padding: 34px 30px; display: flex; flex-direction: column; gap: 20px; }
+.lp-step-n { font-size: 15px; font-weight: 700; color: #0a84ff; }
+.lp-step p { font-size: 17px; line-height: 1.55; color: #a1a1a6; margin-top: 12px; }
+.lp-step-art { height: 92px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.lp-paper { width: 64px; height: 82px; border-radius: 8px; background: #efe9dd; transform: rotate(-6deg); box-shadow: 0 12px 24px -8px rgba(0,0,0,.6); }
+.lp-paper--2 { background: #d8d1c1; transform: rotate(5deg); margin-left: -18px; box-shadow: none; }
+.lp-bar-art { height: 10px; border-radius: 5px; background: linear-gradient(90deg, #0a84ff, #5e5ce6); }
+.lp-bar-art--dim { background: #3a3a3c; }
+.lp-chip { padding: 7px 13px; border-radius: 999px; font-size: 13px; font-weight: 600; }
+
+/* ---- 拆税 ---- */
+.lp-tax-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 68px; align-items: center; }
+.lp-tax-bullets { margin-top: 28px; display: flex; flex-direction: column; gap: 12px; }
+.lp-tax-bullets li { display: flex; align-items: flex-start; gap: 10px; font-size: 17px; line-height: 1.45; }
+.lp-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lp-blue); margin-top: 9px; flex-shrink: 0; }
+.lp-tax-center { text-align: center; }
+.lp-tax-center .lp-lede { max-width: 640px; margin-left: auto; margin-right: auto; }
+.lp-tax-center-stage { margin-top: 60px; display: flex; justify-content: center; }
+
+/* ---- 分析 ---- */
+.lp-insights-grid { margin-top: 56px; display: grid; grid-template-columns: 1.35fr 1fr; gap: 26px; }
+.lp-panel { background: #f5f5f7; border-radius: 26px; padding: 32px 34px 28px; position: relative; }
+.lp-sec--tint .lp-panel, .lp-sec--dark .lp-panel { background: #fff; color: var(--lp-ink); }
+.lp-panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.lp-panel-title { font-size: 17px; font-weight: 600; color: var(--lp-mut); }
+.lp-panel-big { font-size: clamp(26px, 3.4vw, 34px); font-weight: 700; letter-spacing: -.02em; }
+.lp-panel-note { margin-top: 20px; font-size: 15px; color: var(--lp-mut); }
+.lp-sample {
+  position: absolute; top: 14px; right: 16px; font-size: 11px; font-weight: 600; letter-spacing: .06em;
+  color: var(--lp-mut2); background: rgba(0,0,0,.05); border-radius: 999px; padding: 3px 9px;
+}
+
+/* ---- 家庭 ---- */
+.lp-family-grid { display: grid; grid-template-columns: 1fr 1.05fr; gap: 68px; align-items: center; }
+.lp-family-grid--flip .lp-family-copy { order: 2; }
+.lp-family-note { margin-top: 18px; font-size: 17px; color: var(--lp-mut2); }
+
+/* ---- 数据 / 隐私 ---- */
+.lp-data { text-align: center; }
+.lp-data .lp-lede { max-width: 720px; margin-left: auto; margin-right: auto; }
+.lp-data-cards { margin-top: 48px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; text-align: left; }
+.lp-data-card { background: #1c1c1e; border-radius: 20px; padding: 26px; }
+.lp-data-card h3 { font-size: 20px; font-weight: 600; }
+.lp-data-card p { margin-top: 10px; font-size: 16px; line-height: 1.5; color: #a1a1a6; }
+.lp-sec--tint .lp-data-card { background: #fff; }
+.lp-sec--tint .lp-data-card p { color: var(--lp-mut); }
+.lp-lock {
+  width: 72px; height: 72px; margin: 0 auto 28px; border-radius: 22px; background: #1c1c1e;
+  display: flex; align-items: center; justify-content: center;
+}
+.lp-sec--tint .lp-lock { background: #e8e8ed; }
+.lp-lock i { width: 24px; height: 20px; border-radius: 5px; border: 2.5px solid #f5f5f7; position: relative; margin-top: 8px; display: block; }
+.lp-sec--tint .lp-lock i { border-color: var(--lp-ink); }
+.lp-lock i::before {
+  content: ''; position: absolute; left: 3px; right: 3px; top: -12px; height: 12px;
+  border: 2.5px solid currentColor; border-bottom: 0; border-radius: 8px 8px 0 0; color: #f5f5f7;
+}
+.lp-sec--tint .lp-lock i::before { color: var(--lp-ink); }
+
+/* ---- FAQ ---- */
+.lp-faq { max-width: 820px; margin: 0 auto; }
+.lp-faq h2 { margin-bottom: 38px; font-size: clamp(28px, 4.4vw, 44px); }
+.lp-faq details { border-top: 1px solid rgba(0,0,0,.14); }
+.lp-faq details:last-of-type { border-bottom: 1px solid rgba(0,0,0,.14); }
+.lp-faq summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 0;
+  font-size: clamp(17px, 2.1vw, 21px); font-weight: 500; cursor: pointer; list-style: none;
+}
+.lp-faq summary::-webkit-details-marker { display: none; }
+.lp-faq-plus { font-size: 26px; line-height: 1; color: var(--lp-blue); transition: transform .25s ease; flex-shrink: 0; }
+.lp-faq details[open] .lp-faq-plus { transform: rotate(45deg); }
+.lp-faq p { margin: 0 0 22px; font-size: clamp(15px, 1.8vw, 18px); line-height: 1.6; color: var(--lp-mut); max-width: 640px; }
+
+/* ---- 结尾 CTA / 页脚 ---- */
+.lp-final { text-align: center; }
+.lp-final .lp-cta-row { justify-content: center; margin-top: 30px; }
+.lp-footer {
+  border-top: 1px solid rgba(0,0,0,.08); background: #f5f5f7; padding: 36px 0;
+  font-size: 14px; color: var(--lp-mut2);
+}
+.lp-footer--dark { background: #000; border-top-color: rgba(255,255,255,.12); color: var(--lp-mut); }
+.lp-footer-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.lp-footer-mark { font-weight: 600; color: var(--lp-ink); }
+.lp-footer--dark .lp-footer-mark { color: #f5f5f7; }
+.lp-footer-links { margin-left: auto; display: flex; gap: 20px; }
+.lp-footer-links a:hover { color: var(--lp-blue); }
+
+/* ===========================================================================
+   视觉件(全部纯 CSS，无图片资源——Dockerfile 不拷 public/)。
+   每个 mock 用 em 布局，根上一个 font-size 就能整体缩放。
+   =========================================================================== */
+
+/* 手机 */
+.lp-phone {
+  font-size: 15px; position: relative; width: 20.5em; height: 41em; flex-shrink: 0;
+  border-radius: 3.6em; background: linear-gradient(160deg, #48484a, #1d1d1f 55%, #000);
+  padding: .73em; box-shadow: 0 50px 90px -30px rgba(0,0,0,.5);
+}
+.lp-phone-screen { height: 100%; border-radius: 2.93em; background: #fff; overflow: hidden; display: flex; flex-direction: column; color: var(--lp-ink); }
+.lp-phone-notch { height: 3.5em; display: flex; align-items: flex-end; justify-content: center; padding-bottom: .53em; }
+.lp-phone-notch i { width: 6.1em; height: 1.6em; border-radius: .93em; background: #000; display: block; }
+.lp-phone-head { padding: .4em 1.47em 0; display: flex; align-items: baseline; justify-content: space-between; }
+.lp-phone-head b { font-size: 1.47em; font-weight: 700; letter-spacing: -.01em; }
+.lp-phone-head span { font-size: 1.47em; font-weight: 700; color: var(--lp-blue); font-variant-numeric: tabular-nums; }
+.lp-phone-chips { padding: .93em 1.47em 0; display: flex; gap: .47em; flex-wrap: wrap; }
+.lp-phone-chips span { padding: .33em .73em; border-radius: 999px; background: #f5f5f7; color: var(--lp-mut); font-size: .8em; font-weight: 600; }
+.lp-phone-chips span:first-child { background: #eaf4ff; color: var(--lp-blue); }
+.lp-phone-foot { padding: .93em 1.47em 1.47em; display: flex; align-items: center; gap: .67em; }
+.lp-phone-foot i { width: 2.93em; height: 2.93em; border-radius: 50%; background: var(--lp-blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lp-phone-foot i::before { content: ''; width: 1.2em; height: .93em; border-radius: 3px; border: 2px solid #fff; display: block; }
+.lp-phone-foot span { font-size: .87em; color: var(--lp-mut); }
+
+/* 票据(手机内嵌用 --in，独立卡片用 --card) */
+.lp-receipt { font-size: 15px; position: relative; overflow: hidden; color: #4a4335; }
+.lp-receipt--in { margin: 1.07em 1.07em 0; padding: 1.07em 1.2em; border-radius: 1.33em; background: #efe9dd; flex: 1; }
+.lp-receipt--card {
+  width: 100%; max-width: 26em; border-radius: 1.73em; padding: 2.27em 2.27em 2em;
+  background: linear-gradient(180deg, #fffdf8, #efe9dd); box-shadow: 0 40px 70px -30px rgba(90,78,54,.5);
+}
+.lp-receipt--wide { max-width: 40em; }
+.lp-receipt-sheen { position: absolute; top: -60px; left: -40px; width: 220px; height: 220px; background: radial-gradient(closest-side, rgba(255,255,255,.9), rgba(255,255,255,0)); pointer-events: none; }
+.lp-receipt-head { display: flex; justify-content: space-between; font-size: .8em; font-weight: 700; color: #8a8071; letter-spacing: .09em; }
+.lp-receipt-body { margin-top: 1em; display: flex; flex-direction: column; gap: .73em; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .8em; }
+.lp-receipt--card .lp-receipt-body { font-size: 1em; gap: .93em; }
+.lp-receipt-row { display: flex; align-items: center; justify-content: space-between; gap: .8em; }
+.lp-receipt-row span:first-child { display: flex; align-items: center; gap: .67em; min-width: 0; }
+.lp-receipt-rule { height: 1px; background: repeating-linear-gradient(90deg, #c9bfa9 0 6px, transparent 6px 12px); }
+.lp-receipt-mut { color: #8a8071; }
+.lp-receipt-total { font-size: 1.2em; font-weight: 700; color: #2b2720; }
+.lp-receipt--card .lp-receipt-total { font-size: 1.3em; }
+.lp-tag { padding: .2em .55em; border-radius: 6px; font-size: .72em; font-weight: 700; white-space: nowrap; }
+.lp-tag--ex { background: #e3f1e6; color: #3c7a4c; }
+.lp-tag--both { background: #dfeaf9; color: #2a5c96; }
+.lp-tag--gst { background: #f3e6da; color: #8a5a2b; }
+.lp-receipt--card .lp-tag { font-size: .68em; }
+.lp-scan {
+  position: absolute; left: 0; right: 0; top: 0; height: 5.9em;
+  background: linear-gradient(180deg, rgba(0,113,227,0), rgba(0,113,227,.28));
+  border-bottom: 2px solid var(--lp-blue); animation: lp-scan 3.4s cubic-bezier(.5,0,.5,1) infinite;
+}
+@keyframes lp-scan { 0% { transform: translateY(0); opacity: 0 } 12% { opacity: 1 } 88% { opacity: 1 } 100% { transform: translateY(330%); opacity: 0 } }
+
+/* 年度金额卡(hero B) */
+.lp-yearcard { font-size: 15px; width: 26.7em; max-width: 100%; background: #1c1c1e; border-radius: 1.87em; padding: 2.1em 2.27em 1.87em; box-shadow: 0 50px 90px -30px rgba(0,0,0,.8); position: relative; }
+.lp-yearcard-label { font-size: 1em; color: #a1a1a6; }
+.lp-yearcard-value { margin-top: .5em; font-size: 3.7em; font-weight: 700; letter-spacing: -.025em; font-variant-numeric: tabular-nums; line-height: 1; }
+.lp-yearcard-bars { margin-top: 1.5em; height: 9.3em; display: flex; align-items: flex-end; gap: .6em; }
+.lp-yearcard-bars i { flex: 1; border-radius: 6px; background: #3a3a3c; display: block; }
+.lp-yearcard-bars i.on { background: linear-gradient(180deg, #0a84ff, #5e5ce6); }
+.lp-yearcard-axis { margin-top: 1em; display: flex; justify-content: space-between; font-size: .87em; color: var(--lp-mut); }
+.lp-yearcard-tax { margin-top: 1.4em; padding-top: 1.25em; border-top: 1px solid rgba(255,255,255,.12); display: flex; justify-content: space-between; font-size: 1.07em; }
+.lp-yearcard-tax span:first-child { color: #a1a1a6; }
+.lp-yearcard .lp-sample { background: rgba(255,255,255,.1); color: #a1a1a6; }
+.lp-float {
+  position: absolute; left: -38px; bottom: -26px; width: 132px; background: #efe9dd; border-radius: 12px;
+  padding: 14px 12px; transform: rotate(-3deg); animation: lp-float 6s ease-in-out infinite;
+  box-shadow: 0 20px 40px -14px rgba(0,0,0,.7); font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 10px; color: #4a4335;
+}
+.lp-float div { display: flex; justify-content: space-between; }
+.lp-float div + div { margin-top: 6px; }
+.lp-float hr { height: 1px; border: 0; margin: 8px 0; background: repeating-linear-gradient(90deg, #c9bfa9 0 5px, transparent 5px 10px); }
+@keyframes lp-float { 0%, 100% { transform: translateY(0) rotate(-3deg) } 50% { transform: translateY(-14px) rotate(-3deg) } }
+
+/* 柱图 */
+.lp-bars { margin-top: 30px; height: 190px; display: flex; align-items: flex-end; gap: 16px; }
+.lp-bars > div { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.lp-bars b {
+  width: 100%; border-radius: 10px 10px 4px 4px; background: #d2d2d7; display: block;
+  transform: scaleY(.001); transform-origin: bottom; transition: transform .9s cubic-bezier(.22,.61,.36,1);
+}
+.lp-sec--tint .lp-bars b { background: #e8e8ed; }
+.lp-bars b.on { background: linear-gradient(180deg, #0071e3, #5e5ce6); }
+.is-in .lp-bars b, .lp [data-reveal].is-in .lp-bars b { transform: scaleY(1); }
+.lp-bars span { font-size: 13px; color: var(--lp-mut2); }
+.lp-bars span.on { color: var(--lp-ink); font-weight: 600; }
+
+/* 环图 */
+.lp-donut {
+  margin: 24px auto 0; width: 168px; height: 168px; border-radius: 50%; position: relative;
+  background: conic-gradient(#0071e3 0 28%, #199e70 28% 50%, #c98500 50% 68%, #5e5ce6 68% 85%, #d55181 85% 94%, #d2d2d7 94% 100%);
+  display: flex; align-items: center; justify-content: center;
+}
+.lp-donut i {
+  width: 108px; height: 108px; border-radius: 50%; background: #f5f5f7; display: flex;
+  flex-direction: column; align-items: center; justify-content: center; font-style: normal;
+}
+.lp-sec--tint .lp-donut i { background: #fff; }
+.lp-donut i small { font-size: 13px; color: var(--lp-mut2); }
+.lp-donut i b { font-size: 27px; font-weight: 700; letter-spacing: -.02em; }
+.lp-legend { margin-top: 24px; display: flex; flex-direction: column; gap: 10px; font-size: 15px; }
+.lp-legend div { display: flex; align-items: center; gap: 10px; }
+.lp-legend i { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+.lp-legend span { flex: 1; }
+.lp-legend em { font-style: normal; color: var(--lp-mut); }
+
+/* 家庭账本卡 */
+.lp-ledger { background: #fff; border-radius: 26px; padding: 28px; box-shadow: 0 30px 60px -30px rgba(0,0,0,.25); position: relative; }
+.lp-sec--tint .lp-ledger { box-shadow: none; }
+/* padding-right 给右上角的"示例"角标让位，否则和头像叠在一起 */
+.lp-ledger-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-right: 52px; }
+.lp-ledger-head b { font-size: 19px; font-weight: 600; }
+.lp-avatars { display: flex; }
+.lp-av {
+  width: 32px; height: 32px; border-radius: 50%; color: #fff; font-size: 13px; font-weight: 600;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.lp-avatars .lp-av { border: 2px solid #fff; width: 34px; height: 34px; }
+.lp-avatars .lp-av + .lp-av { margin-left: -10px; }
+.lp-sec--tint .lp-avatars .lp-av { border-color: #f5f5f7; }
+.lp-av--1 { background: #0071e3; }
+.lp-av--2 { background: #199e70; }
+.lp-av--3 { background: #c98500; }
+.lp-ledger-rows { margin-top: 20px; display: flex; flex-direction: column; }
+.lp-ledger-row { display: flex; align-items: center; gap: 14px; padding: 13px 2px; border-top: 1px solid rgba(0,0,0,.08); }
+/* 只让"店名 · 分类"那一格伸展；早先写成 .lp-ledger-row span 会把头像也拉成椭圆 */
+.lp-ledger-what { flex: 1; font-size: 16px; min-width: 0; }
+.lp-ledger-row b { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.lp-ledger-total { display: flex; align-items: center; gap: 14px; padding: 15px 2px 2px; border-top: 1px solid rgba(0,0,0,.14); }
+.lp-ledger-total span { flex: 1; font-size: 16px; color: var(--lp-mut); }
+.lp-ledger-total b { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ===========================================================================
+   滚动进场
+   [data-reveal-ready] 是关键：隐藏态只在 JS 确认会跑观察器之后才写上去。
+   钩子一旦提前 return(减弱动态效果 / 没有 IntersectionObserver / 抛异常)，
+   内容就是普通可见状态，不会永久隐形。
+   =========================================================================== */
+.lp [data-reveal] { transition: opacity .8s cubic-bezier(.22,.61,.36,1), transform .8s cubic-bezier(.22,.61,.36,1); }
+.lp[data-reveal-ready] [data-reveal] { opacity: 0; transform: translateY(26px); }
+.lp [data-reveal].is-in { opacity: 1; transform: none; }
+
+/* ---- A/B 版式切换(定稿后连同 VariantSwitch.js 一起删) ---- */
+.lp-switch {
+  position: fixed; right: 16px; bottom: 16px; z-index: 60; display: flex; gap: 4px; padding: 4px;
+  border-radius: 999px; background: rgba(255,255,255,.86); backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(0,0,0,.12); box-shadow: 0 10px 30px -12px rgba(0,0,0,.4);
+}
+.lp-switch button {
+  min-height: 32px; padding: 0 12px; border-radius: 999px; font-size: 13px; font-weight: 600;
+  color: var(--lp-mut); background: none;
+}
+.lp-switch button.on { background: var(--lp-ink); color: #fff; }
+
+/* ===========================================================================
+   响应式：字号靠 clamp() 自适应，断点只管栅格塌陷和留白
+   =========================================================================== */
+@media (max-width: 1080px) {
+  .lp-wrap { padding: 0 28px; }
+  .lp-nav { padding: 0 28px; }
+  .lp-sec { padding: 84px 0; }
+  .lp-tax-grid, .lp-family-grid, .lp-heroB-grid { gap: 44px; }
+  .lp-phone { font-size: 13px; }
+  .lp-yearcard { font-size: 13.5px; }
+}
+@media (max-width: 900px) {
+  .lp-heroB-grid, .lp-tax-grid, .lp-family-grid, .lp-insights-grid { grid-template-columns: 1fr; }
+  .lp-family-grid--flip .lp-family-copy { order: 0; }
+  .lp-heroA { padding-top: 68px; }
+  .lp-heroA-stage { padding: 40px 0 68px; }
+  .lp-nav-links { display: none; }
+  .lp-steps, .lp-data-cards { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 640px) {
+  .lp-sec { padding: 60px 0; }
+  .lp-wrap { padding: 0 22px; }
+  .lp-nav { padding: 0 22px; gap: 12px; }
+  .lp-steps, .lp-data-cards { grid-template-columns: 1fr; }
+  .lp-cta-row { flex-direction: column; align-items: stretch; }
+  .lp-cta-row .lp-btn { width: 100%; }
+  .lp-heroA .lp-cta-row, .lp-final .lp-cta-row { align-items: stretch; }
+  .lp-link { text-align: center; }
+  .lp-float { display: none; } /* 绝对定位，窄屏会顶出横向滚动 */
+  .lp-phone { font-size: 12px; }
+  .lp-yearcard { font-size: 12.5px; }
+  .lp-receipt--card { font-size: 13px; }
+  .lp-panel { padding: 24px 22px 22px; }
+  .lp-bars { gap: 10px; height: 150px; }
+  .lp-footer-links { margin-left: 0; width: 100%; }
+}
+@media (max-width: 430px) {
+  .lp-sec { padding: 48px 0; }
+  .lp-wrap { padding: 0 20px; }
+  .lp-phone { font-size: 10.6px; }
+  .lp-eyebrow { font-size: 16px; }
+  .lp-tax-bullets li, .lp-family-note, .lp-ledger-row span, .lp-ledger-row b { font-size: 15px; }
+}
+
+/* 尊重"减弱动态效果"：CSS 兜底 + useReveal 里的提前 return，双保险 */
+@media (prefers-reduced-motion: reduce) {
+  .lp *, .lp *::before, .lp *::after {
+    animation-duration: .001ms !important; animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+  .lp [data-reveal] { opacity: 1 !important; transform: none !important; }
+  .lp-bars b { transform: scaleY(1) !important; }
+}
+
+/* ===========================================================================
+   /login —— 独立作用域，绝不嵌在 .lp 里(两者的 button reset 特异性相同)。
+   做法不是逐条覆盖，而是重绑 globals.css 用到的那几个 CSS 变量，
+   .card / button / .muted / input 就自动变成浅色。
+   前提：globals.css 里这些规则继续用变量表达；哪天有人往里写死颜色，这里会悄悄坏掉。
+   =========================================================================== */
+.lp-auth {
+  --card: #fff; --card2: #fff; --line: #d2d2d7;
+  --txt: #1d1d1f; --mut: #6e6e73; --acc: #0071e3; --acc-ink: #fff; --bad: #d70015;
+  --radius: 20px; --shadow: 0 6px 30px rgba(0,0,0,.06);
+  color: var(--txt); /* 裸 .meta 是靠继承取色的，这行救的就是"验证码加载中…" */
+  min-height: 100dvh; padding: 32px 20px;
+  display: grid; align-content: center; justify-items: center; gap: 18px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Segoe UI", Roboto, sans-serif;
+}
+.lp-auth a { color: var(--acc); }
+.lp-auth .card { width: min(92vw, 392px); }
+.lp-auth .card h2 { font-size: 22px; letter-spacing: -.01em; }
+.lp-auth input, .lp-auth select { background: #fff; } /* globals 里唯一硬编码的深色值 */
+.lp-auth input:focus, .lp-auth select:focus { box-shadow: 0 0 0 3px rgba(0,113,227,.22); }
+.lp-auth input[type="radio"] { background: none; border: 0; padding: 0; accent-color: var(--acc); }
+.lp-auth button { border-radius: 999px; padding: 11px 22px; min-height: 44px; }
+.lp-auth button:hover:not(:disabled) { filter: none; background: #0077ed; }
+.lp-auth img { border-radius: 8px; border: 1px solid var(--line); }
+.lp-auth-mark { font-size: 20px; font-weight: 600; letter-spacing: -.01em; color: var(--txt) !important; text-decoration: none; }
+.lp-auth-note { width: min(92vw, 392px); margin: 0; font-size: 12px; line-height: 1.6; color: var(--mut); }

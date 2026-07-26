@@ -1,11 +1,11 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
 import { FAMILY_ROLES } from '../lib/familyRoles';
 
-export default function AuthGate({ onLoggedIn }) {
-  const [mode, setMode] = useState('login');
+export default function AuthGate({ onLoggedIn, initialMode = 'login' }) {
+  const [mode, setMode] = useState(initialMode);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [err, setErr] = useState('');
@@ -15,6 +15,10 @@ export default function AuthGate({ onLoggedIn }) {
   const [accountType, setAccountType] = useState('individual');
   const [familyAction, setFamilyAction] = useState('create');
   const [familyName, setFamilyName] = useState('');
+
+  // 直接以注册态打开(落地页的"免费注册" CTA 带 ?mode=register)时也要先出一道验证码，
+  // 否则只有 toggleMode() 那条路径会出题
+  useEffect(() => { if (initialMode === 'register') loadCaptcha(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadCaptcha() {
     setCaptchaAnswer('');

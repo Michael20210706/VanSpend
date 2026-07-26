@@ -53,7 +53,9 @@ VanSpend 是一个 Next.js(App Router)全栈应用: 前端页面和 API 路由�
 
 ```
 app/            页面 + API 路由: page.js/layout.js(前端), api/**/route.js(接口，含 api/admin/**), uploads/[...file]/route.js(小票原图), admin/page.js(管理后台页面)
-components/     React 组件: Header / AuthGate / ScanTab / DashboardTab / ReceiptsTab / Toast；components/admin/ 下是管理后台的 StatsPanel / ReceiptsPanel / UsersPanel
+components/     React 组件: Header / AuthGate / LoginClient / ScanTab / DashboardTab / ReceiptsTab / Toast
+                components/landing/ 是未登录时的宣传落地页(Landing / sections / mocks / copy / landing.css)
+                components/admin/ 下是管理后台的 StatsPanel / ReceiptsPanel / UsersPanel
 lib/            前端小工具: api.js(fetch 封装) / toast.js / dateRange.js
 src/            后端逻辑: db.cjs(MySQL 访问) / openrouter.cjs(AI 识别) / uploads.cjs / session.js(登录会话)
 config/         config.json(模型、税率、分类；端口现在由 .env 的 PORT 控制)
