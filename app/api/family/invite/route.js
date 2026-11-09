@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
 import dbApi from '@/src/db.cjs';
 import { requireFamilyCreator } from '@/src/session';
-import { wrap } from '@/src/http';
+import { wrap, readJson, FORM_BODY_MAX } from '@/src/http';
 
 // 创建者邀请一个已注册用户直接入群，立即生效(邀请人本身即审核人)
 export const POST = wrap(async (request) => {
   const { session, response } = await requireFamilyCreator();
   if (response) return response;
 
-  const body = await request.json();
+  const body = await readJson(request, FORM_BODY_MAX);
   const username = (body.username || '').trim();
   if (!username) return NextResponse.json({ error: '请填写要邀请的用户名' }, { status: 400 });
   if (username === session.username) return NextResponse.json({ error: '不能邀请自己' }, { status: 400 });

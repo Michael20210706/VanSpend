@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import dbApi from '@/src/db.cjs';
-import { saveImage } from '@/src/uploads.cjs';
+import uploadsLib from '@/src/uploads.cjs';
 import { requireSession } from '@/src/session';
-import { wrap } from '@/src/http';
+import { wrap, readJson, IMAGE_BODY_MAX } from '@/src/http';
 
 export const GET = wrap(async (request) => {
   const { session, response } = await requireSession();
@@ -24,10 +24,14 @@ export const POST = wrap(async (request) => {
   const { session, response } = await requireSession();
   if (response) return response;
 
-  const body = await request.json();
+  const body = await readJson(request, IMAGE_BODY_MAX);
   const { receipt, items, image, raw } = body;
   if (!receipt || !Array.isArray(items)) return NextResponse.json({ error: '数据格式错误' }, { status: 400 });
-  const image_file = image ? saveImage(image) : null;
+  if (image) {
+    const bad = uploadsLib.checkImage(image);
+    if (bad) return NextResponse.json({ error: bad.error }, { status: bad.status });
+  }
+  const image_file = image ? uploadsLib.saveImage(image) : null;
   const id = await dbApi.saveReceipt(
     {
       ...receipt,

@@ -25,7 +25,7 @@ export default function LoginClient({ initialMode }) {
         <div className="card">
           <h2>账号已创建</h2>
           <p className="muted" style={{ margin: '0 0 16px' }}>
-            加入家庭的申请已提交，等家庭创建者通过后，你在下次登录时就会看到共享的账本。
+            加入家庭的申请已提交，等家庭创建者通过后，刷新页面就能看到共享的账本。
             在那之前可以先以个人身份记账。
           </p>
           <button onClick={() => router.replace('/')}>进入应用</button>

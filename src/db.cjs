@@ -6,8 +6,8 @@ const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 
 // --- 极简 .env 加载 ---
-// Next.js 路由处理器会自动加载 .env，但 scripts/selfcheck.js 用纯 node 直接运行、不经过 Next，
-// 仍需要这份手写 loader；两边同时存在时靠 `!process.env[key]` 保护，不会重复覆盖。
+// Next.js 路由处理器会自动加载 .env，但 Vitest(tests/)不经过 Next 的 .env 加载，
+// 仍需要这份手写 loader(测试先注入 .env.test 的值，这里只补齐缺的键)；两边同时存在时靠 `!process.env[key]` 保护，不会重复覆盖。
 (function loadEnv() {
   // process.cwd() 而非 __dirname: 避免被 Next.js/Turbopack 打包后虚拟化的路径影响(见 uploads.cjs 注释)
   const envPath = path.join(process.cwd(), '.env');
@@ -90,6 +90,7 @@ const SCHEMA_STATEMENTS = [
     INDEX idx_receipts_date (purchased_at),
     INDEX idx_receipts_user (user_id),
     INDEX idx_receipts_family (family_id),
+    INDEX idx_receipts_image (image_file),
     CONSTRAINT fk_receipts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT fk_receipts_family FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE SET NULL
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
@@ -125,6 +126,15 @@ const SCHEMA_STATEMENTS = [
     created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_feedback_user (user_id),
     CONSTRAINT fk_feedback_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  // 登录失败记录(防爆破)。只记失败；username 存用户输入的原文(可能根本不存在)，所以不挂外键
+  `CREATE TABLE IF NOT EXISTS login_failures (
+    id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    username      VARCHAR(100)  NOT NULL,
+    ip            VARCHAR(64)   NOT NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_lf_user_time (username, created_at),
+    INDEX idx_lf_ip_time   (ip, created_at)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 ];
 
@@ -199,6 +209,16 @@ async function migrateItemsFamilyColumns(conn) {
   await conn.query('ALTER TABLE items ADD CONSTRAINT fk_items_family FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE SET NULL');
 }
 
+// 升级路径: 已有 receipts 表没有 image_file 索引(原图鉴权按文件名反查小票时用)
+async function migrateReceiptsImageIndex(conn) {
+  const [rows] = await conn.query(`
+    SELECT COUNT(*) AS n FROM information_schema.STATISTICS
+    WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'receipts' AND INDEX_NAME = 'idx_receipts_image'
+  `);
+  if (rows[0].n > 0) return;
+  await conn.query('ALTER TABLE receipts ADD INDEX idx_receipts_image (image_file)');
+}
+
 // 初始化管理员账号: 只在 ADMIN_USERNAME/ADMIN_PASSWORD 都配置了、且该用户名还不存在时创建一次；
 // 已存在的账号(不管是不是管理员)不会被覆盖密码/角色
 async function seedAdmin() {
@@ -231,6 +251,7 @@ async function initSchema() {
       await migrateUsersFamilyFk(conn);
       await migrateReceiptsFamilyColumns(conn);
       await migrateItemsFamilyColumns(conn);
+      await migrateReceiptsImageIndex(conn);
     } finally {
       conn.release();
     }
@@ -379,6 +400,89 @@ async function findUserById(id) {
   return rows[0] || null;
 }
 
+// 每个请求校验会话用: 一次主键查询拿到用户当前的权限与家庭(含家庭名、创建者)，以库为准、不信任 cookie 缓存
+async function getSessionUser(id) {
+  await ready;
+  const [rows] = await pool.execute(`
+    SELECT u.id, u.username, u.is_admin, u.family_id, u.family_role, u.account_type,
+           f.name AS family_name, f.creator_id AS family_creator_id
+    FROM users u LEFT JOIN families f ON f.id = u.family_id
+    WHERE u.id = :id
+  `, { id });
+  return rows[0] || null;
+}
+
+// 原图鉴权: 按文件名反查所属小票的上传者与家庭；文件不属于任何小票时返回 null
+async function findImageOwner(imageFile) {
+  await ready;
+  const [rows] = await pool.execute(
+    'SELECT user_id, family_id FROM receipts WHERE image_file = :imageFile LIMIT 1',
+    { imageFile }
+  );
+  return rows[0] || null;
+}
+
+// ---- 登录防爆破 ----
+// 列宽: username VARCHAR(100)、ip VARCHAR(64)。写入和查询都用同样的截断，超长输入既不会 500，也能落进同一个桶
+const lfUser = (u) => String(u || '').slice(0, 100);
+// ip 为 null(取不到客户端 IP)时存空串，并在所有查询里跳过 IP 维度
+const lfIp = (ip) => (ip ? String(ip).slice(0, 64) : '');
+
+// 最近 windowMinutes 分钟内，该用户名 / 该 IP 各自的记录数(含正在进行中的尝试)
+async function countRecentLoginFailures(username, ip, windowMinutes) {
+  await ready;
+  const [rows] = await pool.execute(`
+    SELECT COALESCE(SUM(username = :username), 0) AS byUser,
+           COALESCE(SUM(:ip <> '' AND ip = :ip), 0) AS byIp
+    FROM login_failures
+    WHERE created_at > NOW() - INTERVAL :windowMinutes MINUTE AND (username = :username OR (:ip <> '' AND ip = :ip))
+  `, { username: lfUser(username), ip: lfIp(ip), windowMinutes });
+  return { byUser: Number(rows[0].byUser), byIp: Number(rows[0].byIp) };
+}
+
+// 固定时长锁定: 取该维度最近一次失败 L(须在 windowMinutes 内)，若 (L - window, L] 内失败数 >= max，
+// 说明在 L 时刻凑满了阈值，锁到 L + window。锁定期间的请求不再写记录，L 不会后移，所以恰好锁满 window 分钟。
+async function isLoginLocked(username, ip, max, windowMinutes) {
+  await ready;
+  const dims = [['username', lfUser(username)]];
+  if (lfIp(ip)) dims.push(['ip', lfIp(ip)]);
+  for (const [col, value] of dims) {
+    const [rows] = await pool.execute(`
+      SELECT COUNT(*) AS n
+      FROM login_failures f
+      JOIN (SELECT MAX(created_at) AS m FROM login_failures
+            WHERE ${col} = :value AND created_at > NOW() - INTERVAL :windowMinutes MINUTE) last
+        ON f.created_at > last.m - INTERVAL :windowMinutes MINUTE AND f.created_at <= last.m
+      WHERE f.${col} = :value
+    `, { value, windowMinutes });
+    if (Number(rows[0].n) >= max) return true;
+  }
+  return false;
+}
+
+// 记一次登录尝试(先记再校验密码，见 login 路由)，返回记录 id。失败就保留，成功或被拒时由调用方删除
+async function recordLoginFailure(username, ip) {
+  await ready;
+  const [info] = await pool.execute(
+    'INSERT INTO login_failures (username, ip) VALUES (:username, :ip)',
+    { username: lfUser(username), ip: lfIp(ip) }
+  );
+  // 顺手清掉一天前的旧记录，表不会无限增长
+  await pool.execute('DELETE FROM login_failures WHERE created_at < NOW() - INTERVAL 1 DAY');
+  return info.insertId;
+}
+
+async function deleteLoginAttempt(id) {
+  await ready;
+  await pool.execute('DELETE FROM login_failures WHERE id = :id', { id });
+}
+
+// 登录成功后清零该用户名的失败计数(不清 IP 维度，避免一个账号登录成功就给整个 IP 解锁)
+async function clearLoginFailures(username) {
+  await ready;
+  await pool.execute('DELETE FROM login_failures WHERE username = :username', { username: lfUser(username) });
+}
+
 async function updatePassword(id, passwordHash) {
   await ready;
   await pool.execute('UPDATE users SET password_hash = :password_hash WHERE id = :id', { id, password_hash: passwordHash });
@@ -393,7 +497,7 @@ async function backfillOwnerlessReceipts(userId) {
 
 // ---- 写入 ----
 // receipt.family_id/family_name/family_role/account_type: 建票时从上传者当前的 users 行拷贝下来的冗余字段
-// (调用方——route handler——负责从 session 填好；selfcheck.cjs 等不传时落到下面的默认值，等同"个人账号")，
+// (调用方——route handler——负责从 session 填好；测试等不传时落到下面的默认值，等同"个人账号")，
 // 目的是家庭内可见性/统计能直接按 receipts/items 的列过滤或分组，不必每次 JOIN users
 async function saveReceipt(receipt, items) {
   await ready;
@@ -661,7 +765,8 @@ module.exports = {
   statsByCategory, statsBySubcategory, statsMonthly, priceTrend,
   distinctItemNames, overview,
   createUser, findUserByUsername, findUserById, countUsers, backfillOwnerlessReceipts,
-  updatePassword,
+  updatePassword, getSessionUser, findImageOwner,
+  countRecentLoginFailures, isLoginLocked, recordLoginFailure, deleteLoginAttempt, clearLoginFailures,
   listUsers, deleteUser, statsByUser,
   findFamilyByName, findFamilyById, createFamily, inviteMember, applyToFamily,
   listFamilyMembers, listPendingRequests, decideRequest,
