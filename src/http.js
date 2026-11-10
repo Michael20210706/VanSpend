@@ -75,6 +75,8 @@ export function parseId(raw) {
 // 请求体上限: 登录/注册等普通表单 16 KB；带图片的接口 16 MB(10 MB 图片的 base64 约 13.4 MB，加上明细 JSON 留余量)
 export const FORM_BODY_MAX = 16 * 1024;
 export const IMAGE_BODY_MAX = 16 * 1024 * 1024;
+// 编辑小票: 最多 300 条明细，每条约 0.5 KB，256 KB 足够
+export const EDIT_BODY_MAX = 256 * 1024;
 
 // 统一错误响应，对应旧 Express 版本 server.js 里的 wrap()
 export function wrap(handler) {
