@@ -204,8 +204,8 @@ describe('PUT /api/receipts/[id]: 校验(不合法一律 400，数据不变)', (
     await expect400(body({}, [item({ name_raw: 'x'.repeat(256) })]));
   });
   it('金额合计超出数据库范围', async () => {
-    const big = Array.from({ length: 11 }, () => item({ amount: 9e6, unit_price: 9e6, qty: 1 }));
-    await expect400(body({}, big));
+    // 每行都合法(金额 < 上限、单价正常)，但合计 1.8e8 超过 DECIMAL(10,2)
+    await expect400(body({}, [item({ amount: 9e7, unit_price: 1, qty: 1 }), item({ amount: 9e7, unit_price: 1, qty: 1 })]));
   });
   it('请求体过大 413；不是 JSON 对象 400', async () => {
     const u = await makeUser();
@@ -223,6 +223,81 @@ describe('PUT /api/receipts/[id]: 校验(不合法一律 400，数据不变)', (
     const r = await (await put(id, body({ gst: 0, pst: 0 }, [item({ amount: 10, unit_price: 10, qty: 1 }), item({ name_raw: 'Discount', amount: -3, unit_price: -3, qty: 1 })]))).json();
     expect(r.subtotal).toBe(7);
     expect(r.total).toBe(7);
+  });
+});
+
+describe('PUT /api/receipts/[id]: 验证后补充的规则', () => {
+  async function owned() {
+    const u = await makeUser();
+    const id = await seed(u);
+    await loginAs(u);
+    return { u, id };
+  }
+
+  it('是否应税必须是布尔或 0/1', async () => {
+    const { id } = await owned();
+    expect((await put(id, body({}, [item({ taxable: 'yes' })]))).status).toBe(400);
+    expect((await put(id, body({}, [item({ taxable: 2 })]))).status).toBe(400);
+    expect((await put(id, body({}, [item({ taxable: true })]))).status).toBe(200);
+  });
+
+  it('数量太小(0 < |qty| < 0.001)返回 400；数量 0 允许', async () => {
+    const { id } = await owned();
+    expect((await put(id, body({}, [item({ qty: 0.0004, unit_price: null, amount: 5 })]))).status).toBe(400);
+    expect((await put(id, body({}, [item({ qty: 0, unit_price: null, amount: 5 })]))).status).toBe(200);
+  });
+
+  it('单价缺失时回推出的单价超出范围 → 400 而不是 500', async () => {
+    const { id } = await owned();
+    const res = await put(id, body({}, [item({ qty: 0.001, unit_price: null, amount: 1000 })]));
+    expect(res.status).toBe(400);
+    expect((await put(id, body({}, [item({ qty: 0.001, unit_price: null, amount: 50 })]))).status).toBe(200);
+  });
+
+  it('金额先取整到分再求和: 小计/总额与落库后的各行之和一致', async () => {
+    const { id } = await owned();
+    const r = await (await put(id, body({ gst: 0.015, pst: 0.015 }, [0.005, 0.005, 0.005].map((a, i) => item({ name_raw: 'p' + i, amount: a, unit_price: a, qty: 1 }))))).json();
+    const sum = r.items.reduce((x, i) => x + i.amount, 0);
+    expect(r.subtotal).toBeCloseTo(sum, 2);
+    expect(r.total).toBeCloseTo(r.subtotal + r.gst + r.pst, 2);
+  });
+
+  it('日期年份太早(0000)、商家含 NUL 字符 → 400', async () => {
+    const { id } = await owned();
+    expect((await put(id, body({ purchased_at: '0000-01-01' }))).status).toBe(400);
+    expect((await put(id, body({ store: 'a\u0000b' }))).status).toBe(400);
+  });
+
+  it('updateReceipt 本身也校验所有者(不依赖路由): 别人的 userId 返回 false，数据不变', async () => {
+    const owner = await makeUser();
+    const other = await makeUser();
+    const id = await seed(owner);
+    const ok = await dbApi.updateReceipt(id, other.id, { store: 'HACK', purchased_at: '2026-01-01', subtotal: 1, gst: 0, pst: 0, total: 1 }, [item()]);
+    expect(ok).toBe(false);
+    const [[r]] = await dbApi.pool.execute('SELECT store FROM receipts WHERE id = :id', { id });
+    expect(r.store).toBe('Costco');
+  });
+
+  it('与改名/解散并发: 编辑不死锁、不留下过期的家庭名', async () => {
+    for (let round = 0; round < 8; round++) {
+      const owner = await makeUser();
+      const member = await makeUser();
+      const familyId = await makeFamily(owner, member);
+      const id = await seed(member, { familyId });
+      const [[{ name: famName }]] = await dbApi.pool.execute('SELECT name FROM families WHERE id = :id', { id: familyId });
+      const results = await Promise.allSettled([
+        dbApi.updateReceipt(id, member.id, { store: 'E', purchased_at: '2026-01-01', subtotal: 1, gst: 0, pst: 0, total: 1 }, [item(), item({ name_raw: 'Z' })]),
+        round % 2 ? dbApi.renameFamily(familyId, owner.id, uniq('renamed')) : dbApi.dissolveFamily(familyId, owner.id, famName),
+      ]);
+      for (const r of results) expect(r.status).toBe('fulfilled');
+      const [[fam]] = await dbApi.pool.execute('SELECT family_id, family_name FROM receipts WHERE id = :id', { id });
+      const [its] = await dbApi.pool.execute('SELECT family_id, family_name FROM items WHERE receipt_id = :id', { id });
+      expect(its).toHaveLength(2);
+      for (const i of its) {
+        expect(i.family_id).toBe(fam.family_id);
+        expect(i.family_name).toBe(fam.family_name);
+      }
+    }
   });
 });
 
@@ -303,5 +378,29 @@ describe('GET /api/receipts/duplicates: 重复提示', () => {
     }
     logout();
     expect((await dupRoute.GET(req('/api/receipts/duplicates?store=a&date=2026-07-07&total=1'))).status).toBe(401);
+  });
+
+  it('商家比较会去掉首尾空格: 库里带空格的商家也能命中', async () => {
+    const u = await makeUser();
+    const store = uniq('Pad');
+    await seed(u, { store: '  ' + store + '  ', date: '2026-07-08', total: 11 });
+    await loginAs(u);
+    expect(await dups(store, '2026-07-08', 11)).toHaveLength(1);
+  });
+
+  it('最多返回 5 条，并带出所有者用户名', async () => {
+    const u = await makeUser();
+    const store = uniq('Many');
+    for (let i = 0; i < 6; i++) await seed(u, { store, date: '2026-07-09', total: 13 });
+    await loginAs(u);
+    const r = await dups(store, '2026-07-09', 13);
+    expect(r).toHaveLength(5);
+    expect(r[0].owner_username).toBe(u.username);
+  });
+
+  it('日期格式对但不是真实日期(2026-99-99) → 400 而不是 500', async () => {
+    const u = await makeUser();
+    await loginAs(u);
+    expect((await dupRoute.GET(req('/api/receipts/duplicates?store=a&date=2026-99-99&total=1'))).status).toBe(400);
   });
 });

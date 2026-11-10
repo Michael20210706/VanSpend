@@ -14,8 +14,9 @@ export default function ReceiptEditor({ receipt, categories, onSaved, onCancel }
   const [rows, setRows] = useState(() => receipt.items.map((it) => makeRow(it)));
   const [saving, setSaving] = useState(false);
 
-  const subtotal = rows.reduce((s, r) => s + (+r.amount || 0), 0);
-  const total = subtotal + (+gst || 0) + (+pst || 0);
+  const cents = (v) => Math.round(v * 100) / 100; // 与服务端一致: 先取整到分再求和
+  const subtotal = rows.reduce((s, r) => s + cents(+r.amount || 0), 0);
+  const total = subtotal + cents(+gst || 0) + cents(+pst || 0);
 
   async function save() {
     setSaving(true);

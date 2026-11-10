@@ -1033,34 +1033,47 @@ async function getReceipt(id, scope) {
   return r;
 }
 
-// 保存后编辑: 只有小票的所有者能改(与删除同权限)，不存在或不是自己的返回 false。
-// 锁住小票行后，更新头部字段并整体替换明细；新明细的家庭字段取自这张小票当前的值(与保存时一致，不信调用方)。
-// 加锁顺序 receipts → items，和 detachUser/dissolveInTx/renameFamily 相同，不会与成员变更互相死锁。
-// image_file、raw_json、currency、family_* 都不动。
+// 保存后编辑: 只有小票的所有者能改，不存在或不是自己的返回 false。
+// 加锁顺序与家庭管理操作一致——先家庭行、后小票行、再明细: 新明细带 family_id 外键，插入时会对 families 行加共享锁，
+// 如果先锁了小票行再去要家庭行，就会和"先锁家庭行、再更新小票"的改名/解散/移除互相死锁(验证中复现过)。
+// 所以先在事务外读出小票当前的 family_id，开事务后先拿该家庭行的共享锁(家庭管理要它的排他锁，会等本事务)，
+// 再锁小票行并核对 family_id 没变(变了就放锁重来)。
+// 只更新 store/purchased_at/subtotal/gst/pst/total，整体替换明细；image_file、raw_json、currency、小票的 family_* 都不动。
 async function updateReceipt(id, userId, receipt, items) {
   await ready;
   const conn = await pool.getConnection();
   try {
-    await conn.beginTransaction();
-    const [rows] = await conn.execute(
-      `SELECT family_id, family_name, family_role, account_type FROM receipts WHERE id = :id AND user_id = :userId FOR UPDATE`,
-      { id, userId }
-    );
-    if (!rows[0]) { await conn.rollback(); return false; }
-    const fam = rows[0];
-    await conn.execute(`
-      UPDATE receipts SET store = :store, purchased_at = :purchased_at, subtotal = :subtotal, gst = :gst, pst = :pst, total = :total
-      WHERE id = :id
-    `, { store: receipt.store, purchased_at: receipt.purchased_at, subtotal: receipt.subtotal, gst: receipt.gst, pst: receipt.pst, total: receipt.total, id });
-    await conn.execute('DELETE FROM items WHERE receipt_id = :id', { id });
-    for (const it of items) {
+    for (let attempt = 0; ; attempt++) {
+      const [pre] = await conn.execute('SELECT family_id FROM receipts WHERE id = :id AND user_id = :userId', { id, userId });
+      if (!pre[0]) return false;
+      const guess = pre[0].family_id || null;
+      await conn.beginTransaction();
+      if (guess) await conn.execute('SELECT id FROM families WHERE id = :fid FOR SHARE', { fid: guess });
+      const [rows] = await conn.execute(
+        `SELECT family_id, family_name, family_role, account_type FROM receipts WHERE id = :id AND user_id = :userId FOR UPDATE`,
+        { id, userId }
+      );
+      if (!rows[0]) { await conn.rollback(); return false; }
+      if ((rows[0].family_id || null) !== guess) {
+        await conn.rollback();
+        if (attempt >= 4) throw new Error('保存小票时家庭关系持续变化，请稍后重试');
+        continue;
+      }
+      const fam = rows[0];
       await conn.execute(`
-        INSERT INTO items (receipt_id, family_id, family_name, family_role, account_type, name_raw, name_norm, category, subcategory, qty, unit, unit_price, amount, taxable)
-        VALUES (:receipt_id, :family_id, :family_name, :family_role, :account_type, :name_raw, :name_norm, :category, :subcategory, :qty, :unit, :unit_price, :amount, :taxable)
-      `, { ...it, receipt_id: id, ...fam });
+        UPDATE receipts SET store = :store, purchased_at = :purchased_at, subtotal = :subtotal, gst = :gst, pst = :pst, total = :total
+        WHERE id = :id
+      `, { store: receipt.store, purchased_at: receipt.purchased_at, subtotal: receipt.subtotal, gst: receipt.gst, pst: receipt.pst, total: receipt.total, id });
+      await conn.execute('DELETE FROM items WHERE receipt_id = :id', { id });
+      for (const it of items) {
+        await conn.execute(`
+          INSERT INTO items (receipt_id, family_id, family_name, family_role, account_type, name_raw, name_norm, category, subcategory, qty, unit, unit_price, amount, taxable)
+          VALUES (:receipt_id, :family_id, :family_name, :family_role, :account_type, :name_raw, :name_norm, :category, :subcategory, :qty, :unit, :unit_price, :amount, :taxable)
+        `, { ...it, receipt_id: id, ...fam });
+      }
+      await conn.commit();
+      return true;
     }
-    await conn.commit();
-    return true;
   } catch (e) {
     try { await conn.rollback(); } catch (_) { /* 没有进行中的事务 */ }
     throw e;
