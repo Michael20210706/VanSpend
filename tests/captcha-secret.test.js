@@ -8,11 +8,12 @@ afterEach(() => {
   vi.resetModules();
 });
 
-// 用某个密钥伪造一个"答案是 7、5 分钟内有效"的 token
+// 用某个密钥伪造一个"答案是 7、5 分钟内有效"的 token(格式同 src/captcha.cjs: 过期时间:nonce:答案的 HMAC)
 function forge(secret) {
-  const payload = `7:${Date.now() + 5 * 60 * 1000}`;
-  const sig = crypto.createHmac('sha256', secret).update(payload).digest('hex');
-  return `${Buffer.from(payload).toString('base64url')}.${sig}`;
+  const hmac = (s) => crypto.createHmac('sha256', secret).update(s).digest('hex');
+  const nonce = crypto.randomBytes(8).toString('hex');
+  const payload = `${Date.now() + 5 * 60 * 1000}:${nonce}:${hmac(`a:${nonce}:7`)}`;
+  return `${Buffer.from(payload).toString('base64url')}.${hmac(payload)}`;
 }
 
 async function freshCaptcha(secret) {

@@ -20,7 +20,7 @@ describe('开放注册(无邀请码)', () => {
     vi.spyOn(captchaApi, 'verify').mockReturnValue(true);
     logout();
     const username = uniq('open');
-    const res = await register({ username, password: 'pw123456', captchaToken: 't', captchaAnswer: '1' });
+    const res = await register({ username, password: 'pw123456', captchaToken: uniq('tok'), captchaAnswer: '1' });
     expect(res.status).toBe(200);
     const u = await userRow(username);
     expect(u.signup_source).toBe('open');
@@ -32,7 +32,7 @@ describe('开放注册(无邀请码)', () => {
     vi.spyOn(captchaApi, 'verify').mockReturnValue(false);
     logout();
     const username = uniq('open');
-    expect((await register({ username, password: 'pw123456', captchaToken: 't', captchaAnswer: '9' })).status).toBe(400);
+    expect((await register({ username, password: 'pw123456', captchaToken: uniq('tok'), captchaAnswer: '9' })).status).toBe(400);
     expect(await userRow(username)).toBeUndefined();
   });
 
@@ -40,7 +40,7 @@ describe('开放注册(无邀请码)', () => {
     vi.spyOn(captchaApi, 'verify').mockReturnValue(true);
     logout();
     const username = uniq('open');
-    const res = await register({ username, password: 'pw123456', captchaToken: 't', captchaAnswer: '1', scanTier: 'normal', signupSource: 'invite', isAdmin: true });
+    const res = await register({ username, password: 'pw123456', captchaToken: uniq('tok'), captchaAnswer: '1', scanTier: 'normal', signupSource: 'invite', isAdmin: true });
     expect(res.status).toBe(200);
     const u = await userRow(username);
     expect(u.scan_tier).toBe('open');
@@ -99,7 +99,7 @@ describe('邀请码注册', () => {
     expect((await register({ username: uniq('ws'), password: 'pw123456', inviteCode: '   ' })).status).toBe(400);
     vi.spyOn(captchaApi, 'verify').mockReturnValue(true);
     const ok = uniq('ws');
-    expect((await register({ username: ok, password: 'pw123456', inviteCode: '   ', captchaToken: 't', captchaAnswer: '1' })).status).toBe(200);
+    expect((await register({ username: ok, password: 'pw123456', inviteCode: '   ', captchaToken: uniq('tok'), captchaAnswer: '1' })).status).toBe(200);
     expect((await userRow(ok)).scan_tier).toBe('open');
   });
 

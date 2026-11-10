@@ -24,6 +24,21 @@ CREATE TABLE IF NOT EXISTS users (
   CONSTRAINT fk_users_invited_by FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 已用过的验证码 token(其 SHA-256)：同一个 token 只能用一次；过期行在每次写入时顺手清掉
+CREATE TABLE IF NOT EXISTS captcha_used (
+  token_key     CHAR(64)      NOT NULL PRIMARY KEY,
+  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_captcha_used_time (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 开放注册(过了验证码)的尝试记录，按 IP 限速用(滚动 24 小时上限见 src/db.cjs)；没有外键，只存 IP
+CREATE TABLE IF NOT EXISTS signup_attempts (
+  id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  ip            VARCHAR(64)   NOT NULL,
+  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_signup_ip_time (ip, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 管理员写操作日志(只增不改，没有修改/删除它的接口；不记录查看)。操作人/对象存文字快照，对象或操作人被删后日志仍可读
 CREATE TABLE IF NOT EXISTS admin_audit_log (
   id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
