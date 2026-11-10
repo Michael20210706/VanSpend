@@ -6,6 +6,7 @@ import { FAMILY_ROLE_LABELS } from '../../lib/familyRoles';
 
 export default function UsersPanel({ active }) {
   const [users, setUsers] = useState([]);
+  const [resetResult, setResetResult] = useState(null); // { username, password }: 临时密码只在这里显示一次
 
   async function load() {
     setUsers(await api('/api/admin/users'));
@@ -29,6 +30,16 @@ export default function UsersPanel({ active }) {
     }
   }
 
+  async function resetPassword(id, username) {
+    if (!confirm(`把「${username}」的密码重置成临时密码？他下次登录必须先修改；原密码立即失效。`)) return;
+    try {
+      const r = await api('/api/admin/users/' + id + '/reset-password', { method: 'POST' });
+      setResetResult({ username, password: r.temporaryPassword });
+    } catch (e) {
+      showToast('重置失败: ' + e.message);
+    }
+  }
+
   async function del(id, username) {
     if (!confirm(`确认删除账号「${username}」？其名下所有小票和明细会一并删除，且不可恢复。`)) return;
     try {
@@ -43,6 +54,15 @@ export default function UsersPanel({ active }) {
   return (
     <div className="card">
       <h2>用户管理</h2>
+      {resetResult && (
+        <div className="card" style={{ border: '1px solid var(--acc)' }}>
+          <p style={{ margin: 0 }}>
+            「{resetResult.username}」的临时密码: <code style={{ fontSize: 16 }}>{resetResult.password}</code>
+          </p>
+          <p className="muted" style={{ margin: '6px 0 10px' }}>只显示这一次，请自己转告用户(这里关闭后无法再查看)。用户登录后会被要求先设置新密码。</p>
+          <button onClick={() => setResetResult(null)}>我已记下，关闭</button>
+        </div>
+      )}
       <div className="table-scroll">
       <table>
         <thead>
@@ -77,7 +97,10 @@ export default function UsersPanel({ active }) {
               <td>{u.created_at}</td>
               <td className="num">{u.receipt_count}</td>
               <td className="num">${fmt(u.total_spend)}</td>
-              <td><button className="danger" onClick={() => del(u.id, u.username)}>删除</button></td>
+              <td>
+                {u.is_admin ? null : <button onClick={() => resetPassword(u.id, u.username)}>重置密码</button>}{' '}
+                <button className="danger" onClick={() => del(u.id, u.username)}>删除</button>
+              </td>
             </tr>
           ))}
         </tbody>

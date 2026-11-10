@@ -48,3 +48,22 @@ describe('users 邀请/额度列的升级迁移', () => {
     expect(await cols()).toEqual(expect.arrayContaining(['signup_source', 'scan_tier', 'invited_by']));
   });
 });
+
+// P4: users.must_change_password 的升级迁移(老库没有这一列)
+describe('users.must_change_password 的升级迁移', () => {
+  it('旧结构(没有这一列)→ 迁移后补齐，老账号默认 0、数据不丢；重复执行是空操作', async () => {
+    const old = await makeUser();
+    await dbApi.pool.query('ALTER TABLE users DROP COLUMN must_change_password');
+    expect(await cols()).not.toContain('must_change_password');
+    const conn = await dbApi.pool.getConnection();
+    try {
+      await dbApi.migrateUsersPasswordFlag(conn);
+      await dbApi.migrateUsersPasswordFlag(conn);
+    } finally {
+      conn.release();
+    }
+    expect(await cols()).toContain('must_change_password');
+    const [[u]] = await dbApi.pool.query('SELECT username, must_change_password FROM users WHERE id = ?', [old.id]);
+    expect(u).toMatchObject({ username: old.username, must_change_password: 0 });
+  });
+});

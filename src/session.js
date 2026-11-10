@@ -47,15 +47,24 @@ export async function getAuthedSession() {
   session.accountType = u.account_type || 'individual';
   session.scanTier = u.scan_tier || 'normal';
   session.isFamilyCreator = !!u.family_id && u.family_creator_id === u.id;
+  session.mustChangePassword = !!u.must_change_password;
   return session;
 }
 
+// 管理员重置过密码的账号: 在用户改掉临时密码之前，除了 /api/auth/me、/api/auth/password、退出登录之外的接口一律 403。
+// 标志每个请求都从库里读(getAuthedSession)，所以对这个账号已经登录的其他设备同样立即生效。
+// 三个 require*() 都过这一关；只有改密码接口用 { allowPasswordChange: true } 放行。
+function passwordChangeRequired() {
+  return NextResponse.json({ error: '请先修改密码', code: 'password_change_required' }, { status: 403 });
+}
+
 // 路由处理器里鉴权的公共写法: const { session, response } = await requireSession(); if (response) return response;
-export async function requireSession() {
+export async function requireSession({ allowPasswordChange = false } = {}) {
   const session = await getAuthedSession();
   if (!session) {
     return { session: null, response: NextResponse.json({ error: '未登录' }, { status: 401 }) };
   }
+  if (session.mustChangePassword && !allowPasswordChange) return { session: null, response: passwordChangeRequired() };
   return { session, response: null };
 }
 
@@ -68,6 +77,7 @@ export async function requireAdmin() {
   if (!session.isAdmin) {
     return { session: null, response: NextResponse.json({ error: '无权限' }, { status: 403 }) };
   }
+  if (session.mustChangePassword) return { session: null, response: passwordChangeRequired() };
   return { session, response: null };
 }
 
@@ -80,5 +90,6 @@ export async function requireFamilyCreator() {
   if (!session.familyId || !session.isFamilyCreator) {
     return { session: null, response: NextResponse.json({ error: '无权限' }, { status: 403 }) };
   }
+  if (session.mustChangePassword) return { session: null, response: passwordChangeRequired() };
   return { session, response: null };
 }

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import Header from '../components/Header';
 import Landing from '../components/landing/Landing';
 import Toast from '../components/Toast';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 import ScanTab from '../components/ScanTab';
 import DashboardTab from '../components/DashboardTab';
 import ReceiptsTab from '../components/ReceiptsTab';
@@ -48,9 +49,22 @@ export default function Home() {
   if (user === undefined) return null; // 等 /api/auth/me 落地，避免落地页和应用互闪
   if (!user) return <Landing />; // 未登录 = 宣传落地页；它自带导航和页脚，不挂 Header
 
+  // 管理员重置过密码的账号: 必须先改掉临时密码，改完之前不渲染应用本身(服务端也会对其他接口回 403)
+  if (user.mustChangePassword) {
+    return (
+      <>
+        <ChangePasswordModal forced onClose={refreshUser} />
+        <p style={{ textAlign: 'center', marginTop: 24 }}>
+          <a href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}>退出登录</a>
+        </p>
+        <Toast />
+      </>
+    );
+  }
+
   return (
     <>
-      <Header cfg={cfg} user={user} onLogout={handleLogout} />
+      <Header cfg={cfg} user={user} onLogout={handleLogout} onAccountDeleted={() => setUser(null)} />
 
       <div className="wrap">
         <div className="tabs">

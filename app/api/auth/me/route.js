@@ -10,6 +10,6 @@ export const GET = wrap(async () => {
     id: session.userId, username: session.username, isAdmin: !!session.isAdmin,
     familyId: session.familyId || null, familyName: session.familyName || null,
     familyRole: session.familyRole || null, accountType: session.accountType || 'individual',
-    isFamilyCreator: !!session.isFamilyCreator,
+    isFamilyCreator: !!session.isFamilyCreator, mustChangePassword: !!session.mustChangePassword,
   });
 });

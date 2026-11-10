@@ -6,6 +6,7 @@ import UsersPanel from '../../components/admin/UsersPanel';
 import ReceiptsPanel from '../../components/admin/ReceiptsPanel';
 import StatsPanel from '../../components/admin/StatsPanel';
 import FeedbackPanel from '../../components/admin/FeedbackPanel';
+import AuditPanel from '../../components/admin/AuditPanel';
 import { api } from '../../lib/api';
 
 const TABS = [
@@ -13,6 +14,7 @@ const TABS = [
   { key: 'users', label: '用户管理' },
   { key: 'receipts', label: '票据管理' },
   { key: 'feedback', label: '用户反馈' },
+  { key: 'audit', label: '操作日志' },
 ];
 
 export default function AdminPage() {
@@ -72,6 +74,9 @@ export default function AdminPage() {
         </section>
         <section className={'grid' + (tab !== 'feedback' ? ' hide' : '')}>
           <FeedbackPanel active={tab === 'feedback'} />
+        </section>
+        <section className={'grid' + (tab !== 'audit' ? ' hide' : '')}>
+          <AuditPanel active={tab === 'audit'} />
         </section>
       </div>
       <Toast />

@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
 
-export default function ChangePasswordModal({ onClose }) {
+// forced: 管理员重置过密码、必须先改密码的账号——不能关闭、不能取消，改完才进入应用
+export default function ChangePasswordModal({ onClose, forced = false }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -12,6 +13,7 @@ export default function ChangePasswordModal({ onClose }) {
   async function submit() {
     if (!currentPassword || !newPassword) { setErr('请输入当前密码和新密码'); return; }
     if (newPassword !== confirmPassword) { setErr('两次输入的新密码不一致'); return; }
+    if (newPassword === currentPassword) { setErr('新密码不能和当前密码相同'); return; }
     try {
       await api('/api/auth/password', {
         method: 'POST',
@@ -31,13 +33,14 @@ export default function ChangePasswordModal({ onClose }) {
         position: 'fixed', inset: 0, background: 'rgba(0,0,0,.5)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100,
       }}
-      onClick={onClose}
+      onClick={forced ? undefined : onClose}
     >
       <div className="card" style={{ width: 320 }} onClick={(e) => e.stopPropagation()}>
-        <h2>修改密码</h2>
+        <h2>{forced ? '请先修改密码' : '修改密码'}</h2>
+        {forced ? <p className="muted" style={{ marginTop: 0 }}>管理员为你重置了密码。请输入临时密码作为当前密码，并设置一个新密码，之后才能继续使用。</p> : null}
         <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
           <input
-            type="password" placeholder="当前密码" autoComplete="current-password"
+            type="password" placeholder={forced ? '临时密码' : '当前密码'} autoComplete="current-password"
             value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)}
           />
           <input
@@ -51,7 +54,7 @@ export default function ChangePasswordModal({ onClose }) {
           <span style={{ color: 'var(--bad)', fontSize: 13 }}>{err}</span>
           <div className="row">
             <button onClick={submit}>确定</button>
-            <button onClick={onClose} style={{ background: 'var(--line)', color: 'inherit' }}>取消</button>
+            {forced ? null : <button onClick={onClose} style={{ background: 'var(--line)', color: 'inherit' }}>取消</button>}
           </div>
         </div>
       </div>
