@@ -4,12 +4,14 @@ import dbApi from '@/src/db.cjs';
 import * as passwordRoute from '@/app/api/auth/password/route.js';
 import * as deleteRoute from '@/app/api/auth/delete-account/route.js';
 import * as loginRoute from '@/app/api/auth/login/route.js';
+import * as registerRoute from '@/app/api/auth/register/route.js';
+import * as invitesRoute from '@/app/api/invites/route.js';
 import { makeUser, loginAs, logout, req, uniq } from './helpers.js';
 
 const changePw = (currentPassword, newPassword = 'brand-new-pass') =>
   passwordRoute.POST(req('/api/auth/password', { method: 'POST', body: { currentPassword, newPassword } }));
 const del = (password) => deleteRoute.POST(req('/api/auth/delete-account', { method: 'POST', body: { password } }));
-const rows = async (userId) => (await dbApi.pool.query('SELECT COUNT(*) n FROM login_failures WHERE username = ?', [`pw:${userId}`]))[0][0].n;
+const rows = async (userId) => (await dbApi.pool.query('SELECT COUNT(*) n FROM pw_failures WHERE user_id = ?', [userId]))[0][0].n;
 const login = (username, password) =>
   loginRoute.POST(req('/api/auth/login', { method: 'POST', body: { username, password }, headers: { 'cf-connecting-ip': `10.7.${(Math.random() * 255) | 0}.${(Math.random() * 255) | 0}` } }));
 
@@ -58,7 +60,7 @@ describe('修改密码 / 注销账号的防爆破', () => {
     for (let i = 0; i < 10; i++) await changePw('wrong');
     for (let i = 0; i < 3; i++) expect((await changePw('right-pass-7')).status).toBe(429);
     expect(await rows(u.id)).toBe(10);
-    await dbApi.pool.query("UPDATE login_failures SET created_at = NOW() - INTERVAL 20 MINUTE WHERE username = ?", [`pw:${u.id}`]);
+    await dbApi.pool.query("UPDATE pw_failures SET created_at = NOW() - INTERVAL 20 MINUTE WHERE user_id = ?", [u.id]);
     expect((await changePw('right-pass-7')).status).toBe(200);
   });
 
@@ -90,5 +92,63 @@ describe('修改密码 / 注销账号的防爆破', () => {
     expect(s.filter((x) => x === 401).length).toBeLessThanOrEqual(10);
     expect(s.filter((x) => x === 401).length + s.filter((x) => x === 429).length).toBe(20);
     expect(await rows(u.id)).toBeLessThanOrEqual(10);
+  });
+
+  // ---- 验证中发现的问题: 计数不能被用户输入够到 ----
+  it('伪造用户名 pw:<id> 登录 10 次，不会锁住受害者的改密码/注销(计数在专用表里，按 user_id)', async () => {
+    const victim = await makeUser({ password: 'victim-pass-1' });
+    logout();
+    for (let i = 0; i < 10; i++) await login(`pw:${victim.id}`, 'whatever');
+    await loginAs(victim);
+    expect((await changePw('victim-pass-1', 'victim-pass-2')).status).toBe(200);
+  });
+
+  it('注册一个叫 pw:<受害者id> 的账号，登录成功也清不掉受害者的计数', async () => {
+    const victim = await makeUser({ password: 'victim-pass-3' });
+    await loginAs(victim);
+    for (let i = 0; i < 9; i++) await changePw('wrong');
+    expect(await rows(victim.id)).toBe(9);
+    // 攻击者开一个同名于旧键格式的账号并成功登录
+    const inviter = await makeUser();
+    await loginAs(inviter);
+    const { code } = await (await invitesRoute.POST(req('/api/invites', { method: 'POST', body: {} }))).json();
+    logout();
+    const name = `pw:${victim.id}`;
+    const reg = await registerRoute.POST(req('/api/auth/register', { method: 'POST', body: { username: name, password: 'attacker-pass', inviteCode: code } }));
+    expect(reg.status).toBe(200);
+    logout();
+    expect((await login(name, 'attacker-pass')).status).toBe(200);
+    expect(await rows(victim.id)).toBe(9); // 没被清零
+    await loginAs(victim);
+    expect((await changePw('wrong')).status).toBe(401);
+    expect((await changePw('wrong')).status).toBe(429); // 第 11 次起被锁
+  });
+
+  it('锁定是固定的 15 分钟(从第 10 次失败算起)，不是滑动窗口: 前 9 次在 14 分钟前、第 10 次刚刚发生 → 仍被锁', async () => {
+    const u = await makeUser({ password: 'right-pass-11' });
+    await loginAs(u);
+    await dbApi.pool.query(
+      `INSERT INTO pw_failures (user_id, created_at) VALUES ${Array(9).fill('(?, NOW() - INTERVAL 14 MINUTE)').join(',')}, (?, NOW())`,
+      [...Array(9).fill(u.id), u.id]);
+    expect((await changePw('right-pass-11')).status).toBe(429);
+    expect(await rows(u.id)).toBe(10); // 被锁的请求不写记录
+  });
+
+  it('改密码前面的校验不算失败: 新密码和当前相同(400)、缺字段(400)都不占计数', async () => {
+    const u = await makeUser({ password: 'right-pass-12' });
+    await loginAs(u);
+    for (let i = 0; i < 12; i++) expect((await changePw('right-pass-12', 'right-pass-12')).status).toBe(400);
+    expect((await changePw('', 'x')).status).toBe(400);
+    expect(await rows(u.id)).toBe(0);
+    expect((await changePw('wrong')).status).toBe(401);
+  });
+
+  it('账号被注销时失败记录随外键一起清掉', async () => {
+    const u = await makeUser({ password: 'right-pass-13' });
+    await loginAs(u);
+    for (let i = 0; i < 3; i++) await changePw('wrong');
+    expect(await rows(u.id)).toBe(3);
+    expect((await del('right-pass-13')).status).toBe(200);
+    expect(await rows(u.id)).toBe(0);
   });
 });

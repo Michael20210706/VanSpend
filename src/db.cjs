@@ -158,6 +158,16 @@ const SCHEMA_STATEMENTS = [
     INDEX idx_lf_user_time (username, created_at),
     INDEX idx_lf_ip_time   (ip, created_at)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  // 已登录用户"输密码确认"(修改密码、注销账号)的错误尝试记录。按用户 id 记，而不是复用 login_failures:
+  // login_failures 的 username 列存的是登录框里随便输入的字符串，用户可以输入任何值(包括伪造的键)去干扰别人的计数；
+  // 这张表只能由服务端按已认证的 user_id 写入，外部输入够不着。账号被删时连带清掉
+  `CREATE TABLE IF NOT EXISTS pw_failures (
+    id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id       INT UNSIGNED  NOT NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_pwf_user_time (user_id, created_at),
+    CONSTRAINT fk_pwf_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   // 已用过的验证码 token(其 SHA-256)。验证码 token 本身是无状态的签名串，5 分钟内本可无限次重放；
   // 注册时把用过的 token 记在这里，同一个 token 只能用一次。过期(10 分钟，比 token 有效期长)的行在每次写入时顺手清掉
   `CREATE TABLE IF NOT EXISTS captcha_used (
@@ -1046,6 +1056,41 @@ async function clearLoginFailures(username) {
   await pool.execute('DELETE FROM login_failures WHERE username = :username', { username: lfUser(username) });
 }
 
+// ---- "输密码确认"接口的防爆破(src/passwordGuard.js)，语义与登录锁定相同，只是按 user_id、存在 pw_failures ----
+// 固定时长锁定: 最近一次失败 L(须在 windowMinutes 内)，若 (L - window, L] 内失败数 >= max 就锁到 L + window；锁定期间不写记录
+async function isPasswordLocked(userId, max, windowMinutes) {
+  await ready;
+  const [rows] = await pool.execute(`
+    SELECT COUNT(*) AS n
+    FROM pw_failures f
+    JOIN (SELECT MAX(created_at) AS m FROM pw_failures
+          WHERE user_id = :userId AND created_at > NOW() - INTERVAL :windowMinutes MINUTE) last
+      ON f.created_at > last.m - INTERVAL :windowMinutes MINUTE AND f.created_at <= last.m
+    WHERE f.user_id = :userId
+  `, { userId, windowMinutes });
+  return Number(rows[0].n) >= max;
+}
+async function recordPasswordFailure(userId) {
+  await ready;
+  const [info] = await pool.execute('INSERT INTO pw_failures (user_id) VALUES (:userId)', { userId });
+  await pool.execute('DELETE FROM pw_failures WHERE created_at < NOW() - INTERVAL 1 DAY');
+  return info.insertId;
+}
+async function countPasswordFailures(userId, windowMinutes) {
+  await ready;
+  const [rows] = await pool.execute(
+    'SELECT COUNT(*) AS n FROM pw_failures WHERE user_id = :userId AND created_at > NOW() - INTERVAL :windowMinutes MINUTE', { userId, windowMinutes });
+  return Number(rows[0].n);
+}
+async function deletePasswordFailure(id) {
+  await ready;
+  await pool.execute('DELETE FROM pw_failures WHERE id = :id', { id });
+}
+async function clearPasswordFailures(userId) {
+  await ready;
+  await pool.execute('DELETE FROM pw_failures WHERE user_id = :userId', { userId });
+}
+
 async function updatePassword(id, passwordHash) {
   await ready;
   // 改密码同时清掉"必须先改密码"标志(管理员重置后用户第一次改密码就解除)
@@ -1511,6 +1556,7 @@ module.exports = {
   reserveScan, finishScan, setScanTier,
   migrateUsersInviteColumns, migrateUsersPasswordFlag, // 导出仅供测试(升级路径)
   countRecentLoginFailures, isLoginLocked, recordLoginFailure, deleteLoginAttempt, clearLoginFailures,
+  isPasswordLocked, recordPasswordFailure, countPasswordFailures, deletePasswordFailure, clearPasswordFailures,
   consumeCaptcha, reserveOpenSignup, listUsers, deleteUser, deleteUserFull, deleteOwnAccount, resetUserPassword, adminDeleteReceipt, listAuditLog, statsByUser,
   findFamilyByName, findFamilyById, createFamily, inviteMember, applyToFamily,
   listFamilyMembers, listPendingRequests, decideRequest,
