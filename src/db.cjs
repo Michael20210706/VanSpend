@@ -467,12 +467,20 @@ async function finishScan(id, success) {
   await pool.execute('UPDATE scan_log SET success = :success WHERE id = :id', { id, success: success ? 1 : 0 });
 }
 
-// 管理员调整某用户的额度档位。返回 false = 用户不存在
+// 管理员调整某用户的额度档位。返回 false = 用户不存在。
+// 降到 open 档时，顺手作废该用户手里所有还没被使用的邀请码——降级的目的就是阻止他继续拉人(见 invites 路由的说明)，
+// 如果不作废，一个被发现在刷码的账号还能靠手里最多 20 个有效码再拉 7 天的人。已被使用的码不受影响(那些人已经注册了)。
 async function setScanTier(userId, tier) {
   await ready;
   const [rows] = await pool.execute('SELECT id FROM users WHERE id = :userId', { userId });
   if (!rows.length) return false;
   await pool.execute('UPDATE users SET scan_tier = :tier WHERE id = :userId', { userId, tier });
+  if (tier === 'open') {
+    await pool.execute(`
+      UPDATE invite_codes SET revoked_at = NOW()
+      WHERE created_by = :userId AND used_by IS NULL AND used_at IS NULL AND revoked_at IS NULL
+    `, { userId });
+  }
   return true;
 }
 

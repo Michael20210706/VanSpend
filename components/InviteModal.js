@@ -1,7 +1,7 @@
 'use client';
 import InviteCodes from './InviteCodes';
 
-// 顶栏"邀请"弹窗: 任何已登录用户都可以生成普通邀请码
+// 顶栏"邀请"弹窗: 生成/查看/作废自己的普通邀请码。只有正常额度的账号和管理员能生成，开放注册的账号会被服务端拒绝(提示在 InviteCodes 的说明文字里)
 export default function InviteModal({ onClose }) {
   return (
     <div

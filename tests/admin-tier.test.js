@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import dbApi from '@/src/db.cjs';
 import * as usersRoute from '@/app/api/admin/users/route.js';
 import * as userIdRoute from '@/app/api/admin/users/[id]/route.js';
-import { makeUser, loginAs, logout, req, ctx } from './helpers.js';
+import { makeUser, loginAs, logout, req, ctx, uniq } from './helpers.js';
 
 const patch = (id, body) => userIdRoute.PATCH(req('/x', { method: 'PATCH', body }), ctx({ id: String(id) }));
 const tierOf = async (id) => (await dbApi.pool.query('SELECT scan_tier FROM users WHERE id = ?', [id]))[0][0].scan_tier;
@@ -57,6 +57,60 @@ describe('管理员调整额度档位', () => {
     expect((await patch(target.id, { tier: 'vip' })).status).toBe(400);
     expect((await patch(target.id, {})).status).toBe(400);
     expect((await patch(99999999, { tier: 'normal' })).status).toBe(404);
+  });
+});
+
+describe('降级到 open 档会作废该用户未使用的邀请码', () => {
+  const codeStatus = async (id) => (await dbApi.pool.query(
+    `SELECT CASE WHEN used_by IS NOT NULL OR used_at IS NOT NULL THEN 'used' WHEN revoked_at IS NOT NULL THEN 'revoked' ELSE 'unused' END AS s FROM invite_codes WHERE id = ?`, [id]))[0][0].s;
+  const mint = async (userId, n) => {
+    const ids = [];
+    for (let i = 0; i < n; i++) {
+      const [info] = await dbApi.pool.execute(
+        'INSERT INTO invite_codes (code, created_by, expires_at) VALUES (?, ?, NOW() + INTERVAL 7 DAY)', [uniq('code') + 'xxxxxxxxxxxx', userId]);
+      ids.push(info.insertId);
+    }
+    return ids;
+  };
+
+  it('降级后: 未使用的码全部作废，已被使用的码不受影响，别人的码不受影响', async () => {
+    const target = await makeUser();
+    const bystander = await makeUser();
+    const invitee = await makeUser();
+    const [u1, u2, used] = await mint(target.id, 3);
+    await dbApi.pool.execute('UPDATE invite_codes SET used_by = ?, used_at = NOW() WHERE id = ?', [invitee.id, used]);
+    const [other] = await mint(bystander.id, 1);
+    await loginAs(await makeUser({ admin: true }));
+    expect((await patch(target.id, { tier: 'open' })).status).toBe(200);
+    expect(await codeStatus(u1)).toBe('revoked');
+    expect(await codeStatus(u2)).toBe('revoked');
+    expect(await codeStatus(used)).toBe('used');
+    expect(await codeStatus(other)).toBe('unused');
+  });
+
+  it('作废后的码不能再用来注册', async () => {
+    const target = await makeUser();
+    const [id] = await mint(target.id, 1);
+    const [[{ code }]] = await dbApi.pool.query('SELECT code FROM invite_codes WHERE id = ?', [id]);
+    expect(await dbApi.peekInviteCode(code)).not.toBeNull();
+    await loginAs(await makeUser({ admin: true }));
+    await patch(target.id, { tier: 'open' });
+    expect(await dbApi.peekInviteCode(code)).toBeNull();
+  });
+
+  it('升到 normal 不会"复活"已作废的码', async () => {
+    const target = await makeUser();
+    const [id] = await mint(target.id, 1);
+    await loginAs(await makeUser({ admin: true }));
+    await patch(target.id, { tier: 'open' });
+    await patch(target.id, { tier: 'normal' });
+    expect(await codeStatus(id)).toBe('revoked');
+  });
+
+  it('档位本来就是 open 时再设 open 也是安全的(幂等)', async () => {
+    const target = await makeUser({ tier: 'open' });
+    await loginAs(await makeUser({ admin: true }));
+    expect((await patch(target.id, { tier: 'open' })).status).toBe(200);
   });
 });
 

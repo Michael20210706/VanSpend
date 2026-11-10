@@ -60,8 +60,8 @@ export default function InviteCodes({ kind = 'personal' }) {
     <div>
       <p className="muted" style={{ margin: '0 0 10px' }}>
         {isFamily
-          ? '对方用这个码注册后直接加入你的家庭，不用再审核。每个码只能用一次，7 天内有效。'
-          : '把邀请链接发给家人朋友，对方不用验证码就能注册，且有更高的每日识别额度。每个码只能用一次，7 天内有效。'}
+          ? '对方用这个码注册后直接加入你的家庭，不用再审核。每个码只能用一次，7 天内有效，每人 7 天最多生成 20 个。'
+          : '把邀请链接发给家人朋友，对方不用验证码就能注册，且有更高的每日识别额度。每个码只能用一次，7 天内有效，每人 7 天最多生成 20 个。开放注册的账号暂时不能生成邀请码，需要先由管理员升级额度。'}
       </p>
       <div className="row" style={{ marginBottom: 10 }}>
         <button onClick={generate}>{isFamily ? '生成家庭邀请码' : '生成邀请码'}</button>

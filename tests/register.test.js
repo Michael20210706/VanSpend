@@ -112,14 +112,15 @@ describe('邀请码注册', () => {
   });
 
   it('邀请码路径下，请求体里的 scanTier / signupSource / isAdmin / familyId 同样被忽略', async () => {
-    const c = await newCode(await makeUser());
+    const inviter = await makeUser();
+    const c = await newCode(inviter);
     logout();
     const username = uniq('inj');
     const res = await register({ username, password: 'pw123456', inviteCode: c.code, scanTier: 'open', signupSource: 'open', isAdmin: true, familyId: 1, invitedBy: 1 });
     expect(res.status).toBe(200);
     const u = await userRow(username);
     expect(u).toMatchObject({ scan_tier: 'normal', signup_source: 'invite', is_admin: 0, family_id: null });
-    expect(u.invited_by).not.toBe(1 + 99999);
+    expect(u.invited_by).toBe(inviter.id); // 请求体里的 invitedBy: 1 被忽略，邀请人只能是发码的人
   });
 
   it('已过期的码 → 400', async () => {

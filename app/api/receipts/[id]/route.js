@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
 import dbApi from '@/src/db.cjs';
 import { requireSession } from '@/src/session';
-import { wrap } from '@/src/http';
+import { wrap, parseId } from '@/src/http';
 
 export const GET = wrap(async (request, { params }) => {
   const { session, response } = await requireSession();
   if (response) return response;
 
-  const { id } = await params;
+  const id = parseId((await params).id);
+  if (id === null) return NextResponse.json({ error: '无效的 id' }, { status: 400 });
   const scope = session.familyId ? { familyId: session.familyId } : { userId: session.userId };
-  const r = await dbApi.getReceipt(+id, scope);
+  const r = await dbApi.getReceipt(id, scope);
   if (!r) return NextResponse.json({ error: '未找到' }, { status: 404 });
   return NextResponse.json(r);
 });
@@ -18,7 +19,8 @@ export const DELETE = wrap(async (request, { params }) => {
   const { session, response } = await requireSession();
   if (response) return response;
 
-  const { id } = await params;
-  const deleted = await dbApi.deleteReceipt(+id, session.userId);
+  const id = parseId((await params).id);
+  if (id === null) return NextResponse.json({ error: '无效的 id' }, { status: 400 });
+  const deleted = await dbApi.deleteReceipt(id, session.userId);
   return NextResponse.json({ deleted });
 });
