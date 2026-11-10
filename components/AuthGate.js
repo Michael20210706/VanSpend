@@ -18,7 +18,7 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login', initialCod
   const [inviteCode, setInviteCode] = useState(initialCode);
   const hasCode = inviteCode.trim() !== '';
 
-  // 开放注册(没有邀请码)才需要验证码；填了邀请码就不用。直接以注册态打开(落地页的"免费注册" CTA 带
+  // 开放注册(没有邀请码)才需要验证码；填了邀请码就不用。直接以注册态打开(落地页的"注册" CTA 带
   // ?mode=register)、或把邀请码清空时，都要补出一道验证码，否则只有 toggleMode() 那条路径会出题
   useEffect(() => {
     if (mode === 'register' && !hasCode && !captcha) loadCaptcha();
