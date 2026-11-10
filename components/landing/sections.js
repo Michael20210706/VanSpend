@@ -1,12 +1,11 @@
 'use client';
 import Link from 'next/link';
-import { PhoneScan, ReceiptCard, YearCard, WeekBars, CategoryDonut, FamilyLedger } from './mocks';
+import { PhoneScan, ReceiptCard, WeekBars, CategoryDonut, FamilyLedger } from './mocks';
 
-// 落地页的各个段落。全部是 ({ t, tone, variant }) => 标记 的同一种形状：
-//   t       = COPY[lang]，文案的唯一来源(见 copy.js)
-//   tone    = 'dark' | 'tint' | undefined，决定这一段的底色
-//   variant = 'a' | 'b'，只有 hero 和少数几处标题分叉用得到
-// 两个版式共用这批组件，差别只在 Landing.js 里的段落顺序和 tone。
+// 落地页的各个段落。全部是 ({ t, tone }) => 标记 的同一种形状：
+//   t    = COPY[lang]，文案的唯一来源(见 copy.js)
+//   tone = 'dark' | 'tint' | undefined，决定这一段的底色
+// 段落顺序和每段的 tone 在 Landing.js 里。
 //
 // 注意：这里不要用 <header> 和 <table>——globals.css 把它们做成了深色 sticky 栏和深色表格。
 
@@ -23,9 +22,9 @@ function Lines({ items }) {
   ));
 }
 
-export function Nav({ t, tone, lang, onToggleLang }) {
+export function Nav({ t, lang, onToggleLang }) {
   return (
-    <nav className={'lp-nav' + (tone === 'dark' ? ' lp-nav--dark' : '')}>
+    <nav className="lp-nav">
       <span className="lp-nav-mark">{t.brand}</span>
       <span className="lp-nav-links">
         <a href="#steps">{t.nav.steps}</a>
@@ -44,34 +43,10 @@ export function Nav({ t, tone, lang, onToggleLang }) {
   );
 }
 
-export function Hero({ t, variant }) {
-  if (variant === 'b') {
-    const c = t.heroB;
-    return (
-      <section className="lp-heroB">
-        <div className="lp-heroB-glow" />
-        <div className="lp-wrap lp-heroB-grid">
-          <div data-reveal>
-            <p className="lp-eyebrow">{c.eyebrow}</p>
-            <h1 className="lp-h1 lp-h1--b"><Lines items={c.title} /></h1>
-            <p className="lp-lede" style={{ marginTop: 24 }}>{c.lede}</p>
-            <div className="lp-cta-row" style={{ marginTop: 32 }}>
-              <Link href={SIGNUP} className="lp-btn">{c.cta}</Link>
-              <a href="#family" className="lp-link">{c.cta2}</a>
-            </div>
-            <p className="lp-heroB-note">{c.note}</p>
-          </div>
-          <div className="lp-heroB-stage" data-reveal>
-            <YearCard t={t} />
-          </div>
-        </div>
-      </section>
-    );
-  }
-
-  const c = t.heroA;
+export function Hero({ t }) {
+  const c = t.hero;
   return (
-    <section className="lp-heroA">
+    <section className="lp-hero">
       <div className="lp-wrap" data-reveal>
         <p className="lp-eyebrow">{c.eyebrow}</p>
         <h1 className="lp-h1"><Lines items={c.title} /></h1>
@@ -80,10 +55,10 @@ export function Hero({ t, variant }) {
           <Link href={SIGNUP} className="lp-btn">{c.cta}</Link>
           <a href="#steps" className="lp-link">{c.cta2}</a>
         </div>
-        <p className="lp-heroA-note">{c.note}</p>
+        <p className="lp-hero-note">{c.note}</p>
       </div>
-      <div className="lp-heroA-stage" data-reveal>
-        <div className="lp-heroA-glow" />
+      <div className="lp-hero-stage" data-reveal>
+        <div className="lp-hero-glow" />
         <PhoneScan t={t} />
       </div>
     </section>
@@ -137,27 +112,13 @@ const stepArt = (t) => [
   </>,
 ];
 
-export function Tax({ t, tone, variant }) {
-  if (variant === 'b') {
-    return (
-      <section id="tax" className={secClass(tone)}>
-        <div className="lp-wrap lp-tax-center" data-reveal>
-          <p className="lp-eyebrow">{t.tax.eyebrow}</p>
-          <h2 className="lp-h2"><Lines items={t.tax.titleB} /></h2>
-          <p className="lp-lede" style={{ marginTop: 20 }}>{t.tax.lede}</p>
-        </div>
-        <div className="lp-wrap lp-tax-center-stage" data-reveal>
-          <ReceiptCard t={t} wide />
-        </div>
-      </section>
-    );
-  }
+export function Tax({ t, tone }) {
   return (
     <section id="tax" className={secClass(tone)}>
       <div className="lp-wrap lp-tax-grid" data-reveal>
         <div>
           <p className="lp-eyebrow">{t.tax.eyebrow}</p>
-          <h2 className="lp-h2"><Lines items={t.tax.titleA} /></h2>
+          <h2 className="lp-h2"><Lines items={t.tax.title} /></h2>
           <p className="lp-lede" style={{ marginTop: 20 }}>{t.tax.lede}</p>
           <ul className="lp-tax-bullets">
             {t.tax.bullets.map((b) => (
@@ -173,12 +134,12 @@ export function Tax({ t, tone, variant }) {
   );
 }
 
-export function Insights({ t, tone, variant }) {
+export function Insights({ t, tone }) {
   return (
     <section id="insights" className={secClass(tone)}>
       <div className="lp-wrap" data-reveal>
         <p className="lp-eyebrow">{t.insights.eyebrow}</p>
-        <h2 className="lp-h2"><Lines items={variant === 'b' ? t.insights.titleB : t.insights.titleA} /></h2>
+        <h2 className="lp-h2"><Lines items={t.insights.title} /></h2>
         <p className="lp-lede" style={{ marginTop: 18, maxWidth: 640 }}>{t.insights.lede}</p>
         <div className="lp-insights-grid">
           <WeekBars t={t} />
@@ -190,20 +151,20 @@ export function Insights({ t, tone, variant }) {
   );
 }
 
-export function Family({ t, tone, variant }) {
+export function Family({ t, tone }) {
   const copy = (
     <div className="lp-family-copy">
       <p className="lp-eyebrow">{t.family.eyebrow}</p>
-      <h2 className="lp-h2"><Lines items={variant === 'b' ? t.family.titleB : t.family.titleA} /></h2>
+      <h2 className="lp-h2"><Lines items={t.family.title} /></h2>
       <p className="lp-lede" style={{ marginTop: 20 }}>{t.family.lede}</p>
       <p className="lp-family-note">{t.family.note}</p>
     </div>
   );
-  const card = <FamilyLedger t={t} />;
   return (
     <section id="family" className={secClass(tone)}>
-      <div className={'lp-wrap lp-family-grid' + (variant === 'b' ? ' lp-family-grid--flip' : '')} data-reveal>
-        {variant === 'b' ? <>{card}{copy}</> : <>{copy}{card}</>}
+      <div className="lp-wrap lp-family-grid" data-reveal>
+        {copy}
+        <FamilyLedger t={t} />
       </div>
     </section>
   );
@@ -250,11 +211,11 @@ export function Faq({ t, tone }) {
   );
 }
 
-export function FinalCta({ t, tone, variant }) {
+export function FinalCta({ t, tone }) {
   return (
     <section className={secClass(tone)}>
       <div className="lp-wrap lp-final" data-reveal>
-        <h2 className="lp-h2"><Lines items={variant === 'b' ? t.cta.titleB : t.cta.titleA} /></h2>
+        <h2 className="lp-h2"><Lines items={t.cta.title} /></h2>
         <div className="lp-cta-row">
           <Link href={SIGNUP} className="lp-btn">{t.cta.btn}</Link>
           <Link href="/login" className="lp-link">{t.cta.link}</Link>
@@ -264,9 +225,9 @@ export function FinalCta({ t, tone, variant }) {
   );
 }
 
-export function Footer({ t, tone }) {
+export function Footer({ t }) {
   return (
-    <div className={'lp-footer' + (tone === 'dark' ? ' lp-footer--dark' : '')}>
+    <div className="lp-footer">
       <div className="lp-wrap lp-footer-row">
         <span className="lp-footer-mark">{t.brand}</span>
         <span>{t.footer.place}</span>

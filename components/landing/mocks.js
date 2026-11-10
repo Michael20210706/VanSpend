@@ -57,43 +57,13 @@ export function PhoneScan({ t }) {
 }
 
 /** 独立票据卡：每行带 免税 / GST / GST+PST 标签，用在拆税段落 */
-export function ReceiptCard({ t, wide }) {
+export function ReceiptCard({ t }) {
   return (
-    <div className={'lp-receipt lp-receipt--card' + (wide ? ' lp-receipt--wide' : '')}>
+    <div className="lp-receipt lp-receipt--card">
       <div className="lp-receipt-sheen" />
       <div className="lp-receipt-head"><span>{t.mock.store}</span><span>2026-07-21</span></div>
       <ReceiptLines t={t} showTags />
     </div>
-  );
-}
-
-/** hero B 的年度金额卡 + 一张漂浮的小票 */
-export function YearCard({ t }) {
-  const bars = [52, 64, 46, 74, 58, 88, 70];
-  const s = t.heroB.stat;
-  return (
-    <>
-      <div className="lp-yearcard">
-        <span className="lp-sample">{t.mock.sample}</span>
-        <div className="lp-yearcard-label">{s.label}</div>
-        <div className="lp-yearcard-value">{s.value}</div>
-        <div className="lp-yearcard-bars">
-          {bars.map((h, i) => <i key={i} className={i === 5 ? 'on' : ''} style={{ height: h + '%' }} />)}
-        </div>
-        <div className="lp-yearcard-axis"><span>{s.from}</span><span>{s.to}</span></div>
-        <div className="lp-yearcard-tax">
-          <span>{s.taxLabel}</span>
-          <span className="lp-num" style={{ fontWeight: 600 }}>{s.taxValue}</span>
-        </div>
-      </div>
-      <div className="lp-float" aria-hidden="true">
-        <div><span>MILK</span><span>6.49</span></div>
-        <div><span>EGGS</span><span>5.99</span></div>
-        <div><span>SOAP</span><span>4.29</span></div>
-        <hr />
-        <div style={{ fontWeight: 700 }}><span>TOTAL</span><span>37.01</span></div>
-      </div>
-    </>
   );
 }
 
