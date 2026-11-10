@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
+import { checkPasswordLimited, lockedBody } from '@/src/passwordGuard';
 import dbApi from '@/src/db.cjs';
 import uploadsLib from '@/src/uploads.cjs';
 import { requireSession, getSession } from '@/src/session';
@@ -18,9 +18,11 @@ export const POST = wrap(async (request) => {
   if (session.isAdmin) return NextResponse.json({ error: '管理员账号不能自助注销' }, { status: 403 });
 
   const user = await dbApi.findUserById(session.userId);
-  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-    return NextResponse.json({ error: '密码不正确' }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: '密码不正确' }, { status: 401 });
+  // 带防爆破: 与修改密码共用一个失败计数(10 次 / 15 分钟，见 src/passwordGuard.js)
+  const check = await checkPasswordLimited(user.id, password, user.password_hash);
+  if (check === 'locked') return NextResponse.json(lockedBody(), { status: 429 });
+  if (check !== 'ok') return NextResponse.json({ error: '密码不正确' }, { status: 401 });
 
   const { status, images } = await dbApi.deleteOwnAccount(session.userId);
   if (status === 'creator') {
