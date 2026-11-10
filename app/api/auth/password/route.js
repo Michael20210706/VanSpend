@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
+import { checkPasswordLimited, lockedBody } from '@/src/passwordGuard';
 import dbApi from '@/src/db.cjs';
 import { requireSession } from '@/src/session';
 import { wrap, readJson, FORM_BODY_MAX } from '@/src/http';
@@ -19,9 +20,11 @@ export const POST = wrap(async (request) => {
   if (newPassword === currentPassword) return NextResponse.json({ error: '新密码不能和当前密码相同' }, { status: 400 });
 
   const user = await dbApi.findUserById(session.userId);
-  if (!user || !(await bcrypt.compare(currentPassword, user.password_hash))) {
-    return NextResponse.json({ error: '当前密码不正确' }, { status: 401 });
-  }
+  if (!user) return NextResponse.json({ error: '当前密码不正确' }, { status: 401 });
+  // 带防爆破: 修改密码和注销账号共用一个失败计数(10 次 / 15 分钟，见 src/passwordGuard.js)
+  const check = await checkPasswordLimited(user.id, currentPassword, user.password_hash);
+  if (check === 'locked') return NextResponse.json(lockedBody(), { status: 429 });
+  if (check !== 'ok') return NextResponse.json({ error: '当前密码不正确' }, { status: 401 });
 
   const passwordHash = await bcrypt.hash(newPassword, 10);
   await dbApi.updatePassword(session.userId, passwordHash);

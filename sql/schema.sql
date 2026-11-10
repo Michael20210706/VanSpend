@@ -24,6 +24,15 @@ CREATE TABLE IF NOT EXISTS users (
   CONSTRAINT fk_users_invited_by FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 已登录用户"输密码确认"(修改密码、注销账号)的错误尝试记录，按 user_id；用户输入够不着这张表(不像 login_failures 存的是登录框里的任意字符串)
+CREATE TABLE IF NOT EXISTS pw_failures (
+  id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id       INT UNSIGNED  NOT NULL,
+  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_pwf_user_time (user_id, created_at),
+  CONSTRAINT fk_pwf_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 已用过的验证码 token(其 SHA-256)：同一个 token 只能用一次；过期行在每次写入时顺手清掉
 CREATE TABLE IF NOT EXISTS captcha_used (
   token_key     CHAR(64)      NOT NULL PRIMARY KEY,
