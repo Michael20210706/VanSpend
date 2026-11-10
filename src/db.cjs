@@ -572,8 +572,8 @@ async function adminDeleteReceipt(id, audit) {
     await conn.beginTransaction();
     const [rows] = await conn.execute(`
       SELECT r.store, r.purchased_at, r.total, u.username AS owner
-      FROM receipts r LEFT JOIN users u ON u.id = r.user_id WHERE r.id = :id FOR UPDATE
-    `, { id });
+      FROM receipts r LEFT JOIN users u ON u.id = r.user_id WHERE r.id = :id FOR UPDATE OF r
+    `, { id });  // OF r: 只锁小票行；不锁所有者的 users 行(那会和"先家庭行、后用户行"的加锁顺序相反，压测里出现过死锁)
     if (!rows.length) { await conn.rollback(); return 0; }
     const r = rows[0];
     const [result] = await conn.execute('DELETE FROM receipts WHERE id = :id', { id });

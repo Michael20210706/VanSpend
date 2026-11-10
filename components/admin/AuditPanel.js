@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
+import { showToast } from '../../lib/toast';
 
 const ACTION_LABELS = {
   delete_user: '删除用户',
@@ -14,7 +15,7 @@ export default function AuditPanel({ active }) {
   const [rows, setRows] = useState([]);
 
   useEffect(() => {
-    if (active) api('/api/admin/audit').then(setRows).catch(() => {});
+    if (active) api('/api/admin/audit').then(setRows).catch((e) => showToast('加载操作日志失败: ' + e.message));
   }, [active]);
 
   return (

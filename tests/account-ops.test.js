@@ -17,6 +17,7 @@ import * as logoutRoute from '@/app/api/auth/logout/route.js';
 import * as receiptsRoute from '@/app/api/receipts/route.js';
 import * as invitesRoute from '@/app/api/invites/route.js';
 import * as familyMeRoute from '@/app/api/family/me/route.js';
+import * as inviteMemberRoute from '@/app/api/family/invite/route.js';
 import * as uploadsRoute from '@/app/uploads/[...file]/route.js';
 import { makeUser, makeFamily, makeReceipt, loginAs, logout, req, ctx, uniq } from './helpers.js';
 
@@ -164,6 +165,32 @@ describe('必须先改密码(重置后的账号)', () => {
     await loginAs(u);
     expect((await changePw('plain-pass-1', 'plain-pass-2')).status).toBe(200);
     expect(await flagOf(u.id)).toBe(0);
+  });
+});
+
+describe('必须先改密码: 管理员/家庭创建者的专用门也要拦', () => {
+  it('被标记的管理员访问后台接口 → 403 password_change_required(requireAdmin)', async () => {
+    const admin = await makeUser({ admin: true });
+    await dbApi.pool.execute('UPDATE users SET must_change_password = 1 WHERE id = ?', [admin.id]);
+    await loginAs(admin);
+    const res = await auditRoute.GET(req('/api/admin/audit'));
+    expect(res.status).toBe(403);
+    expect((await res.json()).code).toBe('password_change_required');
+    expect((await adminUsersRoute.GET(req('/api/admin/users'))).status).toBe(403);
+  });
+
+  it('被标记的家庭创建者做创建者操作 → 403 password_change_required(requireFamilyCreator)；清标志后同一操作不再是这个 403', async () => {
+    const creator = await makeUser();
+    const invitee = await makeUser();
+    await makeFamily(creator);
+    await dbApi.pool.execute('UPDATE users SET must_change_password = 1 WHERE id = ?', [creator.id]);
+    await loginAs(creator);
+    const call = () => inviteMemberRoute.POST(req('/api/family/invite', { method: 'POST', body: { username: invitee.username } }));
+    const blocked = await call();
+    expect(blocked.status).toBe(403);
+    expect((await blocked.json()).code).toBe('password_change_required');
+    await dbApi.pool.execute('UPDATE users SET must_change_password = 0 WHERE id = ?', [creator.id]);
+    expect((await call()).status).toBe(200);
   });
 });
 
@@ -355,7 +382,8 @@ describe('管理员操作日志', () => {
     await userIdRoute.DELETE(req('/x', { method: 'DELETE' }), ctx({ id: '99999999' }));
     await userIdRoute.PATCH(req('/x', { method: 'PATCH', body: { tier: 'normal' } }), ctx({ id: '99999999' }));
     await userIdRoute.PATCH(req('/x', { method: 'PATCH', body: { tier: 'bogus' } }), ctx({ id: String(admin.id) }));
-    await userIdRoute.DELETE(req('/x', { method: 'DELETE' }), ctx({ id: String(admin.id) })); // 删自己被拒
+    expect((await userIdRoute.DELETE(req('/x', { method: 'DELETE' }), ctx({ id: String(admin.id) }))).status).toBe(400); // 删自己被拒
+    expect(await exists(admin.id)).toBe(true);
     await adminReceiptRoute.DELETE(req('/x', { method: 'DELETE' }), ctx({ id: '99999999' }));
     await resetPw(99999999);
     await resetPw(admin.id);
@@ -384,7 +412,13 @@ describe('管理员操作日志', () => {
     const all = await audit('?limit=500');
     for (let i = 1; i < all.length; i++) expect(all[i - 1].id).toBeGreaterThan(all[i].id);
     expect(await audit('?limit=2')).toHaveLength(2);
-    expect((await audit('?limit=999999')).length).toBeLessThanOrEqual(500);
+    // 补到 500 条以上，上限才真正被检验
+    await dbApi.pool.query(
+      "INSERT INTO admin_audit_log (admin_id, admin_username, action, target_type, target_id, target_label) " +
+      "SELECT ?, ?, 'set_tier', 'user', n, 'bulk' FROM (SELECT @r := @r + 1 AS n FROM information_schema.COLUMNS a, information_schema.COLUMNS b, (SELECT @r := 0) v LIMIT 520) t",
+      [admin.id, admin.username]);
+    expect((await audit('?limit=999999')).length).toBe(500);
+    expect((await audit('')).length).toBe(200);
     await loginAs(await makeUser());
     expect((await auditRoute.GET(req('/api/admin/audit'))).status).toBe(403);
     logout();
