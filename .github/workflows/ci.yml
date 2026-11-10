@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# 同一分支/PR 上有新提交时，取消还在跑的旧任务
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # 测试要连一个真实的 MySQL。tests/globalSetup.js 每次运行前会 DROP 并重建 vanspend_test，
+    # 需要建库权限，所以这里用 root。这个 MySQL 只存在于本次 CI 任务里。
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: ci-root-password
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -pci-root-password"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      # tests/env.js 先加载 .env.test(库名 vanspend_test、HOST=127.0.0.1 等)，
+      # CI 里没有 .env，所以账号密码从这里提供
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: ci-root-password
+      MYSQL_DATABASE: vanspend_test
+      SESSION_SECRET: ci-only-session-secret-0123456789abcdef
+      # 测试绝不能产生计费的 OpenRouter 调用: 用无效 key，所有识别调用都必须在测试里 mock
+      OPENROUTER_API_KEY: sk-or-ci-invalid
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22 # 与 Dockerfile(node:22-alpine) 和 package.json engines 一致
+          cache: npm
+
+      - run: npm ci
+
+      - name: 测试(Vitest，独立的 vanspend_test 库)
+        run: npm test
+
+      # next build 会导入所有路由、可能连库，放在测试之后，此时 vanspend_test 已存在
+      - name: 构建(next build)
+        run: npm run build
+
+      - name: 校验 docker-compose.yml
+        run: |
+          cp .env.example .env # compose 里 env_file: .env，CI 里没有，用示例文件顶上(只校验语法)
+          docker compose config -q
+          docker compose --profile tunnel config -q
