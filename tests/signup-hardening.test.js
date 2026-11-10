@@ -1,10 +1,12 @@
 // 验证码只能用一次 + 开放注册按 IP 限速(此前: 验证码 5 分钟内可无限重放，也没有按 IP 的限速)
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import dbApi from '@/src/db.cjs';
 import captchaApi from '@/src/captcha.cjs';
 import * as registerRoute from '@/app/api/auth/register/route.js';
 import * as invitesRoute from '@/app/api/invites/route.js';
 import { makeUser, loginAs, logout, req, uniq } from './helpers.js';
+
+afterEach(() => vi.useRealTimers());
 
 // 真验证码: token 里没有答案明文，测试里用 verify() 把约 27 种可能逐个试一遍(verify 本身不消耗 token)
 function realCaptcha() {
@@ -103,6 +105,31 @@ describe('验证码只能用一次', () => {
   });
 });
 
+describe('token 有效期与 nonce', () => {
+  it('超过 5 分钟的 token 过期: verify / isWellFormed 为 false，注册返回 400 且不建号；5 分钟内仍有效', async () => {
+    logout();
+    const { token, answer } = realCaptcha();
+    const t0 = Date.now();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(t0 + 4 * 60 * 1000);
+    expect(captchaApi.verify(token, answer)).toBe(true);
+    vi.setSystemTime(t0 + 5 * 60 * 1000 + 5000);
+    expect(captchaApi.verify(token, answer)).toBe(false);
+    expect(captchaApi.isWellFormed(token)).toBe(false);
+    const u = uniq('su');
+    expect((await regWith(token, answer, u)).status).toBe(400);
+    expect(await userExists(u)).toBe(false);
+  });
+
+  it('同一毫秒、同一答案签发的 token 签名也不同(nonce)，所以"已用"键不会撞', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(1_800_000_000_000);
+    const sigs = new Set();
+    for (let i = 0; i < 200; i++) sigs.add(captchaApi.tokenKey(captchaApi.generate().token));
+    expect(sigs.size).toBe(200);
+  });
+});
+
 describe('token 只有唯一一种合法写法(宽松解码的变体不能当成新 token 重放)', () => {
   // 同一个 token 的各种"宽松解码后内容相同"的变体
   function variants(token) {
@@ -180,13 +207,13 @@ describe('开放注册按 IP 限速(滚动 24 小时 10 次)', () => {
     expect((await reg({}, ip)).status).toBe(429);
   });
 
-  it('超过 24 小时的记录不算，23 小时前的还算(窗口就是 24 小时)', async () => {
+  it('24 小时 30 分钟前的记录不算，23 小时 30 分钟前的还算(窗口就是 24 小时)', async () => {
     logout();
     const ip = randIp();
-    await dbApi.pool.query(`INSERT INTO signup_attempts (ip, created_at) VALUES ${Array(10).fill('(?, NOW() - INTERVAL 25 HOUR)').join(',')}`, Array(10).fill(ip));
+    await dbApi.pool.query(`INSERT INTO signup_attempts (ip, created_at) VALUES ${Array(10).fill('(?, NOW() - INTERVAL 1470 MINUTE)').join(',')}`, Array(10).fill(ip));
     expect((await reg({}, ip)).status).toBe(200);
     const ip2 = randIp();
-    await dbApi.pool.query(`INSERT INTO signup_attempts (ip, created_at) VALUES ${Array(10).fill('(?, NOW() - INTERVAL 23 HOUR)').join(',')}`, Array(10).fill(ip2));
+    await dbApi.pool.query(`INSERT INTO signup_attempts (ip, created_at) VALUES ${Array(10).fill('(?, NOW() - INTERVAL 1410 MINUTE)').join(',')}`, Array(10).fill(ip2));
     logout();
     expect((await reg({}, ip2)).status).toBe(429);
   });
