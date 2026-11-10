@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const mysql = require('mysql2/promise');
 const bcrypt = require('bcryptjs');
 
@@ -49,8 +50,13 @@ const SCHEMA_STATEMENTS = [
     family_id     INT UNSIGNED,
     family_role   ENUM('dad','mom','child','other'),
     account_type  ENUM('individual','family') NOT NULL DEFAULT 'individual',
+    signup_source ENUM('invite','open') NOT NULL DEFAULT 'invite',
+    scan_tier     ENUM('open','normal') NOT NULL DEFAULT 'normal',
+    invited_by    INT UNSIGNED,
     created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_users_family (family_id)
+    INDEX idx_users_family (family_id),
+    INDEX idx_users_invited_by (invited_by),
+    CONSTRAINT fk_users_invited_by FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE SET NULL
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS families (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -136,6 +142,33 @@ const SCHEMA_STATEMENTS = [
     INDEX idx_lf_user_time (username, created_at),
     INDEX idx_lf_ip_time   (ip, created_at)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  // 邀请码: 单次有效。family_id 非空 = 入家庭邀请码(注册后直接加入该家庭)。
+  // 码本身是 128 位随机数(base64url)，不可猜；状态(未用/已用/作废/过期)由 used_by/revoked_at/expires_at 推出
+  `CREATE TABLE IF NOT EXISTS invite_codes (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    code          VARCHAR(40)   NOT NULL UNIQUE,
+    created_by    INT UNSIGNED  NOT NULL,
+    family_id     INT UNSIGNED,
+    expires_at    DATETIME      NOT NULL,
+    used_by       INT UNSIGNED,
+    used_at       TIMESTAMP     NULL,
+    revoked_at    TIMESTAMP     NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_invite_creator (created_by),
+    CONSTRAINT fk_invite_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_invite_family  FOREIGN KEY (family_id)  REFERENCES families(id) ON DELETE CASCADE,
+    CONSTRAINT fk_invite_used_by FOREIGN KEY (used_by)    REFERENCES users(id) ON DELETE SET NULL
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  // 每次调用 OpenRouter 的记录(成功与否都记)，同时是每日扫描额度的计数依据。success NULL = 进行中
+  `CREATE TABLE IF NOT EXISTS scan_log (
+    id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id       INT UNSIGNED  NOT NULL,
+    model         VARCHAR(100),
+    success       TINYINT(1),
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_scan_user_time (user_id, created_at),
+    CONSTRAINT fk_scan_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 ];
 
 // 升级路径: 功能上线前建的 receipts 表没有 user_id 列，需要在已有表上补齐
@@ -219,6 +252,22 @@ async function migrateReceiptsImageIndex(conn) {
   await conn.query('ALTER TABLE receipts ADD INDEX idx_receipts_image (image_file)');
 }
 
+// 升级路径: 已有 users 表没有邀请/额度相关列。老账号取列默认值 signup_source='invite'、scan_tier='normal'
+// (即"按邀请注册、正常额度"处理，不受开放注册的每天 3 次限制)
+async function migrateUsersInviteColumns(conn) {
+  if (!(await columnExists(conn, 'users', 'signup_source'))) {
+    await conn.query(`ALTER TABLE users ADD COLUMN signup_source ENUM('invite','open') NOT NULL DEFAULT 'invite' AFTER account_type`);
+  }
+  if (!(await columnExists(conn, 'users', 'scan_tier'))) {
+    await conn.query(`ALTER TABLE users ADD COLUMN scan_tier ENUM('open','normal') NOT NULL DEFAULT 'normal' AFTER signup_source`);
+  }
+  if (!(await columnExists(conn, 'users', 'invited_by'))) {
+    await conn.query('ALTER TABLE users ADD COLUMN invited_by INT UNSIGNED AFTER scan_tier');
+    await conn.query('ALTER TABLE users ADD INDEX idx_users_invited_by (invited_by)');
+    await conn.query('ALTER TABLE users ADD CONSTRAINT fk_users_invited_by FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE SET NULL');
+  }
+}
+
 // 初始化管理员账号: 只在 ADMIN_USERNAME/ADMIN_PASSWORD 都配置了、且该用户名还不存在时创建一次；
 // 已存在的账号(不管是不是管理员)不会被覆盖密码/角色
 async function seedAdmin() {
@@ -252,6 +301,7 @@ async function initSchema() {
       await migrateReceiptsFamilyColumns(conn);
       await migrateItemsFamilyColumns(conn);
       await migrateReceiptsImageIndex(conn);
+      await migrateUsersInviteColumns(conn);
     } finally {
       conn.release();
     }
@@ -263,13 +313,164 @@ async function initSchema() {
 const ready = initSchema();
 
 // ---- 用户 ----
-async function createUser(username, passwordHash, { familyRole } = {}) {
+// signupSource: 'open' = 开放注册(无邀请码)，同时落到 scan_tier='open' 档；缺省/其他 = 邀请注册档(列默认值)。
+// 邀请码注册走 registerWithInvite()，不经过这里。
+async function createUser(username, passwordHash, { familyRole, signupSource } = {}) {
   await ready;
+  const open = signupSource === 'open';
   const [info] = await pool.execute(
-    'INSERT INTO users (username, password_hash, family_role) VALUES (:username, :password_hash, :family_role)',
-    { username, password_hash: passwordHash, family_role: familyRole || null }
+    `INSERT INTO users (username, password_hash, family_role, signup_source, scan_tier)
+     VALUES (:username, :password_hash, :family_role, :signup_source, :scan_tier)`,
+    {
+      username, password_hash: passwordHash, family_role: familyRole || null,
+      signup_source: open ? 'open' : 'invite', scan_tier: open ? 'open' : 'normal',
+    }
   );
   return info.insertId;
+}
+
+// ---- 邀请码 ----
+const INVITE_VALID_DAYS = 7;
+const INVITE_MAX_ACTIVE = 20; // 每人同时持有的未使用有效码上限，防止无限刷码
+
+// 生成一个邀请码。familyId 非空 = 入家庭码(调用方负责确认调用者是该家庭的创建者)。
+// 在事务里先锁住调用者的 users 行再数、再插入，同一用户并发生成也不会突破上限。
+// 返回码行；已达上限返回 null。
+async function createInviteCode(userId, { familyId } = {}) {
+  await ready;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.execute('SELECT id FROM users WHERE id = :userId FOR UPDATE', { userId });
+    const [[{ n }]] = await conn.execute(`
+      SELECT COUNT(*) AS n FROM invite_codes
+      WHERE created_by = :userId AND used_by IS NULL AND revoked_at IS NULL AND expires_at > NOW()
+    `, { userId });
+    if (n >= INVITE_MAX_ACTIVE) { await conn.rollback(); return null; }
+    const code = crypto.randomBytes(16).toString('base64url');
+    const [info] = await conn.execute(`
+      INSERT INTO invite_codes (code, created_by, family_id, expires_at)
+      VALUES (:code, :userId, :familyId, NOW() + INTERVAL ${INVITE_VALID_DAYS} DAY)
+    `, { code, userId, familyId: familyId || null });
+    const [[row]] = await conn.execute('SELECT id, code, family_id, expires_at, created_at FROM invite_codes WHERE id = :id', { id: info.insertId });
+    await conn.commit();
+    return row;
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
+// 我生成的码，带状态。kind: 'family' 只列家庭码，'personal' 只列普通码，缺省全列
+async function listInviteCodes(userId, kind) {
+  await ready;
+  const kindClause = kind === 'family' ? 'AND c.family_id IS NOT NULL' : kind === 'personal' ? 'AND c.family_id IS NULL' : '';
+  const [rows] = await pool.execute(`
+    SELECT c.id, c.code, c.family_id, c.expires_at, c.created_at, c.used_at, u.username AS used_by_username,
+           CASE WHEN c.used_by IS NOT NULL OR c.used_at IS NOT NULL THEN 'used'
+                WHEN c.revoked_at IS NOT NULL THEN 'revoked'
+                WHEN c.expires_at <= NOW() THEN 'expired'
+                ELSE 'unused' END AS status
+    FROM invite_codes c LEFT JOIN users u ON u.id = c.used_by
+    WHERE c.created_by = :userId ${kindClause}
+    ORDER BY c.id DESC
+  `, { userId });
+  return rows;
+}
+
+// 作废自己的、还没被使用的码。返回 'ok' | 'used'(已被使用，不能改) | 'not_found'(不存在或不是你的)
+async function revokeInviteCode(id, userId) {
+  await ready;
+  const [rows] = await pool.execute('SELECT used_by, used_at FROM invite_codes WHERE id = :id AND created_by = :userId', { id, userId });
+  if (!rows.length) return 'not_found';
+  const [info] = await pool.execute(`
+    UPDATE invite_codes SET revoked_at = COALESCE(revoked_at, NOW())
+    WHERE id = :id AND created_by = :userId AND used_by IS NULL AND used_at IS NULL
+  `, { id, userId });
+  return info.affectedRows > 0 ? 'ok' : 'used';
+}
+
+// 注册页预检: 码有效(未用、未作废、未过期)就返回 { id, created_by, family_id, family_name }，否则 null。
+// 只读、不加锁——真正消耗码的是 registerWithInvite()，这里只是为了在建号前把表单里的家庭字段校验清楚。
+async function peekInviteCode(code) {
+  await ready;
+  const [rows] = await pool.execute(`
+    SELECT c.id, c.created_by, c.family_id, f.name AS family_name
+    FROM invite_codes c LEFT JOIN families f ON f.id = c.family_id
+    WHERE c.code = :code AND c.used_by IS NULL AND c.used_at IS NULL AND c.revoked_at IS NULL AND c.expires_at > NOW()
+  `, { code });
+  return rows[0] || null;
+}
+
+// 用邀请码建号。事务里先 SELECT ... FOR UPDATE 锁住码行，同一个码被并发注册时只有一个能成功；
+// 建号、标记码已使用、(家庭码)加入家庭三件事要么全成要么全不成。
+// 返回 { id, familyId, familyName, invitedBy }；码无效(不存在/已用/作废/过期)返回 null；用户名重复会抛 ER_DUP_ENTRY。
+async function registerWithInvite(code, username, passwordHash, { familyRole } = {}) {
+  await ready;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [rows] = await conn.execute(`
+      SELECT c.id, c.created_by, c.family_id, f.name AS family_name
+      FROM invite_codes c LEFT JOIN families f ON f.id = c.family_id
+      WHERE c.code = :code AND c.used_by IS NULL AND c.used_at IS NULL AND c.revoked_at IS NULL AND c.expires_at > NOW()
+      FOR UPDATE
+    `, { code });
+    if (!rows.length) { await conn.rollback(); return null; }
+    const c = rows[0];
+    const [info] = await conn.execute(`
+      INSERT INTO users (username, password_hash, family_role, signup_source, scan_tier, invited_by, family_id, account_type)
+      VALUES (:username, :password_hash, :family_role, 'invite', 'normal', :invited_by, :family_id, :account_type)
+    `, {
+      username, password_hash: passwordHash, family_role: familyRole || null, invited_by: c.created_by,
+      family_id: c.family_id || null, account_type: c.family_id ? 'family' : 'individual',
+    });
+    await conn.execute('UPDATE invite_codes SET used_by = :uid, used_at = NOW() WHERE id = :id', { uid: info.insertId, id: c.id });
+    await conn.commit();
+    return { id: info.insertId, familyId: c.family_id || null, familyName: c.family_name || null, invitedBy: c.created_by };
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
+// ---- 扫描额度 / scan_log ----
+const SCAN_WINDOW_HOURS = 24; // 滚动 24 小时，不按自然日(避开时区)
+
+// 先记一条再数、超限就撤回自己那条(和登录防爆破同样的顺序): 并发到达的请求都能看到彼此已写入的记录，
+// 保证任何 24 小时窗口里放行的次数不超过 limit。limit 为 null = 不限额(管理员)，只记录。
+// 返回 { ok: true, id } 放行(之后用 finishScan 记成败)，或 { ok: false, used } 超额(已撤回，不留记录)。
+async function reserveScan(userId, model, limit) {
+  await ready;
+  const [info] = await pool.execute('INSERT INTO scan_log (user_id, model) VALUES (:userId, :model)', { userId, model: model || null });
+  if (limit != null) {
+    const [[{ n }]] = await pool.execute(`
+      SELECT COUNT(*) AS n FROM scan_log WHERE user_id = :userId AND created_at > NOW() - INTERVAL ${SCAN_WINDOW_HOURS} HOUR
+    `, { userId });
+    if (n > limit) {
+      await pool.execute('DELETE FROM scan_log WHERE id = :id', { id: info.insertId });
+      return { ok: false, used: Math.min(n - 1, limit) };
+    }
+  }
+  return { ok: true, id: info.insertId };
+}
+
+async function finishScan(id, success) {
+  await ready;
+  await pool.execute('UPDATE scan_log SET success = :success WHERE id = :id', { id, success: success ? 1 : 0 });
+}
+
+// 管理员调整某用户的额度档位。返回 false = 用户不存在
+async function setScanTier(userId, tier) {
+  await ready;
+  const [rows] = await pool.execute('SELECT id FROM users WHERE id = :userId', { userId });
+  if (!rows.length) return false;
+  await pool.execute('UPDATE users SET scan_tier = :tier WHERE id = :userId', { userId, tier });
+  return true;
 }
 
 // ---- 家庭 ----
@@ -404,7 +605,7 @@ async function findUserById(id) {
 async function getSessionUser(id) {
   await ready;
   const [rows] = await pool.execute(`
-    SELECT u.id, u.username, u.is_admin, u.family_id, u.family_role, u.account_type,
+    SELECT u.id, u.username, u.is_admin, u.family_id, u.family_role, u.account_type, u.scan_tier,
            f.name AS family_name, f.creator_id AS family_creator_id
     FROM users u LEFT JOIN families f ON f.id = u.family_id
     WHERE u.id = :id
@@ -701,12 +902,15 @@ async function listUsers() {
   await ready;
   const [rows] = await pool.execute(`
     SELECT u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name AS family_name, u.created_at,
+           u.signup_source, u.scan_tier, inv.username AS inviter_username,
            COUNT(r.id) AS receipt_count,
            ROUND(COALESCE(SUM(r.total), 0), 2) AS total_spend
     FROM users u
     LEFT JOIN receipts r ON r.user_id = u.id
     LEFT JOIN families f ON f.id = u.family_id
-    GROUP BY u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name, u.created_at
+    LEFT JOIN users inv ON inv.id = u.invited_by
+    GROUP BY u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name, u.created_at,
+             u.signup_source, u.scan_tier, inv.username
     ORDER BY u.created_at
   `);
   return rows;
@@ -766,6 +970,8 @@ module.exports = {
   distinctItemNames, overview,
   createUser, findUserByUsername, findUserById, countUsers, backfillOwnerlessReceipts,
   updatePassword, getSessionUser, findImageOwner,
+  createInviteCode, listInviteCodes, revokeInviteCode, peekInviteCode, registerWithInvite,
+  reserveScan, finishScan, setScanTier,
   countRecentLoginFailures, isLoginLocked, recordLoginFailure, deleteLoginAttempt, clearLoginFailures,
   listUsers, deleteUser, statsByUser,
   findFamilyByName, findFamilyById, createFamily, inviteMember, applyToFamily,

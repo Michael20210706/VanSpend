@@ -14,8 +14,13 @@ CREATE TABLE IF NOT EXISTS users (
   family_id     INT UNSIGNED,                       -- 所属家庭；NULL = 个人账号或尚未加入家庭
   family_role   ENUM('dad','mom','child','other'),  -- 家庭角色标签，个人/家庭账号都可选填
   account_type  ENUM('individual','family') NOT NULL DEFAULT 'individual',
+  signup_source ENUM('invite','open') NOT NULL DEFAULT 'invite',  -- 注册来源；老账号一律按 invite 处理
+  scan_tier     ENUM('open','normal') NOT NULL DEFAULT 'normal',  -- 每日扫描额度档位(见 config.json scanQuota)；开放注册的新账号是 open，管理员可升级
+  invited_by    INT UNSIGNED,                                      -- 邀请人；邀请人账号被删后置空
   created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  INDEX idx_users_family (family_id)
+  INDEX idx_users_family (family_id),
+  INDEX idx_users_invited_by (invited_by),
+  CONSTRAINT fk_users_invited_by FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS families (
@@ -109,4 +114,33 @@ CREATE TABLE IF NOT EXISTS login_failures (
   created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_lf_user_time (username, created_at),
   INDEX idx_lf_ip_time   (ip, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 邀请码: 单次有效。family_id 非空 = 入家庭邀请码(注册后直接加入该家庭)。
+-- 码本身是 128 位随机数(base64url)，不可猜；状态(未用/已用/作废/过期)由 used_by/revoked_at/expires_at 推出
+CREATE TABLE IF NOT EXISTS invite_codes (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  code          VARCHAR(40)   NOT NULL UNIQUE,
+  created_by    INT UNSIGNED  NOT NULL,
+  family_id     INT UNSIGNED,
+  expires_at    DATETIME      NOT NULL,
+  used_by       INT UNSIGNED,
+  used_at       TIMESTAMP     NULL,
+  revoked_at    TIMESTAMP     NULL,
+  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_invite_creator (created_by),
+  CONSTRAINT fk_invite_creator FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE,
+  CONSTRAINT fk_invite_family  FOREIGN KEY (family_id)  REFERENCES families(id) ON DELETE CASCADE,
+  CONSTRAINT fk_invite_used_by FOREIGN KEY (used_by)    REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 每次调用 OpenRouter 的记录(成功与否都记)，同时是每日扫描额度的计数依据。success NULL = 进行中
+CREATE TABLE IF NOT EXISTS scan_log (
+  id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id       INT UNSIGNED  NOT NULL,
+  model         VARCHAR(100),
+  success       TINYINT(1),
+  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_scan_user_time (user_id, created_at),
+  CONSTRAINT fk_scan_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

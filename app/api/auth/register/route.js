@@ -7,24 +7,48 @@ import { wrap, readJson, FORM_BODY_MAX } from '@/src/http';
 
 const FAMILY_ROLES = ['dad', 'mom', 'child', 'other'];
 
+// 不区分"不存在 / 已用 / 已作废 / 已过期"，统一一句话，免得被用来探测码的状态
+const INVALID_CODE = () => NextResponse.json({ error: '邀请码无效、已被使用或已过期' }, { status: 400 });
+const USERNAME_TAKEN = () => NextResponse.json({ error: '用户名已存在' }, { status: 400 });
+
+// 两条注册路径并存:
+//   带邀请码: 码本身就是"人"的证明，不再要验证码；账号按"邀请注册、正常额度"建，记录邀请人；
+//            家庭码(创建者生成)注册后直接加入该家庭，表单里的家庭字段被忽略。
+//   无邀请码(开放注册): 必须过验证码；账号标记为"开放注册"，落在低额度档(config.json scanQuota.open)，管理员可升级。
+// signupSource / scanTier / isAdmin 永远由服务端按路径决定，请求体里同名字段一律忽略。
 export const POST = wrap(async (request) => {
   const body = await readJson(request, FORM_BODY_MAX);
-  const username = (body.username || '').trim();
-  const password = body.password || '';
+  const username = String(body.username || '').trim();
+  const password = String(body.password || '');
   const familyRole = FAMILY_ROLES.includes(body.familyRole) ? body.familyRole : null;
   const accountType = body.accountType === 'family' ? 'family' : 'individual';
   const familyAction = body.familyAction === 'apply' ? 'apply' : 'create';
-  const familyName = (body.familyName || '').trim();
+  const familyName = String(body.familyName || '').trim();
+
+  // inviteCode 没填(缺省/null/空串)= 开放注册；填了就必须是字符串，数组、对象、数字一律当无效码
+  const rawCode = body.inviteCode;
+  const hasCode = !(rawCode === undefined || rawCode === null || rawCode === '');
+  if (hasCode && typeof rawCode !== 'string') return INVALID_CODE();
+  const inviteCode = hasCode ? rawCode.trim() : '';
 
   if (!username || !password) return NextResponse.json({ error: '用户名和密码不能为空' }, { status: 400 });
-  if (!captchaApi.verify(body.captchaToken, body.captchaAnswer)) {
+
+  // 邀请码预检(只读)。建号前就要知道是不是家庭码——家庭码会忽略表单里的家庭字段
+  let peek = null;
+  if (hasCode) {
+    peek = await dbApi.peekInviteCode(inviteCode);
+    if (!peek) return INVALID_CODE();
+  } else if (!captchaApi.verify(body.captchaToken, body.captchaAnswer)) {
     return NextResponse.json({ error: '验证码错误或已过期，请重新验证' }, { status: 400 });
   }
-  if (await dbApi.findUserByUsername(username)) return NextResponse.json({ error: '用户名已存在' }, { status: 400 });
+  if (await dbApi.findUserByUsername(username)) return USERNAME_TAKEN();
+
+  // 表单里的家庭选项只在"没用家庭码"时生效
+  const formFamily = accountType === 'family' && !(peek && peek.family_id);
 
   // 家庭相关校验放在建号前，避免"账号建了、家庭名却不合法"的半成功状态
   let existingFamily = null;
-  if (accountType === 'family') {
+  if (formFamily) {
     if (!familyName) return NextResponse.json({ error: '请填写家庭名称' }, { status: 400 });
     existingFamily = await dbApi.findFamilyByName(familyName);
     if (familyAction === 'create' && existingFamily) {
@@ -35,21 +59,43 @@ export const POST = wrap(async (request) => {
     }
   }
 
-  const isFirstUser = (await dbApi.countUsers()) === 0;
   const passwordHash = await bcrypt.hash(password, 10);
-  const id = await dbApi.createUser(username, passwordHash, { familyRole });
-  if (isFirstUser) await dbApi.backfillOwnerlessReceipts(id); // 迁移: 功能上线前的旧数据归给首个账号
-
-  // 创建家庭立即生效；申请加入需等创建者审核，账号先以个人身份使用
+  let id;
   let familyId = null;
   let familyDisplayName = null;
   let isFamilyCreator = false;
   let pendingFamilyRequest = false;
-  if (accountType === 'family' && familyAction === 'create') {
+
+  if (hasCode) {
+    // 建号 + 消耗邀请码(+ 家庭码入家庭)在一个事务里；并发用同一个码，只有一个能成功
+    let created;
+    try {
+      created = await dbApi.registerWithInvite(inviteCode, username, passwordHash, { familyRole });
+    } catch (e) {
+      if (e && e.code === 'ER_DUP_ENTRY') return USERNAME_TAKEN();
+      throw e;
+    }
+    if (!created) return INVALID_CODE();
+    id = created.id;
+    familyId = created.familyId;
+    familyDisplayName = created.familyName;
+  } else {
+    const isFirstUser = (await dbApi.countUsers()) === 0;
+    try {
+      id = await dbApi.createUser(username, passwordHash, { familyRole, signupSource: 'open' });
+    } catch (e) {
+      if (e && e.code === 'ER_DUP_ENTRY') return USERNAME_TAKEN();
+      throw e;
+    }
+    if (isFirstUser) await dbApi.backfillOwnerlessReceipts(id); // 迁移: 功能上线前的旧数据归给首个账号
+  }
+
+  // 创建家庭立即生效；申请加入需等创建者审核，账号先以个人身份使用
+  if (formFamily && familyAction === 'create') {
     familyId = await dbApi.createFamily(familyName, id);
     familyDisplayName = familyName;
     isFamilyCreator = true;
-  } else if (accountType === 'family' && familyAction === 'apply') {
+  } else if (formFamily && familyAction === 'apply') {
     await dbApi.applyToFamily(existingFamily.id, id);
     pendingFamilyRequest = true;
   }

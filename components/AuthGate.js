@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
 import { FAMILY_ROLES } from '../lib/familyRoles';
 
-export default function AuthGate({ onLoggedIn, initialMode = 'login' }) {
+export default function AuthGate({ onLoggedIn, initialMode = 'login', initialCode = '' }) {
   const [mode, setMode] = useState(initialMode);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -15,10 +15,14 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login' }) {
   const [accountType, setAccountType] = useState('individual');
   const [familyAction, setFamilyAction] = useState('create');
   const [familyName, setFamilyName] = useState('');
+  const [inviteCode, setInviteCode] = useState(initialCode);
+  const hasCode = inviteCode.trim() !== '';
 
-  // 直接以注册态打开(落地页的"免费注册" CTA 带 ?mode=register)时也要先出一道验证码，
-  // 否则只有 toggleMode() 那条路径会出题
-  useEffect(() => { if (initialMode === 'register') loadCaptcha(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // 开放注册(没有邀请码)才需要验证码；填了邀请码就不用。直接以注册态打开(落地页的"免费注册" CTA 带
+  // ?mode=register)、或把邀请码清空时，都要补出一道验证码，否则只有 toggleMode() 那条路径会出题
+  useEffect(() => {
+    if (mode === 'register' && !hasCode && !captcha) loadCaptcha();
+  }, [mode, hasCode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadCaptcha() {
     setCaptchaAnswer('');
@@ -37,12 +41,13 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login' }) {
     setAccountType('individual');
     setFamilyAction('create');
     setFamilyName('');
+    setInviteCode('');
     setErr('');
   }
 
   async function submit() {
     if (!username.trim() || !password) { setErr('请输入用户名和密码'); return; }
-    if (mode === 'register' && !captchaAnswer.trim()) { setErr('请完成验证码'); return; }
+    if (mode === 'register' && !hasCode && !captchaAnswer.trim()) { setErr('请完成验证码'); return; }
     if (mode === 'register' && accountType === 'family' && !familyName.trim()) { setErr('请填写家庭名称'); return; }
     try {
       const u = await api('/api/auth/' + mode, {
@@ -52,7 +57,7 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login' }) {
           username: username.trim(),
           password,
           ...(mode === 'register' ? {
-            captchaToken: captcha?.token, captchaAnswer,
+            ...(hasCode ? { inviteCode: inviteCode.trim() } : { captchaToken: captcha?.token, captchaAnswer }),
             familyRole: familyRole || undefined,
             accountType,
             ...(accountType === 'family' ? { familyAction, familyName: familyName.trim() } : {}),
@@ -66,7 +71,7 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login' }) {
       setErr(e.message);
       if (mode === 'register') {
         setPassword(''); // 密码和验证码答案都清空、换一张图，避免反复重试同一个 token；登录失败不清密码，方便重试
-        loadCaptcha();
+        if (!hasCode) loadCaptcha();
       }
     }
   }
@@ -77,16 +82,30 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login' }) {
     resetForm();
     if (next === 'register') loadCaptcha();
   }
+  // (resetForm 会清空邀请码；useEffect 在 hasCode 变化后按需出验证码)
 
   return (
     <div className="card">
       <h2 style={{ marginBottom: 6 }}>{mode === 'login' ? '登录' : '注册'}</h2>
       <p className="muted" style={{ margin: '0 0 14px', fontSize: 12 }}>
-        {mode === 'login' ? '欢迎回来，登录后继续记账' : '开放自助注册，注册完就能传第一张小票'}
+        {mode === 'login' ? '欢迎回来，登录后继续记账' : '有邀请码就填上，不用验证码；没有也可以直接注册(每天识别次数较少)'}
       </p>
       <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
         <input placeholder="用户名" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} />
         <input type="password" placeholder="密码" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        {mode === 'register' && (
+          <input
+            placeholder="邀请码(可选)"
+            autoComplete="off"
+            value={inviteCode}
+            onChange={(e) => setInviteCode(e.target.value)}
+          />
+        )}
+        {mode === 'register' && hasCode && (
+          <span className="muted" style={{ fontSize: 12 }}>
+            如果这是家庭邀请码，注册后会直接加入对方的家庭，下面的家庭选项将被忽略。
+          </span>
+        )}
         {mode === 'register' && (
           <>
             <label className="row" style={{ gap: 8 }}>
@@ -122,7 +141,7 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login' }) {
             )}
           </>
         )}
-        {mode === 'register' && (
+        {mode === 'register' && !hasCode && (
           <div className="row" style={{ gap: 10, alignItems: 'center' }}>
             {captcha ? (
               <img src={captcha.image} alt="验证码图片，请输入图中算式的计算结果" width={150} height={48} style={{ borderRadius: 6, flexShrink: 0 }} />

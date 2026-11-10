@@ -6,7 +6,7 @@ import AuthGate from './AuthGate';
 import Toast from './Toast';
 import './landing/landing.css';
 
-export default function LoginClient({ initialMode }) {
+export default function LoginClient({ initialMode, initialCode = '' }) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
@@ -31,7 +31,7 @@ export default function LoginClient({ initialMode }) {
           <button onClick={() => router.replace('/')}>进入应用</button>
         </div>
       ) : (
-        <AuthGate initialMode={initialMode} onLoggedIn={handleLoggedIn} />
+        <AuthGate initialMode={initialMode} initialCode={initialCode} onLoggedIn={handleLoggedIn} />
       )}
 
       <p className="lp-auth-note">
