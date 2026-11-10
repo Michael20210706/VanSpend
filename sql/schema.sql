@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS receipts (
   INDEX idx_receipts_date (purchased_at),
   INDEX idx_receipts_user (user_id),
   INDEX idx_receipts_family (family_id),
+  INDEX idx_receipts_image (image_file),
   CONSTRAINT fk_receipts_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   CONSTRAINT fk_receipts_family FOREIGN KEY (family_id) REFERENCES families(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -98,4 +99,14 @@ CREATE TABLE IF NOT EXISTS feedback (
   created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_feedback_user (user_id),
   CONSTRAINT fk_feedback_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 登录失败记录(防爆破)。只记失败；username 存用户输入的原文(可能根本不存在)，所以不挂外键
+CREATE TABLE IF NOT EXISTS login_failures (
+  id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  username      VARCHAR(100)  NOT NULL,
+  ip            VARCHAR(64)   NOT NULL,
+  created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_lf_user_time (username, created_at),
+  INDEX idx_lf_ip_time   (ip, created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

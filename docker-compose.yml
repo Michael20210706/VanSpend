@@ -1,8 +1,10 @@
 services:
   app:
     build: .
+    # 只绑定本机回环: 公网流量只能经 cloudflared(Cloudflare Tunnel)进来，不能绕过它直连 3000。
+    # 这也是 CF-Connecting-IP 请求头可信的前提(登录防爆破按它取客户端 IP)，不要改回 0.0.0.0。
     ports:
-      - "${PORT:-3000}:3000"
+      - "127.0.0.1:${PORT:-3000}:3000"
     env_file:
       - .env
     volumes:
@@ -12,7 +14,21 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  # 本地/演示用的 MySQL；若已有外部 MySQL，删掉这个 service，
+  # 公网入口: Cloudflare Tunnel。在 Cloudflare Zero Trust 后台建 Tunnel，Public Hostname 的服务地址填
+  # http://app:3000，把 token 填进 .env 的 TUNNEL_TOKEN，然后:
+  #   docker compose --profile tunnel up -d
+  # 不加 --profile tunnel 时不启动本服务(本地试用不需要)。
+  cloudflared:
+    image: cloudflare/cloudflared:2025.8.1
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:-}
+    depends_on:
+      - app
+    restart: unless-stopped
+    profiles: ["tunnel"]
+
+  # 本地/演示用的 MySQL(不映射端口到宿主机，只有 compose 内部的 app 能连)；若已有外部 MySQL，删掉这个 service，
   # 并把 .env 里的 MYSQL_HOST/PORT 指向那个外部实例即可。
   mysql:
     image: mysql:8.0

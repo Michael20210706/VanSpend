@@ -3,6 +3,9 @@ import { useRef, useState } from 'react';
 import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
 
+// 上传前压缩到的最大长边(像素)，见 readImage()
+const MAX_EDGE = 2000;
+
 let rowSeq = 0;
 function makeRow(it = {}, defaultCategory = '') {
   return {
@@ -35,9 +38,26 @@ export default function ScanTab({ cfg }) {
   const lastRawRef = useRef(null);
   const fileInputRef = useRef(null);
 
+  // 上传前把长边压缩到 MAX_EDGE 像素以内(重新编码为 JPEG)：手机原图常有 4000+ 像素、数 MB，
+  // 压缩后传给模型的数据量和费用都更小，小票文字仍清晰。本来就不大的图原样保留；浏览器解码不了的格式也原样上传，
+  // 由服务端的 10 MB 上限兜底。
   function readImage(file) {
     const r = new FileReader();
-    r.onload = () => setCurrentImage(r.result);
+    r.onload = () => {
+      const original = r.result;
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, MAX_EDGE / Math.max(img.naturalWidth, img.naturalHeight));
+        if (scale === 1) { setCurrentImage(original); return; }
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.naturalWidth * scale);
+        canvas.height = Math.round(img.naturalHeight * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        setCurrentImage(canvas.toDataURL('image/jpeg', 0.85));
+      };
+      img.onerror = () => setCurrentImage(original);
+      img.src = original;
+    };
     r.readAsDataURL(file);
   }
 

@@ -2,13 +2,13 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import dbApi from '@/src/db.cjs';
 import { requireSession } from '@/src/session';
-import { wrap } from '@/src/http';
+import { wrap, readJson, FORM_BODY_MAX } from '@/src/http';
 
 export const POST = wrap(async (request) => {
   const { session, response } = await requireSession();
   if (response) return response;
 
-  const body = await request.json();
+  const body = await readJson(request, FORM_BODY_MAX);
   const currentPassword = body.currentPassword || '';
   const newPassword = body.newPassword || '';
   if (!currentPassword || !newPassword) {

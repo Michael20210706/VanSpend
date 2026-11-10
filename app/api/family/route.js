@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbApi from '@/src/db.cjs';
 import { requireSession } from '@/src/session';
-import { wrap } from '@/src/http';
+import { wrap, readJson, FORM_BODY_MAX } from '@/src/http';
 
 // 个人账号事后创建家庭(注册时选"个人"的用户，后来想建家庭也走这里，和注册时创建家庭是同一套逻辑)
 export const POST = wrap(async (request) => {
@@ -9,7 +9,7 @@ export const POST = wrap(async (request) => {
   if (response) return response;
   if (session.familyId) return NextResponse.json({ error: '您已经在一个家庭中' }, { status: 400 });
 
-  const body = await request.json();
+  const body = await readJson(request, FORM_BODY_MAX);
   const name = (body.name || '').trim();
   if (!name) return NextResponse.json({ error: '请填写家庭名称' }, { status: 400 });
   if (await dbApi.findFamilyByName(name)) {

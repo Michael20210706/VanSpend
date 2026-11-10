@@ -3,12 +3,12 @@ import bcrypt from 'bcryptjs';
 import dbApi from '@/src/db.cjs';
 import captchaApi from '@/src/captcha.cjs';
 import { getSession } from '@/src/session';
-import { wrap } from '@/src/http';
+import { wrap, readJson, FORM_BODY_MAX } from '@/src/http';
 
 const FAMILY_ROLES = ['dad', 'mom', 'child', 'other'];
 
 export const POST = wrap(async (request) => {
-  const body = await request.json();
+  const body = await readJson(request, FORM_BODY_MAX);
   const username = (body.username || '').trim();
   const password = body.password || '';
   const familyRole = FAMILY_ROLES.includes(body.familyRole) ? body.familyRole : null;
