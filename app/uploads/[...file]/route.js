@@ -22,7 +22,7 @@ export const GET = wrap(async (request, { params }) => {
   if (!SAFE_NAME.test(name)) return notFound();
 
   const session = await getAuthedSession();
-  if (!session) return notFound();
+  if (!session || session.mustChangePassword) return notFound(); // 必须先改密码的账号也一视同仁地 404
 
   const owner = await dbApi.findImageOwner(name);
   if (!owner) return notFound();

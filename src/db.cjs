@@ -53,10 +53,26 @@ const SCHEMA_STATEMENTS = [
     signup_source ENUM('invite','open') NOT NULL DEFAULT 'invite',
     scan_tier     ENUM('open','normal') NOT NULL DEFAULT 'normal',
     invited_by    INT UNSIGNED,
+    must_change_password TINYINT(1) NOT NULL DEFAULT 0,
     created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_users_family (family_id),
     INDEX idx_users_invited_by (invited_by),
     CONSTRAINT fk_users_invited_by FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE SET NULL
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  // 管理员写操作日志: 只增不改(没有任何修改/删除它的接口)。操作人、对象都存一份文字快照，对象或操作人之后被删也看得懂；
+  // admin_id 外键 ON DELETE SET NULL，操作人账号被删后日志保留。不记录查看。
+  `CREATE TABLE IF NOT EXISTS admin_audit_log (
+    id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    admin_id       INT UNSIGNED,
+    admin_username VARCHAR(100)  NOT NULL,
+    action         VARCHAR(40)   NOT NULL,
+    target_type    ENUM('user','receipt') NOT NULL,
+    target_id      INT UNSIGNED  NOT NULL,
+    target_label   VARCHAR(255)  NOT NULL,
+    detail         VARCHAR(255),
+    created_at     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_audit_created (created_at),
+    CONSTRAINT fk_audit_admin FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   `CREATE TABLE IF NOT EXISTS families (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -268,6 +284,13 @@ async function migrateUsersInviteColumns(conn) {
   }
 }
 
+// 升级路径: 已有 users 表没有 must_change_password(管理员重置密码后要求下次先改密码)。老账号取默认值 0
+async function migrateUsersPasswordFlag(conn) {
+  if (!(await columnExists(conn, 'users', 'must_change_password'))) {
+    await conn.query('ALTER TABLE users ADD COLUMN must_change_password TINYINT(1) NOT NULL DEFAULT 0 AFTER invited_by');
+  }
+}
+
 // 初始化管理员账号: 只在 ADMIN_USERNAME/ADMIN_PASSWORD 都配置了、且该用户名还不存在时创建一次；
 // 已存在的账号(不管是不是管理员)不会被覆盖密码/角色
 async function seedAdmin() {
@@ -302,6 +325,7 @@ async function initSchema() {
       await migrateItemsFamilyColumns(conn);
       await migrateReceiptsImageIndex(conn);
       await migrateUsersInviteColumns(conn);
+      await migrateUsersPasswordFlag(conn);
     } finally {
       conn.release();
     }
@@ -470,18 +494,101 @@ async function finishScan(id, success) {
 // 管理员调整某用户的额度档位。返回 false = 用户不存在。
 // 降到 open 档时，顺手作废该用户手里所有还没被使用的邀请码——降级的目的就是阻止他继续拉人(见 invites 路由的说明)，
 // 如果不作废，一个被发现在刷码的账号还能靠手里最多 20 个有效码再拉 7 天的人。已被使用的码不受影响(那些人已经注册了)。
-async function setScanTier(userId, tier) {
+// audit: { id, username }(操作的管理员)。给了就在同一事务里写一条 set_tier 日志；用户不存在返回 false、不写日志
+async function setScanTier(userId, tier, audit) {
   await ready;
-  const [rows] = await pool.execute('SELECT id FROM users WHERE id = :userId', { userId });
-  if (!rows.length) return false;
-  await pool.execute('UPDATE users SET scan_tier = :tier WHERE id = :userId', { userId, tier });
-  if (tier === 'open') {
-    await pool.execute(`
-      UPDATE invite_codes SET revoked_at = NOW()
-      WHERE created_by = :userId AND used_by IS NULL AND used_at IS NULL AND revoked_at IS NULL
-    `, { userId });
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [rows] = await conn.execute('SELECT username, scan_tier FROM users WHERE id = :userId FOR UPDATE', { userId });
+    if (!rows.length) { await conn.rollback(); return false; }
+    await conn.execute('UPDATE users SET scan_tier = :tier WHERE id = :userId', { userId, tier });
+    if (tier === 'open') {
+      await conn.execute(`
+        UPDATE invite_codes SET revoked_at = NOW()
+        WHERE created_by = :userId AND used_by IS NULL AND used_at IS NULL AND revoked_at IS NULL
+      `, { userId });
+    }
+    if (audit) {
+      await insertAudit(conn, audit, { action: 'set_tier', target_type: 'user', target_id: userId, target_label: rows[0].username, detail: `额度档位 ${rows[0].scan_tier} → ${tier}` });
+    }
+    await conn.commit();
+    return true;
+  } catch (e) {
+    try { await conn.rollback(); } catch (_) { /* 没有进行中的事务 */ }
+    throw e;
+  } finally {
+    conn.release();
   }
-  return true;
+}
+
+// ---- 管理员操作日志 ----
+// 在调用方的事务里写一行。audit = { id, username }(操作的管理员)，d = { action, target_type, target_id, target_label, detail }
+async function insertAudit(conn, audit, d) {
+  await conn.execute(`
+    INSERT INTO admin_audit_log (admin_id, admin_username, action, target_type, target_id, target_label, detail)
+    VALUES (:admin_id, :admin_username, :action, :target_type, :target_id, :target_label, :detail)
+  `, {
+    admin_id: audit.id, admin_username: String(audit.username).slice(0, 100),
+    action: d.action, target_type: d.target_type, target_id: d.target_id,
+    target_label: String(d.target_label).slice(0, 255), detail: d.detail ? String(d.detail).slice(0, 255) : null,
+  });
+}
+
+async function listAuditLog({ limit = 200 } = {}) {
+  await ready;
+  const lim = Math.min(Math.max(parseInt(limit, 10) || 200, 1), 500);
+  const [rows] = await pool.execute(`SELECT * FROM admin_audit_log ORDER BY id DESC LIMIT ${lim}`);
+  return rows;
+}
+
+// 管理员把某用户的密码重置成临时密码(hash 由调用方生成)，并要求该用户下次先改密码。
+// 返回 'ok' | 'not_found' | 'is_admin'(管理员账号的密码来自 .env 引导，不能被重置)。同一事务里写 reset_password 日志(不含密码)
+async function resetUserPassword(userId, passwordHash, audit) {
+  await ready;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [rows] = await conn.execute('SELECT username, is_admin FROM users WHERE id = :userId FOR UPDATE', { userId });
+    if (!rows.length) { await conn.rollback(); return 'not_found'; }
+    if (rows[0].is_admin) { await conn.rollback(); return 'is_admin'; }
+    await conn.execute('UPDATE users SET password_hash = :passwordHash, must_change_password = 1 WHERE id = :userId', { passwordHash, userId });
+    await insertAudit(conn, audit, { action: 'reset_password', target_type: 'user', target_id: userId, target_label: rows[0].username, detail: '重置为临时密码，下次登录须先修改' });
+    await conn.commit();
+    return 'ok';
+  } catch (e) {
+    try { await conn.rollback(); } catch (_) { /* 没有进行中的事务 */ }
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
+// 管理员删除小票，并在同一事务里写 delete_receipt 日志。返回受影响行数(0 = 不存在，不写日志)
+async function adminDeleteReceipt(id, audit) {
+  await ready;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [rows] = await conn.execute(`
+      SELECT r.store, r.purchased_at, r.total, u.username AS owner
+      FROM receipts r LEFT JOIN users u ON u.id = r.user_id WHERE r.id = :id FOR UPDATE OF r
+    `, { id });  // OF r: 只锁小票行；不锁所有者的 users 行(那会和"先家庭行、后用户行"的加锁顺序相反，压测里出现过死锁)
+    if (!rows.length) { await conn.rollback(); return 0; }
+    const r = rows[0];
+    const [result] = await conn.execute('DELETE FROM receipts WHERE id = :id', { id });
+    await insertAudit(conn, audit, {
+      action: 'delete_receipt', target_type: 'receipt', target_id: id,
+      target_label: `${r.store} ${r.purchased_at} $${Number(r.total).toFixed(2)}`, detail: r.owner ? `所有者: ${r.owner}` : null,
+    });
+    await conn.commit();
+    return result.affectedRows;
+  } catch (e) {
+    try { await conn.rollback(); } catch (_) { /* 没有进行中的事务 */ }
+    throw e;
+  } finally {
+    conn.release();
+  }
 }
 
 // ---- 家庭 ----
@@ -807,7 +914,7 @@ async function findUserById(id) {
 async function getSessionUser(id) {
   await ready;
   const [rows] = await pool.execute(`
-    SELECT u.id, u.username, u.is_admin, u.family_id, u.family_role, u.account_type, u.scan_tier,
+    SELECT u.id, u.username, u.is_admin, u.family_id, u.family_role, u.account_type, u.scan_tier, u.must_change_password,
            f.name AS family_name, f.creator_id AS family_creator_id
     FROM users u LEFT JOIN families f ON f.id = u.family_id
     WHERE u.id = :id
@@ -888,7 +995,8 @@ async function clearLoginFailures(username) {
 
 async function updatePassword(id, passwordHash) {
   await ready;
-  await pool.execute('UPDATE users SET password_hash = :password_hash WHERE id = :id', { id, password_hash: passwordHash });
+  // 改密码同时清掉"必须先改密码"标志(管理员重置后用户第一次改密码就解除)
+  await pool.execute('UPDATE users SET password_hash = :password_hash, must_change_password = 0 WHERE id = :id', { id, password_hash: passwordHash });
 }
 
 // 迁移: 把功能上线前的无主小票全部归给首个注册账号
@@ -1228,18 +1336,70 @@ async function listUsers() {
 // 删除用户(管理员用)。如果他是某个家庭的创建者，families.creator_id 的外键会级联删掉整个家庭，
 // 但成员的 account_type 和小票/明细里冗余的 family_name 不会跟着清理——所以先走一遍和"解散家庭"相同的清理，
 // 让其他成员干净地变回个人账号、小票归各自所有，再删这个用户。
-async function deleteUser(id) {
+// 管理员删除账号(级联删除其小票/明细)。先解散该用户创建的家庭，其他成员变回个人。
+// 返回 { deleted: 受影响行数, images: 被删小票的原图文件名 }——文件在数据库事务提交之后由调用方删除。
+// audit 给了就在同一事务里写 delete_user 日志(账号不存在不写)
+async function deleteUserFull(id, audit) {
   await ready;
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
     const [owned] = await conn.execute('SELECT id FROM families WHERE creator_id = :id FOR UPDATE', { id });
     for (const f of owned) await dissolveInTx(conn, f.id);
+    const [u] = await conn.execute('SELECT username FROM users WHERE id = :id FOR UPDATE', { id });
+    const [imgs] = await conn.execute('SELECT image_file FROM receipts WHERE user_id = :id AND image_file IS NOT NULL', { id });
+    const [cnt] = await conn.execute('SELECT COUNT(*) AS n FROM receipts WHERE user_id = :id', { id });
     const [result] = await conn.execute('DELETE FROM users WHERE id = :id', { id });
+    if (audit && result.affectedRows) {
+      await insertAudit(conn, audit, {
+        action: 'delete_user', target_type: 'user', target_id: id, target_label: u[0].username,
+        detail: `连带删除 ${cnt[0].n} 张小票${owned.length ? `，解散其创建的 ${owned.length} 个家庭` : ''}`,
+      });
+    }
     await conn.commit();
-    return result.affectedRows;
+    return { deleted: result.affectedRows, images: imgs.map((r) => r.image_file) };
   } catch (e) {
-    await conn.rollback();
+    try { await conn.rollback(); } catch (_) { /* 没有进行中的事务 */ }
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
+async function deleteUser(id) {
+  return (await deleteUserFull(id)).deleted;
+}
+
+// 用户自助注销。返回 { status, images }: status = 'ok' | 'not_found' | 'is_admin'(管理员不能自助注销) |
+// 'creator'(是某个家庭的创建者: 须先转让或解散，不替用户做这个决定)。
+// 加锁顺序与家庭管理一致: 先家庭行、再用户行；等锁期间所属家庭变了就重来。
+async function deleteOwnAccount(userId) {
+  await ready;
+  const conn = await pool.getConnection();
+  try {
+    for (let attempt = 0; ; attempt++) {
+      const [pre] = await conn.execute('SELECT family_id FROM users WHERE id = :userId', { userId });
+      if (!pre[0]) return { status: 'not_found', images: [] };
+      const guess = pre[0].family_id || null;
+      await conn.beginTransaction();
+      let fam = null;
+      if (guess) fam = await lockFamily(conn, guess);
+      const [u] = await conn.execute('SELECT family_id, is_admin FROM users WHERE id = :userId FOR UPDATE', { userId });
+      if (!u[0]) { await conn.rollback(); return { status: 'not_found', images: [] }; }
+      if ((u[0].family_id || null) !== guess) {
+        await conn.rollback();
+        if (attempt >= 4) throw new Error('家庭关系持续变化，请稍后重试');
+        continue;
+      }
+      if (u[0].is_admin) { await conn.rollback(); return { status: 'is_admin', images: [] }; }
+      if (fam && fam.creator_id === userId) { await conn.rollback(); return { status: 'creator', images: [] }; }
+      const [imgs] = await conn.execute('SELECT image_file FROM receipts WHERE user_id = :userId AND image_file IS NOT NULL', { userId });
+      await conn.execute('DELETE FROM users WHERE id = :userId', { userId });
+      await conn.commit();
+      return { status: 'ok', images: imgs.map((r) => r.image_file) };
+    }
+  } catch (e) {
+    try { await conn.rollback(); } catch (_) { /* 没有进行中的事务 */ }
     throw e;
   } finally {
     conn.release();
@@ -1296,9 +1456,9 @@ module.exports = {
   updatePassword, getSessionUser, findImageOwner,
   createInviteCode, listInviteCodes, revokeInviteCode, peekInviteCode, registerWithInvite,
   reserveScan, finishScan, setScanTier,
-  migrateUsersInviteColumns, // 导出仅供测试(升级路径)
+  migrateUsersInviteColumns, migrateUsersPasswordFlag, // 导出仅供测试(升级路径)
   countRecentLoginFailures, isLoginLocked, recordLoginFailure, deleteLoginAttempt, clearLoginFailures,
-  listUsers, deleteUser, statsByUser,
+  listUsers, deleteUser, deleteUserFull, deleteOwnAccount, resetUserPassword, adminDeleteReceipt, listAuditLog, statsByUser,
   findFamilyByName, findFamilyById, createFamily, inviteMember, applyToFamily,
   listFamilyMembers, listPendingRequests, decideRequest,
   leaveFamily, removeMember, transferCreator, dissolveFamily, renameFamily, withdrawApplication, listMyApplications,

@@ -45,4 +45,21 @@ function saveImage(dataUrl) {
   return file;
 }
 
-module.exports = { UPLOAD_DIR, MAX_IMAGE_BYTES, dataUrlBytes, checkImage, saveImage };
+// 删除一批原图文件(账号被注销/删除后)。只接受 saveImage() 生成的文件名形状(单层、无路径分隔符，也是路径穿越防护)；
+// 文件不存在、删除失败都只记一条警告，不抛错——数据库里的账号已经删了，残留文件不该让请求失败。返回实际删掉的个数
+const SAFE_IMAGE_NAME = /^[A-Za-z0-9_-]+\.(jpg|jpeg|png|webp|gif)$/i;
+function deleteImages(files) {
+  let n = 0;
+  for (const f of files || []) {
+    if (typeof f !== 'string' || !SAFE_IMAGE_NAME.test(f)) continue;
+    try {
+      fs.unlinkSync(path.join(UPLOAD_DIR, f));
+      n++;
+    } catch (e) {
+      if (e.code !== 'ENOENT') console.warn('[uploads] 删除原图失败:', f, e.message);
+    }
+  }
+  return n;
+}
+
+module.exports = { UPLOAD_DIR, MAX_IMAGE_BYTES, dataUrlBytes, checkImage, saveImage, deleteImages };

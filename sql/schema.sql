@@ -17,10 +17,26 @@ CREATE TABLE IF NOT EXISTS users (
   signup_source ENUM('invite','open') NOT NULL DEFAULT 'invite',  -- 注册来源；老账号一律按 invite 处理
   scan_tier     ENUM('open','normal') NOT NULL DEFAULT 'normal',  -- 每日扫描额度档位(见 config.json scanQuota)；开放注册的新账号是 open，管理员可升级
   invited_by    INT UNSIGNED,                                      -- 邀请人；邀请人账号被删后置空
+  must_change_password TINYINT(1) NOT NULL DEFAULT 0,               -- 管理员重置密码后为 1: 用户改掉临时密码之前，除改密码/退出外的接口一律 403
   created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_users_family (family_id),
   INDEX idx_users_invited_by (invited_by),
   CONSTRAINT fk_users_invited_by FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 管理员写操作日志(只增不改，没有修改/删除它的接口；不记录查看)。操作人/对象存文字快照，对象或操作人被删后日志仍可读
+CREATE TABLE IF NOT EXISTS admin_audit_log (
+  id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  admin_id       INT UNSIGNED,
+  admin_username VARCHAR(100)  NOT NULL,
+  action         VARCHAR(40)   NOT NULL,                            -- delete_user / delete_receipt / reset_password / set_tier
+  target_type    ENUM('user','receipt') NOT NULL,
+  target_id      INT UNSIGNED  NOT NULL,
+  target_label   VARCHAR(255)  NOT NULL,
+  detail         VARCHAR(255),
+  created_at     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_audit_created (created_at),
+  CONSTRAINT fk_audit_admin FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS families (

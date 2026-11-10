@@ -16,11 +16,11 @@ export const GET = wrap(async (request, { params }) => {
 });
 
 export const DELETE = wrap(async (request, { params }) => {
-  const { response } = await requireAdmin();
+  const { session, response } = await requireAdmin();
   if (response) return response;
 
   const id = parseId((await params).id);
   if (id === null) return NextResponse.json({ error: '无效的 id' }, { status: 400 });
-  const deleted = await dbApi.deleteReceipt(id);
+  const deleted = await dbApi.adminDeleteReceipt(id, { id: session.userId, username: session.username });
   return NextResponse.json({ deleted });
 });
