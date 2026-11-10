@@ -1033,6 +1033,58 @@ async function getReceipt(id, scope) {
   return r;
 }
 
+// 保存后编辑: 只有小票的所有者能改(与删除同权限)，不存在或不是自己的返回 false。
+// 锁住小票行后，更新头部字段并整体替换明细；新明细的家庭字段取自这张小票当前的值(与保存时一致，不信调用方)。
+// 加锁顺序 receipts → items，和 detachUser/dissolveInTx/renameFamily 相同，不会与成员变更互相死锁。
+// image_file、raw_json、currency、family_* 都不动。
+async function updateReceipt(id, userId, receipt, items) {
+  await ready;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [rows] = await conn.execute(
+      `SELECT family_id, family_name, family_role, account_type FROM receipts WHERE id = :id AND user_id = :userId FOR UPDATE`,
+      { id, userId }
+    );
+    if (!rows[0]) { await conn.rollback(); return false; }
+    const fam = rows[0];
+    await conn.execute(`
+      UPDATE receipts SET store = :store, purchased_at = :purchased_at, subtotal = :subtotal, gst = :gst, pst = :pst, total = :total
+      WHERE id = :id
+    `, { store: receipt.store, purchased_at: receipt.purchased_at, subtotal: receipt.subtotal, gst: receipt.gst, pst: receipt.pst, total: receipt.total, id });
+    await conn.execute('DELETE FROM items WHERE receipt_id = :id', { id });
+    for (const it of items) {
+      await conn.execute(`
+        INSERT INTO items (receipt_id, family_id, family_name, family_role, account_type, name_raw, name_norm, category, subcategory, qty, unit, unit_price, amount, taxable)
+        VALUES (:receipt_id, :family_id, :family_name, :family_role, :account_type, :name_raw, :name_norm, :category, :subcategory, :qty, :unit, :unit_price, :amount, :taxable)
+      `, { ...it, receipt_id: id, ...fam });
+    }
+    await conn.commit();
+    return true;
+  } catch (e) {
+    try { await conn.rollback(); } catch (_) { /* 没有进行中的事务 */ }
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
+// 重复提示: 在可见范围内(家庭 + 自己的，或只有自己的)找同商家(忽略首尾空格和大小写)、同日期、同总额的小票。
+// 只用于提示，不拦截保存。
+async function findDuplicateReceipts({ store, purchased_at, total }, scope) {
+  await ready;
+  const params = { store: String(store).trim(), purchased_at, total: Number(total).toFixed(2) };
+  const sc = scopeClause(scope, params);
+  const [rows] = await pool.execute(`
+    SELECT r.id, r.store, r.purchased_at, r.total, r.created_at, u.username AS owner_username
+    FROM receipts r LEFT JOIN users u ON u.id = r.user_id
+    WHERE TRIM(r.store) = :store AND r.purchased_at = :purchased_at AND r.total = CAST(:total AS DECIMAL(10,2))
+    ${sc ? 'AND ' + sc : ''}
+    ORDER BY r.id DESC LIMIT 5
+  `, params);
+  return rows;
+}
+
 async function deleteReceipt(id, userId) {
   await ready;
   const clause = userId ? 'id = :id AND user_id = :userId' : 'id = :id';
@@ -1224,7 +1276,7 @@ async function listAllFeedback() {
 }
 
 module.exports = {
-  pool, saveReceipt, listReceipts, getReceipt, deleteReceipt,
+  pool, saveReceipt, listReceipts, getReceipt, deleteReceipt, updateReceipt, findDuplicateReceipts,
   statsByCategory, statsBySubcategory, statsMonthly, priceTrend,
   distinctItemNames, overview,
   createUser, findUserByUsername, findUserById, countUsers, backfillOwnerlessReceipts,

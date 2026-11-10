@@ -70,7 +70,7 @@ export default function Home() {
           <DashboardTab cfg={cfg} active={tab === 'dash'} />
         </section>
         <section className={'grid' + (tab !== 'list' ? ' hide' : '')}>
-          <ReceiptsTab active={tab === 'list'} showOwner={!!user?.familyId} />
+          <ReceiptsTab active={tab === 'list'} showOwner={!!user?.familyId} userId={user?.id} cfg={cfg} />
         </section>
         <section className={'grid' + (tab !== 'family' ? ' hide' : '')}>
           <FamilyPanel active={tab === 'family'} onChanged={refreshUser} />

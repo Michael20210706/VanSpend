@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, fmt } from '../lib/api';
 import { computePresetRange, PRESETS } from '../lib/dateRange';
+import ReceiptEditor from './ReceiptEditor';
 
 function query(from, to, search) {
   const q = [];
@@ -11,12 +12,13 @@ function query(from, to, search) {
   return q.length ? '?' + q.join('&') : '';
 }
 
-export default function ReceiptsTab({ active, showOwner }) {
+export default function ReceiptsTab({ active, showOwner, userId, cfg }) {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [search, setSearch] = useState('');
   const [receipts, setReceipts] = useState([]);
   const [detail, setDetail] = useState(null);
+  const [editing, setEditing] = useState(false);
   const detailRef = useRef(null);
 
   async function load(f = from, t = to, s = search) {
@@ -38,6 +40,7 @@ export default function ReceiptsTab({ active, showOwner }) {
   }
 
   async function viewRec(id) {
+    setEditing(false);
     setDetail(await api('/api/receipts/' + id));
   }
   async function delRec(id) {
@@ -92,9 +95,23 @@ export default function ReceiptsTab({ active, showOwner }) {
         </div>
       </div>
 
-      {detail && (
+      {detail && editing && cfg && (
+        <div ref={detailRef}>
+          <ReceiptEditor
+            receipt={detail}
+            categories={cfg.categories}
+            onCancel={() => setEditing(false)}
+            onSaved={(updated) => { setDetail(updated); setEditing(false); load(); }}
+          />
+        </div>
+      )}
+
+      {detail && !editing && (
         <div className="card" ref={detailRef}>
           <h2>{detail.store} · {detail.purchased_at}</h2>
+          {userId && detail.user_id === userId && cfg && (
+            <p><button className="ghost" onClick={() => setEditing(true)}>编辑</button></p>
+          )}
           <p className="muted">
             税前 ${fmt(detail.subtotal)} ｜ GST ${fmt(detail.gst)} ｜ PST ${fmt(detail.pst)} ｜ 实付 ${fmt(detail.total)}
             {showOwner ? <> ｜ 所属成员: {detail.owner_username}</> : null}

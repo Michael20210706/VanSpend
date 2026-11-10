@@ -2,25 +2,10 @@
 import { useRef, useState } from 'react';
 import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
+import ItemsEditor, { makeRow, rowsToItems } from './ItemsEditor';
 
 // 上传前压缩到的最大长边(像素)，见 readImage()
 const MAX_EDGE = 2000;
-
-let rowSeq = 0;
-function makeRow(it = {}, defaultCategory = '') {
-  return {
-    _id: ++rowSeq,
-    name_raw: it.name_raw || '',
-    name_norm: it.name_norm || '',
-    category: it.category || defaultCategory,
-    subcategory: it.subcategory || '',
-    qty: it.qty ?? 1,
-    unit: it.unit || '',
-    unit_price: it.unit_price ?? '',
-    amount: it.amount ?? 0,
-    taxable: !!it.taxable,
-  };
-}
 
 export default function ScanTab({ cfg }) {
   const [currentImage, setCurrentImage] = useState(null);
@@ -88,28 +73,8 @@ export default function ScanTab({ cfg }) {
     setScanning(false);
   }
 
-  function updateRow(id, patch) {
-    setRows((rs) => rs.map((r) => (r._id === id ? { ...r, ...patch } : r)));
-  }
-  function removeRow(id) {
-    setRows((rs) => rs.filter((r) => r._id !== id));
-  }
-  function addRow() {
-    setRows((rs) => [...rs, makeRow({}, cfg.categories[0])]);
-  }
-
   async function save() {
-    const items = rows.map((r) => ({
-      name_raw: r.name_raw.trim() || '未知商品',
-      name_norm: r.name_norm.trim() || null,
-      category: r.category,
-      subcategory: r.subcategory.trim() || null,
-      qty: +r.qty || 0,
-      unit: r.unit.trim() || null,
-      unit_price: r.unit_price === '' ? null : +r.unit_price,
-      amount: +r.amount || 0,
-      taxable: r.taxable ? 1 : 0,
-    }));
+    const items = rowsToItems(rows);
     const receipt = {
       store: store.trim() || '未知',
       purchased_at: date || new Date().toISOString().slice(0, 10),
@@ -119,6 +84,17 @@ export default function ScanTab({ cfg }) {
       pst: +pst || 0,
       total: +total || 0,
     };
+    // 重复提示: 同商家 + 同日期 + 同总额(家庭内/自己的)。只提示，用户可以选择仍然保存
+    try {
+      const q = `store=${encodeURIComponent(receipt.store)}&date=${receipt.purchased_at}&total=${receipt.total}`;
+      const dups = await api('/api/receipts/duplicates?' + q);
+      if (dups.length > 0) {
+        const lines = dups.map((d) => `· ${d.purchased_at} ${d.store} $${Number(d.total).toFixed(2)}（${d.owner_username}）`).join('\n');
+        if (!confirm(`可能重复：已有商家、日期、总额都相同的小票：\n${lines}\n\n仍要保存吗？`)) return;
+      }
+    } catch (e) {
+      // 查重失败不应挡住保存
+    }
     try {
       await api('/api/receipts', {
         method: 'POST',
@@ -176,40 +152,8 @@ export default function ScanTab({ cfg }) {
           <label>PST <input type="number" step="0.01" className="num" style={{ width: 80 }} value={pst} onChange={(e) => setPst(e.target.value)} /></label>
           <label>实付 <input type="number" step="0.01" className="num" style={{ width: 90 }} value={total} onChange={(e) => setTotal(e.target.value)} /></label>
         </div>
-        <div className="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>原文品名</th><th>规范品名</th><th>分类</th><th>细分</th>
-              <th className="num">数量</th><th>单位</th><th className="num">单价</th><th className="num">金额</th><th>税</th><th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r._id}>
-                <td><input value={r.name_raw} onChange={(e) => updateRow(r._id, { name_raw: e.target.value })} /></td>
-                <td><input value={r.name_norm} onChange={(e) => updateRow(r._id, { name_norm: e.target.value })} /></td>
-                <td>
-                  <select value={r.category} onChange={(e) => updateRow(r._id, { category: e.target.value })}>
-                    {cfg.categories.map((c) => <option key={c}>{c}</option>)}
-                  </select>
-                </td>
-                <td><input value={r.subcategory} onChange={(e) => updateRow(r._id, { subcategory: e.target.value })} /></td>
-                <td><input type="number" step="0.01" className="num" value={r.qty} onChange={(e) => updateRow(r._id, { qty: e.target.value })} /></td>
-                <td><input value={r.unit} onChange={(e) => updateRow(r._id, { unit: e.target.value })} /></td>
-                <td><input type="number" step="0.01" className="num" value={r.unit_price} onChange={(e) => updateRow(r._id, { unit_price: e.target.value })} /></td>
-                <td><input type="number" step="0.01" className="num" value={r.amount} onChange={(e) => updateRow(r._id, { amount: e.target.value })} /></td>
-                <td style={{ textAlign: 'center' }}>
-                  <input type="checkbox" checked={r.taxable} onChange={(e) => updateRow(r._id, { taxable: e.target.checked })} />
-                </td>
-                <td><button className="danger" onClick={() => removeRow(r._id)}>×</button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        </div>
+        <ItemsEditor rows={rows} setRows={setRows} categories={cfg.categories} />
         <div className="row" style={{ marginTop: 14 }}>
-          <button className="ghost" onClick={addRow}>+ 添加一行</button>
           <button onClick={save}>保存到账本</button>
         </div>
       </div>
