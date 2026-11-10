@@ -162,7 +162,7 @@ describe('邀请码: 开放注册档账号不能发码(防止过一次验证码�
   it('开放注册进来的账号走完整链路: 注册(open 档) → 想发码被拒', async () => {
     const spy = vi.spyOn(captchaApi, 'verify').mockReturnValue(true);
     logout();
-    const res = await registerRoute.POST(req('/api/auth/register', { method: 'POST', body: { username: uniq('open'), password: 'pw123456', captchaToken: 't', captchaAnswer: '1' } }));
+    const res = await registerRoute.POST(req('/api/auth/register', { method: 'POST', body: { username: uniq('open'), password: 'pw123456', captchaToken: uniq('tok'), captchaAnswer: '1' } }));
     spy.mockRestore();
     expect(res.status).toBe(200);
     expect((await create()).status).toBe(403); // 注册成功后 cookie 里就是这个新账号

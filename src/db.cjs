@@ -158,6 +158,20 @@ const SCHEMA_STATEMENTS = [
     INDEX idx_lf_user_time (username, created_at),
     INDEX idx_lf_ip_time   (ip, created_at)
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  // 已用过的验证码 token(其 SHA-256)。验证码 token 本身是无状态的签名串，5 分钟内本可无限次重放；
+  // 注册时把用过的 token 记在这里，同一个 token 只能用一次。过期(10 分钟，比 token 有效期长)的行在每次写入时顺手清掉
+  `CREATE TABLE IF NOT EXISTS captcha_used (
+    token_key     CHAR(64)      NOT NULL PRIMARY KEY,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_captcha_used_time (created_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  // 开放注册(过了验证码)的尝试记录，按 IP 限速用。和 login_failures 一样没有外键，只存 IP
+  `CREATE TABLE IF NOT EXISTS signup_attempts (
+    id            BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    ip            VARCHAR(64)   NOT NULL,
+    created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_signup_ip_time (ip, created_at)
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
   // 邀请码: 单次有效。family_id 非空 = 入家庭邀请码(注册后直接加入该家庭)。
   // 码本身是 128 位随机数(base64url)，不可猜；状态(未用/已用/作废/过期)由 used_by/revoked_at/expires_at 推出
   `CREATE TABLE IF NOT EXISTS invite_codes (
@@ -356,6 +370,40 @@ async function createUser(username, passwordHash, { familyRole, signupSource } =
     }
   );
   return info.insertId;
+}
+
+// ---- 验证码一次性 + 开放注册按 IP 限速 ----
+// 同一个 IP 在滚动 24 小时内最多这么多次"过了验证码的开放注册尝试"(不论最后成没成功——用户名被占用的试探也算，
+// 这样无法靠换用户名反复试探；共用出口 IP 的一家人/一个办公室也远远用不到这个数)。邀请码注册不受影响。
+const OPEN_SIGNUP_MAX_PER_IP = 10;
+const OPEN_SIGNUP_WINDOW_HOURS = 24;
+
+// 记下一个验证码 token 已被使用。第一次返回 true；已经用过返回 false(INSERT 撞主键，由数据库保证并发下只有一个成功)
+async function consumeCaptcha(tokenKey) {
+  await ready;
+  await pool.execute('DELETE FROM captcha_used WHERE created_at < NOW() - INTERVAL 10 MINUTE');
+  try {
+    await pool.execute('INSERT INTO captcha_used (token_key) VALUES (:tokenKey)', { tokenKey });
+    return true;
+  } catch (e) {
+    if (e && e.code === 'ER_DUP_ENTRY') return false;
+    throw e;
+  }
+}
+
+// 先记一笔再数(和登录锁定、扫描额度同一个顺序)，超限就撤销自己这一笔并返回 false——并发的一波请求不会各自读到 0 而全部放行
+async function reserveOpenSignup(ip) {
+  await ready;
+  const ipKey = String(ip).slice(0, 64);
+  await pool.execute('DELETE FROM signup_attempts WHERE created_at < NOW() - INTERVAL 2 DAY');
+  const [info] = await pool.execute('INSERT INTO signup_attempts (ip) VALUES (:ip)', { ip: ipKey });
+  const [rows] = await pool.query(
+    `SELECT COUNT(*) AS n FROM signup_attempts WHERE ip = ? AND created_at > NOW() - INTERVAL ${OPEN_SIGNUP_WINDOW_HOURS} HOUR`, [ipKey]);
+  if (rows[0].n > OPEN_SIGNUP_MAX_PER_IP) {
+    await pool.execute('DELETE FROM signup_attempts WHERE id = :id', { id: info.insertId });
+    return false;
+  }
+  return true;
 }
 
 // ---- 邀请码 ----
@@ -1463,7 +1511,7 @@ module.exports = {
   reserveScan, finishScan, setScanTier,
   migrateUsersInviteColumns, migrateUsersPasswordFlag, // 导出仅供测试(升级路径)
   countRecentLoginFailures, isLoginLocked, recordLoginFailure, deleteLoginAttempt, clearLoginFailures,
-  listUsers, deleteUser, deleteUserFull, deleteOwnAccount, resetUserPassword, adminDeleteReceipt, listAuditLog, statsByUser,
+  consumeCaptcha, reserveOpenSignup, listUsers, deleteUser, deleteUserFull, deleteOwnAccount, resetUserPassword, adminDeleteReceipt, listAuditLog, statsByUser,
   findFamilyByName, findFamilyById, createFamily, inviteMember, applyToFamily,
   listFamilyMembers, listPendingRequests, decideRequest,
   leaveFamily, removeMember, transferCreator, dissolveFamily, renameFamily, withdrawApplication, listMyApplications,

@@ -66,9 +66,33 @@ function generate() {
   const op = crypto.randomInt(0, 2) === 0 ? '+' : '-';
   const answer = op === '+' ? a + b : a - b;
   const image = `data:image/svg+xml;base64,${Buffer.from(renderSvg(`${a}${op}${b}=?`)).toString('base64')}`;
-  const payload = `${answer}:${Date.now() + TTL_MS}`;
+  // 末尾的随机 nonce 让每个 token 的签名都不同(同一毫秒、同一答案也不会撞)，签名因此可以当"这个 token 是否用过"的键
+  const payload = `${answer}:${Date.now() + TTL_MS}:${crypto.randomBytes(8).toString('hex')}`;
   const token = `${Buffer.from(payload).toString('base64url')}.${sign(payload)}`;
   return { image, token };
+}
+
+// token 本身是否有效(签名对、没过期)，不看答案。注册路由用它给"签名有效但答案错"的 token 也记一次使用——
+// 否则答案是一位数加减(约 27 种可能)，同一个 token 可以反复猜到对为止
+function isWellFormed(token) {
+  const p = parse(token);
+  return p !== null;
+}
+
+function parse(token) {
+  if (!token || typeof token !== 'string') return null;
+  const dotIndex = token.lastIndexOf('.');
+  if (dotIndex < 0) return null;
+  let payload;
+  try {
+    payload = Buffer.from(token.slice(0, dotIndex), 'base64url').toString('utf8');
+  } catch {
+    return null;
+  }
+  if (!safeEqual(sign(payload), token.slice(dotIndex + 1))) return null;
+  const [expectedAnswer, expiresAt] = payload.split(':');
+  if (Date.now() > Number(expiresAt)) return null;
+  return { expectedAnswer };
 }
 
 function verify(token, answer) {
@@ -89,4 +113,9 @@ function verify(token, answer) {
   return String(answer ?? '').trim() === expectedAnswer;
 }
 
-module.exports = { generate, verify };
+// 一次性使用的键: token 整体的 SHA-256。验证通过后由调用方(注册路由)写进库里，重放同一个 token 就会被拒绝
+function tokenKey(token) {
+  return crypto.createHash('sha256').update(String(token)).digest('hex');
+}
+
+module.exports = { generate, verify, isWellFormed, tokenKey };

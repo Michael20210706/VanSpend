@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import dbApi from '@/src/db.cjs';
 import captchaApi from '@/src/captcha.cjs';
 import { getSession } from '@/src/session';
-import { wrap, readJson, FORM_BODY_MAX } from '@/src/http';
+import { wrap, readJson, clientIp, FORM_BODY_MAX } from '@/src/http';
 
 const FAMILY_ROLES = ['dad', 'mom', 'child', 'other'];
 
@@ -38,8 +38,20 @@ export const POST = wrap(async (request) => {
   if (hasCode) {
     peek = await dbApi.peekInviteCode(inviteCode);
     if (!peek) return INVALID_CODE();
-  } else if (!captchaApi.verify(body.captchaToken, body.captchaAnswer)) {
-    return NextResponse.json({ error: '验证码错误或已过期，请重新验证' }, { status: 400 });
+  } else {
+    const BAD_CAPTCHA = () => NextResponse.json({ error: '验证码错误或已过期，请重新验证' }, { status: 400 });
+    const answerOk = captchaApi.verify(body.captchaToken, body.captchaAnswer);
+    // 一次性: 同一个验证码 token 只能用一次(此前 5 分钟内可无限重放)。答案对、或者 token 签名有效但答案错，都算用掉——
+    // 否则一位数加减只有约 27 种答案，同一个 token 可以反复猜。不管后面成不成功都得重新出题；签名无效的垃圾 token 不入库
+    if (answerOk || captchaApi.isWellFormed(body.captchaToken)) {
+      if (!(await dbApi.consumeCaptcha(captchaApi.tokenKey(body.captchaToken)))) return BAD_CAPTCHA();
+    }
+    if (!answerOk) return BAD_CAPTCHA();
+    // 按 IP 限速: 过了验证码的开放注册尝试，每个 IP 滚动 24 小时有上限。取不到 IP(没经 Tunnel 的本地访问)时跳过，不把所有人归进同一个桶
+    const ip = clientIp(request);
+    if (ip && !(await dbApi.reserveOpenSignup(ip))) {
+      return NextResponse.json({ error: '这个网络今天的注册尝试次数过多，请明天再试，或使用邀请码注册' }, { status: 429 });
+    }
   }
   if (await dbApi.findUserByUsername(username)) return USERNAME_TAKEN();
 

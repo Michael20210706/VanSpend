@@ -137,7 +137,7 @@ npm test   # vitest run：解析/统计、会话实时校验、原图鉴权、�
 **严格约束**
 - 需要一个可达的外部 MySQL 服务;连接信息(`MYSQL_HOST/PORT/USER/PASSWORD/DATABASE`)放在 `.env`,不要提交到版本库。
 - 公网访问只经 Cloudflare Tunnel:`docker-compose.yml` 里应用端口只绑定 `127.0.0.1`,用 `docker compose --profile tunnel up -d` 启动 `cloudflared`(token 写在 `.env` 的 `TUNNEL_TOKEN`)。公网部署必须在 `.env` 设 `COOKIE_SECURE=true`;本地 http://localhost 试用保持 `false`。应用端口和 MySQL 都不要对公网开放——登录防爆破按 `CF-Connecting-IP` 取客户端 IP,只有在应用无法被绕过 Tunnel 直连时这个头才可信。
-- 注册无需管理员审批:要么用邀请码(正常额度的账号能生成;开放注册的账号不能发码,要先由管理员升级),要么开放注册(验证码,识别额度较低);普通账号只能看到自己的数据,加入同一家庭后互相只读可见(加入前记的小票仍只有本人可见)。唯一的例外角色是 `is_admin`,只能通过启动时的 `ADMIN_USERNAME`/`ADMIN_PASSWORD` 初始化,注册接口本身永远不会赋予这个角色。
+- 注册无需管理员审批:要么用邀请码(正常额度的账号能生成;开放注册的账号不能发码,要先由管理员升级),要么开放注册(验证码,每个验证码只能用一次;同一 IP 每 24 小时最多 10 次开放注册尝试;识别额度较低);普通账号只能看到自己的数据,加入同一家庭后互相只读可见(加入前记的小票仍只有本人可见)。唯一的例外角色是 `is_admin`,只能通过启动时的 `ADMIN_USERNAME`/`ADMIN_PASSWORD` 初始化,注册接口本身永远不会赋予这个角色。
 - 小票原图仍存本地 `uploads/` 目录,不进 MySQL,只有文件名存在 `receipts.image_file` 里。`/uploads/<文件>` 只给上传者本人、同家庭成员和管理员看,其余情况一律 404,并带 `Cache-Control: private, no-store`(防止 Cloudflare 边缘缓存)。单张图片上限 10 MB,浏览器上传前会把长边压缩到 2000 像素以内。
 
 **本期明确不包含**
