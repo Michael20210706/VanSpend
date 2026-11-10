@@ -13,7 +13,14 @@ export const PW_LOCK_MINUTES = 15;
 // 返回 'ok' | 'wrong' | 'locked'
 export async function checkPasswordLimited(userId, password, passwordHash) {
   if (await dbApi.isPasswordLocked(userId, PW_MAX_FAILURES, PW_LOCK_MINUTES)) return 'locked';
-  const attemptId = await dbApi.recordPasswordFailure(userId);
+  let attemptId;
+  try {
+    attemptId = await dbApi.recordPasswordFailure(userId);
+  } catch (e) {
+    // 请求处理期间这个账号刚好被删了(外键找不到用户): 当作密码错误，而不是 500
+    if (e && e.code === 'ER_NO_REFERENCED_ROW_2') return 'wrong';
+    throw e;
+  }
   if ((await dbApi.countPasswordFailures(userId, PW_LOCK_MINUTES)) > PW_MAX_FAILURES) {
     await dbApi.deletePasswordFailure(attemptId);
     return 'locked';

@@ -21,7 +21,12 @@ export const POST = wrap(async (request) => {
   // 先预占一条 scan_log 再调用 OpenRouter，成功失败都记(失败照样收费)，超额返回 429 且不调用
   const quota = openrouterLib.config.scanQuota;
   const limit = session.isAdmin ? null : (quota[session.scanTier] ?? quota.normal);
-  const slot = await dbApi.reserveScan(session.userId, openrouterLib.config.model, limit);
+  // 开放档账号另受全站总预算限制(openRegistration.maxOpenScansPerDay)，防止大量开放账号合起来烧钱
+  const openGlobal = !session.isAdmin && session.scanTier === 'open' ? openrouterLib.config.openRegistration.maxOpenScansPerDay : null;
+  const slot = await dbApi.reserveScan(session.userId, openrouterLib.config.model, limit, openGlobal);
+  if (slot.global) {
+    return NextResponse.json({ error: '今天开放注册账号的识别总额度已用完，请明天再试；邀请注册的账号不受这个限制' }, { status: 429 });
+  }
   if (!slot.ok) {
     return NextResponse.json({ error: `今日识别次数已用完(24 小时内最多 ${limit} 次)，如需更多额度请联系管理员` }, { status: 429 });
   }

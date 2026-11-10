@@ -24,5 +24,10 @@
   "scanQuota": {
     "open": 3,
     "normal": 20
+  },
+  "openRegistration": {
+    "maxAttemptsPerIpPerDay": 10,
+    "maxAttemptsPerDay": 60,
+    "maxOpenScansPerDay": 150
   }
 }
