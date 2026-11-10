@@ -6,11 +6,11 @@ import * as registerRoute from '@/app/api/auth/register/route.js';
 import * as invitesRoute from '@/app/api/invites/route.js';
 import { makeUser, loginAs, logout, req, uniq } from './helpers.js';
 
-// 真验证码: 从 token 里读出答案(测试里才这样做；浏览器里答案只在图片像素里)
+// 真验证码: token 里没有答案明文，测试里用 verify() 把约 27 种可能逐个试一遍(verify 本身不消耗 token)
 function realCaptcha() {
   const { token } = captchaApi.generate();
-  const answer = Buffer.from(token.split('.')[0], 'base64url').toString().split(':')[0];
-  return { token, answer };
+  for (let a = -9; a <= 18; a++) if (captchaApi.verify(token, String(a))) return { token, answer: String(a) };
+  throw new Error('找不到答案');
 }
 const randIp = () => `10.${(Math.random() * 255) | 0}.${(Math.random() * 255) | 0}.${(Math.random() * 255) | 0}`;
 const reg = (extra = {}, ip) => {
@@ -103,6 +103,60 @@ describe('验证码只能用一次', () => {
   });
 });
 
+describe('token 只有唯一一种合法写法(宽松解码的变体不能当成新 token 重放)', () => {
+  // 同一个 token 的各种"宽松解码后内容相同"的变体
+  function variants(token) {
+    const [b64, sig] = token.split('.');
+    const std = Buffer.from(b64, 'base64url').toString('base64'); // 标准 base64(可能带 + / =)
+    return {
+      padded: `${b64}=.${sig}`,
+      whitespace: `${b64.slice(0, 4)} ${b64.slice(4)}.${sig}`,
+      extraDot: `${b64.slice(0, 6)}.${b64.slice(6)}.${sig}`,
+      junkPrefix: `!!${b64}.${sig}`,
+      upperSig: `${b64}.${sig.toUpperCase()}`,
+      stdBase64: `${std}.${sig}`.replace(/^([^.]*)\./, (m) => m), // 标准字母表(含 =)
+      trailingNewline: `${b64}.${sig}\n`,
+    };
+  }
+
+  it('verify / isWellFormed 对每个变体都拒绝，只有原样 token 通过', () => {
+    const { token, answer } = realCaptcha();
+    expect(captchaApi.verify(token, answer)).toBe(true);
+    expect(captchaApi.isWellFormed(token)).toBe(true);
+    for (const [name, v] of Object.entries(variants(token))) {
+      if (v === token) continue; // 这个 token 的标准 base64 恰好等于 base64url(没有 + / =)
+      expect(captchaApi.verify(v, answer), name).toBe(false);
+      expect(captchaApi.isWellFormed(v), name).toBe(false);
+    }
+  });
+
+  it('用过之后，拿变体重放注册 → 400，不建号', async () => {
+    logout();
+    const { token, answer } = realCaptcha();
+    expect((await regWith(token, answer, uniq('su'))).status).toBe(200);
+    for (const [name, v] of Object.entries(variants(token))) {
+      logout();
+      const u = uniq('su');
+      expect((await regWith(v, answer, u)).status, name).toBe(400);
+      expect(await userExists(u), name).toBe(false);
+    }
+  });
+
+  it('同一个 token 只会产生一个"已用"键(键 = 签名，不随写法变)', () => {
+    const { token } = realCaptcha();
+    expect(captchaApi.tokenKey(token)).toMatch(/^[0-9a-f]{64}$/);
+    expect(captchaApi.tokenKey(token)).toBe(captchaApi.tokenKey(token));
+    expect(captchaApi.tokenKey(realCaptcha().token)).not.toBe(captchaApi.tokenKey(token));
+  });
+
+  it('token 里没有答案明文: payload 只是 过期时间:nonce:HMAC，且换答案验证不过', () => {
+    const { token, answer } = realCaptcha();
+    const payload = Buffer.from(token.split('.')[0], 'base64url').toString();
+    expect(payload).toMatch(/^\d+:[0-9a-f]{16}:[0-9a-f]{64}$/);
+    expect(captchaApi.verify(token, String(Number(answer) + 1))).toBe(false);
+  });
+});
+
 describe('开放注册按 IP 限速(滚动 24 小时 10 次)', () => {
   it('同一 IP 第 11 次 → 429 且没建号；其他 IP 不受影响；被拒的那次不占名额', async () => {
     logout();
@@ -126,11 +180,23 @@ describe('开放注册按 IP 限速(滚动 24 小时 10 次)', () => {
     expect((await reg({}, ip)).status).toBe(429);
   });
 
-  it('超过 24 小时的记录不算', async () => {
+  it('超过 24 小时的记录不算，23 小时前的还算(窗口就是 24 小时)', async () => {
     logout();
     const ip = randIp();
     await dbApi.pool.query(`INSERT INTO signup_attempts (ip, created_at) VALUES ${Array(10).fill('(?, NOW() - INTERVAL 25 HOUR)').join(',')}`, Array(10).fill(ip));
     expect((await reg({}, ip)).status).toBe(200);
+    const ip2 = randIp();
+    await dbApi.pool.query(`INSERT INTO signup_attempts (ip, created_at) VALUES ${Array(10).fill('(?, NOW() - INTERVAL 23 HOUR)').join(',')}`, Array(10).fill(ip2));
+    logout();
+    expect((await reg({}, ip2)).status).toBe(429);
+  });
+
+  it('两天前的记录在下一次写入时被清掉', async () => {
+    const old = randIp();
+    await dbApi.pool.query('INSERT INTO signup_attempts (ip, created_at) VALUES (?, NOW() - INTERVAL 3 DAY)', [old]);
+    expect(await attempts(old)).toBe(1);
+    await dbApi.reserveOpenSignup(randIp());
+    expect(await attempts(old)).toBe(0);
   });
 
   it('失败的尝试(用户名被占用)也占名额，不能靠换用户名无限试探', async () => {
