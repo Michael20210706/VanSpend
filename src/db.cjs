@@ -497,7 +497,8 @@ async function findFamilyById(id) {
   return rows[0] || null;
 }
 
-// 创建家庭，创建者本人立即成为成员(唯一有权邀请/审核的人)
+// 创建家庭，创建者本人立即成为成员(唯一有权邀请/审核的人)。
+// 创建者已经在某个家庭里(例如并发的邀请/批准刚把他拉进去)返回 null，不覆盖他现有的家庭归属
 async function createFamily(name, creatorId) {
   await ready;
   const conn = await pool.getConnection();
@@ -505,7 +506,11 @@ async function createFamily(name, creatorId) {
     await conn.beginTransaction();
     const [info] = await conn.execute('INSERT INTO families (name, creator_id) VALUES (:name, :creator_id)', { name, creator_id: creatorId });
     const familyId = info.insertId;
-    await conn.execute(`UPDATE users SET family_id = :familyId, account_type = 'family' WHERE id = :creatorId`, { familyId, creatorId });
+    const [upd] = await conn.execute(
+      `UPDATE users SET family_id = :familyId, account_type = 'family' WHERE id = :creatorId AND family_id IS NULL`,
+      { familyId, creatorId }
+    );
+    if (upd.affectedRows === 0) { await conn.rollback(); return null; }
     await conn.commit();
     return familyId;
   } catch (e) {
@@ -539,6 +544,192 @@ async function applyToFamily(familyId, userId) {
     { familyId, userId }
   );
   return info.insertId;
+}
+
+// ---- 家庭管理(退出 / 移除 / 转让 / 解散 / 改名 / 撤回申请) ----
+// 所有会改动家庭成员关系的操作都在事务里、并且**先锁 families 行再锁 users 行**(统一的加锁顺序，避免死锁)；
+// 锁住家庭行之后再校验调用者当前是不是创建者，这样"同时转让 + 移除 / 同时退出"这类并发不会各自基于过期状态做决定。
+// 返回值是状态字符串，由路由映射成 HTTP 状态码。
+
+// 把一个用户从家庭里摘出来: 变回个人账号；他名下的小票和明细 family_id/family_name 清空(小票跟人走，所有者不变)
+async function detachUser(conn, userId) {
+  await conn.execute(
+    `UPDATE receipts SET family_id = NULL, family_name = NULL, account_type = 'individual' WHERE user_id = :userId AND family_id IS NOT NULL`,
+    { userId }
+  );
+  await conn.execute(`
+    UPDATE items i JOIN receipts r ON r.id = i.receipt_id
+    SET i.family_id = NULL, i.family_name = NULL, i.account_type = 'individual'
+    WHERE r.user_id = :userId AND i.family_id IS NOT NULL
+  `, { userId });
+  await conn.execute(`UPDATE users SET family_id = NULL, account_type = 'individual' WHERE id = :userId`, { userId });
+}
+
+// 解散: 所有成员变回个人、全部小票/明细摘掉家庭归属，然后删家庭(待审申请和家庭邀请码由外键级联一并删除)
+async function dissolveInTx(conn, familyId) {
+  await conn.execute(
+    `UPDATE receipts SET family_id = NULL, family_name = NULL, account_type = 'individual' WHERE family_id = :familyId`, { familyId });
+  await conn.execute(
+    `UPDATE items SET family_id = NULL, family_name = NULL, account_type = 'individual' WHERE family_id = :familyId`, { familyId });
+  await conn.execute(`UPDATE users SET family_id = NULL, account_type = 'individual' WHERE family_id = :familyId`, { familyId });
+  await conn.execute('DELETE FROM families WHERE id = :familyId', { familyId });
+}
+
+// 锁住家庭行并返回它(不存在返回 null)
+async function lockFamily(conn, familyId) {
+  const [rows] = await conn.execute('SELECT id, name, creator_id FROM families WHERE id = :familyId FOR UPDATE', { familyId });
+  return rows[0] || null;
+}
+
+// 成员自己退出。返回 'left' | 'dissolved'(创建者且只剩自己，退出即解散) | 'not_in_family' | 'creator_must_transfer'
+async function leaveFamily(userId) {
+  await ready;
+  const [pre] = await pool.execute('SELECT family_id FROM users WHERE id = :userId', { userId });
+  const familyId = pre[0] && pre[0].family_id;
+  if (!familyId) return 'not_in_family';
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const family = await lockFamily(conn, familyId);
+    // 拿到家庭锁之后重新确认: 等锁期间他可能已经被移除 / 已经退出 / 家庭已解散
+    const [[u]] = await conn.execute('SELECT family_id FROM users WHERE id = :userId FOR UPDATE', { userId });
+    if (!family || !u || u.family_id !== familyId) { await conn.rollback(); return 'not_in_family'; }
+    if (family.creator_id === userId) {
+      const [[{ n }]] = await conn.execute('SELECT COUNT(*) AS n FROM users WHERE family_id = :familyId', { familyId });
+      if (n > 1) { await conn.rollback(); return 'creator_must_transfer'; }
+      await dissolveInTx(conn, familyId);
+      await conn.commit();
+      return 'dissolved';
+    }
+    await detachUser(conn, userId);
+    await conn.commit();
+    return 'left';
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
+// 创建者移除成员。返回 'removed' | 'forbidden'(调用者已不是创建者) | 'is_creator'(目标是创建者本人) | 'not_member'
+async function removeMember(familyId, callerId, targetId) {
+  await ready;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const family = await lockFamily(conn, familyId);
+    if (!family || family.creator_id !== callerId) { await conn.rollback(); return 'forbidden'; }
+    if (targetId === callerId) { await conn.rollback(); return 'is_creator'; }
+    const [[t]] = await conn.execute('SELECT family_id FROM users WHERE id = :targetId FOR UPDATE', { targetId });
+    if (!t || t.family_id !== familyId) { await conn.rollback(); return 'not_member'; }
+    await detachUser(conn, targetId);
+    await conn.commit();
+    return 'removed';
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
+// 转让创建者身份给本家庭的另一个成员；原创建者未使用的家庭邀请码同时作废(他不再有权拉人进这个家庭)。
+// 返回 'transferred' | 'forbidden' | 'self' | 'not_member'
+async function transferCreator(familyId, callerId, newCreatorId) {
+  await ready;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const family = await lockFamily(conn, familyId);
+    if (!family || family.creator_id !== callerId) { await conn.rollback(); return 'forbidden'; }
+    if (newCreatorId === callerId) { await conn.rollback(); return 'self'; }
+    const [[t]] = await conn.execute('SELECT family_id FROM users WHERE id = :newCreatorId FOR UPDATE', { newCreatorId });
+    if (!t || t.family_id !== familyId) { await conn.rollback(); return 'not_member'; }
+    await conn.execute('UPDATE families SET creator_id = :newCreatorId WHERE id = :familyId', { newCreatorId, familyId });
+    await conn.execute(`
+      UPDATE invite_codes SET revoked_at = NOW()
+      WHERE created_by = :callerId AND family_id = :familyId AND used_by IS NULL AND used_at IS NULL AND revoked_at IS NULL
+    `, { callerId, familyId });
+    await conn.commit();
+    return 'transferred';
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
+// 创建者解散家庭。confirmName 必须和家庭名一字不差(防止手滑/误调)。返回 'dissolved' | 'forbidden' | 'name_mismatch'
+async function dissolveFamily(familyId, callerId, confirmName) {
+  await ready;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const family = await lockFamily(conn, familyId);
+    if (!family || family.creator_id !== callerId) { await conn.rollback(); return 'forbidden'; }
+    if (family.name !== confirmName) { await conn.rollback(); return 'name_mismatch'; }
+    await dissolveInTx(conn, familyId);
+    await conn.commit();
+    return 'dissolved';
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
+// 创建者改名(全站唯一)。历史小票/明细里冗余存的 family_name 一并更新。返回 'renamed' | 'forbidden' | 'name_taken'
+async function renameFamily(familyId, callerId, newName) {
+  await ready;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const family = await lockFamily(conn, familyId);
+    if (!family || family.creator_id !== callerId) { await conn.rollback(); return 'forbidden'; }
+    if (family.name !== newName) {
+      try {
+        await conn.execute('UPDATE families SET name = :newName WHERE id = :familyId', { newName, familyId });
+      } catch (e) {
+        await conn.rollback();
+        if (e && e.code === 'ER_DUP_ENTRY') return 'name_taken';
+        throw e;
+      }
+      await conn.execute('UPDATE receipts SET family_name = :newName WHERE family_id = :familyId', { newName, familyId });
+      await conn.execute('UPDATE items SET family_name = :newName WHERE family_id = :familyId', { newName, familyId });
+    }
+    await conn.commit();
+    return 'renamed';
+  } catch (e) {
+    try { await conn.rollback(); } catch (_) { /* 上面已回滚过 */ }
+    throw e;
+  } finally {
+    conn.release();
+  }
+}
+
+// 申请人撤回自己还没被处理的申请(直接删除这条记录)。别人的、已处理的、不存在的都返回 false
+async function withdrawApplication(requestId, userId) {
+  await ready;
+  const [info] = await pool.execute(
+    `DELETE FROM family_join_requests WHERE id = :requestId AND user_id = :userId AND status = 'pending'`,
+    { requestId, userId }
+  );
+  return info.affectedRows > 0;
+}
+
+// 我提交的、还在等审核的申请(带家庭名)
+async function listMyApplications(userId) {
+  await ready;
+  const [rows] = await pool.execute(`
+    SELECT fjr.id, f.name AS family_name, fjr.created_at
+    FROM family_join_requests fjr JOIN families f ON f.id = fjr.family_id
+    WHERE fjr.user_id = :userId AND fjr.status = 'pending'
+    ORDER BY fjr.created_at
+  `, { userId });
+  return rows;
 }
 
 async function listFamilyMembers(familyId) {
@@ -708,39 +899,67 @@ async function backfillOwnerlessReceipts(userId) {
 }
 
 // ---- 写入 ----
-// receipt.family_id/family_name/family_role/account_type: 建票时从上传者当前的 users 行拷贝下来的冗余字段
-// (调用方——route handler——负责从 session 填好；测试等不传时落到下面的默认值，等同"个人账号")，
-// 目的是家庭内可见性/统计能直接按 receipts/items 的列过滤或分组，不必每次 JOIN users
-async function saveReceipt(receipt, items) {
+// receipt.family_id/family_name/family_role/account_type: 建票时从上传者当前的 users 行拷贝下来的冗余字段，
+// 目的是家庭内可见性/统计能直接按 receipts/items 的列过滤或分组，不必每次 JOIN users。
+//   默认(不传 opts): 用调用方给的值，不传就落到"个人账号"默认值——测试和脚本用。
+//   { stampFamilyFromDb: true }(路由用): **忽略调用方给的家庭字段，在事务里从数据库取当前值**。
+//     路由是在解析完(可能 16 MB 的)请求体之前读的会话，如果这期间发生了退出/移除/改名/解散，
+//     用会话里的旧值写入就会留下一张"家庭归属已经过期"的小票: 仍然对旧家庭可见、或带着旧家庭名、
+//     或(家庭已解散时)因外键失败变成 500。这里先拿到该家庭行的共享锁(家庭管理操作都要先拿它的排他锁，
+//     所以会等本事务提交)，再用锁定读核对用户当前所属家庭；等锁期间变了就重来。
+async function saveReceipt(receipt, items, { stampFamilyFromDb = false } = {}) {
   await ready;
   const conn = await pool.getConnection();
   try {
-    await conn.beginTransaction();
-    const [info] = await conn.execute(`
-      INSERT INTO receipts (user_id, family_id, family_name, family_role, account_type, store, purchased_at, currency, subtotal, gst, pst, total, image_file, raw_json)
-      VALUES (:user_id, :family_id, :family_name, :family_role, :account_type, :store, :purchased_at, :currency, :subtotal, :gst, :pst, :total, :image_file, :raw_json)
-    `, {
-      family_id: null, family_name: null, family_role: null, account_type: 'individual',
-      ...receipt,
-    });
-    const rid = info.insertId;
-    for (const it of items) {
-      await conn.execute(`
-        INSERT INTO items (receipt_id, family_id, family_name, family_role, account_type, name_raw, name_norm, category, subcategory, qty, unit, unit_price, amount, taxable)
-        VALUES (:receipt_id, :family_id, :family_name, :family_role, :account_type, :name_raw, :name_norm, :category, :subcategory, :qty, :unit, :unit_price, :amount, :taxable)
-      `, {
-        ...it,
-        receipt_id: rid,
-        family_id: receipt.family_id ?? null,
-        family_name: receipt.family_name ?? null,
-        family_role: receipt.family_role ?? null,
-        account_type: receipt.account_type || 'individual',
-      });
+    let fam = {
+      family_id: receipt.family_id ?? null, family_name: receipt.family_name ?? null,
+      family_role: receipt.family_role ?? null, account_type: receipt.account_type || 'individual',
+    };
+    let rid;
+    for (let attempt = 0; ; attempt++) {
+      // 先在事务外(自动提交)读一次，避免事务快照读到旧值
+      let guess = null;
+      if (stampFamilyFromDb) {
+        const [pre] = await conn.execute('SELECT family_id FROM users WHERE id = :uid', { uid: receipt.user_id });
+        guess = (pre[0] && pre[0].family_id) || null;
+      }
+      await conn.beginTransaction();
+      if (stampFamilyFromDb) {
+        let famName = null;
+        if (guess) {
+          const [f] = await conn.execute('SELECT id, name FROM families WHERE id = :fid FOR SHARE', { fid: guess });
+          famName = f[0] ? f[0].name : null;
+          if (!f[0]) guess = null; // 家庭已被解散
+        }
+        const [u] = await conn.execute('SELECT family_id, family_role FROM users WHERE id = :uid FOR SHARE', { uid: receipt.user_id });
+        const current = (u[0] && u[0].family_id) || null;
+        if (current !== guess) {
+          // 等锁期间成员关系变了: 放掉锁，按最新的再来(最多几次，实际上一次就稳定)
+          await conn.rollback();
+          if (attempt >= 4) throw new Error('保存小票时家庭关系持续变化，请稍后重试');
+          continue;
+        }
+        fam = {
+          family_id: guess, family_name: guess ? famName : null,
+          family_role: (u[0] && u[0].family_role) || null, account_type: guess ? 'family' : 'individual',
+        };
+      }
+      const [info] = await conn.execute(`
+        INSERT INTO receipts (user_id, family_id, family_name, family_role, account_type, store, purchased_at, currency, subtotal, gst, pst, total, image_file, raw_json)
+        VALUES (:user_id, :family_id, :family_name, :family_role, :account_type, :store, :purchased_at, :currency, :subtotal, :gst, :pst, :total, :image_file, :raw_json)
+      `, { ...receipt, ...fam });
+      rid = info.insertId;
+      for (const it of items) {
+        await conn.execute(`
+          INSERT INTO items (receipt_id, family_id, family_name, family_role, account_type, name_raw, name_norm, category, subcategory, qty, unit, unit_price, amount, taxable)
+          VALUES (:receipt_id, :family_id, :family_name, :family_role, :account_type, :name_raw, :name_norm, :category, :subcategory, :qty, :unit, :unit_price, :amount, :taxable)
+        `, { ...it, receipt_id: rid, ...fam });
+      }
+      await conn.commit();
+      return rid;
     }
-    await conn.commit();
-    return rid;
   } catch (e) {
-    await conn.rollback();
+    try { await conn.rollback(); } catch (_) { /* 没有进行中的事务 */ }
     throw e;
   } finally {
     conn.release();
@@ -748,14 +967,31 @@ async function saveReceipt(receipt, items) {
 }
 
 // ---- 查询 ----
-// scope: { familyId } 家庭内互相可见(按 family_id 过滤，看得到所有家庭成员的数据)；
+// scope: { familyId, userId } 在家庭里的成员: 看得到整个家庭以家庭身份保存的小票，**外加自己的所有小票**
+//          (r.family_id = :familyId OR r.user_id = :userId)。后半句很重要: 加入/创建家庭之前记的个人小票没有
+//          family_id，如果只按 family_id 过滤，这些旧小票会从本人视图里消失；而别人的旧个人小票
+//          (别人的 user_id、family_id 为空)两个条件都不满足，仍然保持私有，不会共享给家庭。
+//        { familyId } 只按家庭(只在调用方没带 userId 时用，兼容旧调用)；
 //        { userId } 只看自己(个人账号，或未在家庭里)；
 //        都不传(管理后台用)则不加这个过滤，查全部用户
+// 把 scope 变成 WHERE 片段(不含 WHERE/AND)，需要的参数写进 params；没有任何限定返回 ''
+function scopeClause(scope, params) {
+  if (!scope) return '';
+  if (scope.familyId && scope.userId) {
+    params.familyId = scope.familyId;
+    params.userId = scope.userId;
+    return '(r.family_id = :familyId OR r.user_id = :userId)';
+  }
+  if (scope.familyId) { params.familyId = scope.familyId; return 'r.family_id = :familyId'; }
+  if (scope.userId) { params.userId = scope.userId; return 'r.user_id = :userId'; }
+  return '';
+}
+
 function dateFilter(from, to, scope) {
   const clauses = [];
   const params = {};
-  if (scope && scope.familyId) { clauses.push('r.family_id = :familyId'); params.familyId = scope.familyId; }
-  else if (scope && scope.userId) { clauses.push('r.user_id = :userId'); params.userId = scope.userId; }
+  const sc = scopeClause(scope, params);
+  if (sc) clauses.push(sc);
   if (from) { clauses.push('r.purchased_at >= :from'); params.from = from; }
   if (to)   { clauses.push('r.purchased_at <= :to');   params.to = to; }
   return { where: clauses.length ? 'WHERE ' + clauses.join(' AND ') : '', params };
@@ -785,8 +1021,8 @@ async function getReceipt(id, scope) {
   await ready;
   let clause = 'r.id = :id';
   const params = { id };
-  if (scope && scope.familyId) { clause += ' AND r.family_id = :familyId'; params.familyId = scope.familyId; }
-  else if (scope && scope.userId) { clause += ' AND r.user_id = :userId'; params.userId = scope.userId; }
+  const sc = scopeClause(scope, params);
+  if (sc) clause += ' AND ' + sc;
   const [rows] = await pool.execute(`
     SELECT r.*, u.username AS owner_username FROM receipts r LEFT JOIN users u ON u.id = r.user_id WHERE ${clause}
   `, params);
@@ -858,9 +1094,7 @@ async function statsMonthly(from, to, scope) {
 async function priceTrend(nameNorm, store, scope) {
   await ready;
   const params = { q: '%' + nameNorm + '%' };
-  let scopeClause;
-  if (scope && scope.familyId) { scopeClause = 'r.family_id = :familyId'; params.familyId = scope.familyId; }
-  else { scopeClause = 'r.user_id = :userId'; params.userId = scope && scope.userId; }
+  const scopeSql = scopeClause(scope, params) || '1 = 0'; // 没有 scope 就什么都不返回(这个函数从不给管理后台用)
   let storeClause = '';
   if (store) { storeClause = ' AND r.store = :store'; params.store = store; }
   const [rows] = await pool.execute(`
@@ -868,7 +1102,7 @@ async function priceTrend(nameNorm, store, scope) {
            i.name_raw AS name, i.unit, i.qty,
            i.unit_price AS unit_price, i.amount AS amount
     FROM items i JOIN receipts r ON r.id = i.receipt_id
-    WHERE ${scopeClause} AND (i.name_norm LIKE :q OR i.name_raw LIKE :q)${storeClause}
+    WHERE ${scopeSql} AND (i.name_norm LIKE :q OR i.name_raw LIKE :q)${storeClause}
     ORDER BY r.purchased_at
   `, params);
   return rows;
@@ -877,13 +1111,12 @@ async function priceTrend(nameNorm, store, scope) {
 // 品名候选(用于趋势搜索下拉); scope 语义同 dateFilter
 async function distinctItemNames(scope) {
   await ready;
-  let scopeClause, params;
-  if (scope && scope.familyId) { scopeClause = 'r.family_id = :familyId'; params = { familyId: scope.familyId }; }
-  else { scopeClause = 'r.user_id = :userId'; params = { userId: scope && scope.userId }; }
+  const params = {};
+  const scopeSql = scopeClause(scope, params) || '1 = 0';
   const [rows] = await pool.execute(`
     SELECT COALESCE(i.name_norm, i.name_raw) AS name, COUNT(*) AS n
     FROM items i JOIN receipts r ON r.id = i.receipt_id
-    WHERE ${scopeClause}
+    WHERE ${scopeSql}
     GROUP BY name ORDER BY n DESC LIMIT 300
   `, params);
   return rows;
@@ -927,10 +1160,25 @@ async function listUsers() {
   return rows;
 }
 
+// 删除用户(管理员用)。如果他是某个家庭的创建者，families.creator_id 的外键会级联删掉整个家庭，
+// 但成员的 account_type 和小票/明细里冗余的 family_name 不会跟着清理——所以先走一遍和"解散家庭"相同的清理，
+// 让其他成员干净地变回个人账号、小票归各自所有，再删这个用户。
 async function deleteUser(id) {
   await ready;
-  const [result] = await pool.execute('DELETE FROM users WHERE id = :id', { id });
-  return result.affectedRows;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [owned] = await conn.execute('SELECT id FROM families WHERE creator_id = :id FOR UPDATE', { id });
+    for (const f of owned) await dissolveInTx(conn, f.id);
+    const [result] = await conn.execute('DELETE FROM users WHERE id = :id', { id });
+    await conn.commit();
+    return result.affectedRows;
+  } catch (e) {
+    await conn.rollback();
+    throw e;
+  } finally {
+    conn.release();
+  }
 }
 
 // 各用户花费: LEFT JOIN 保证没有小票的用户也会出现(花费为 0)，日期条件放在 ON 里而非 WHERE，
@@ -988,5 +1236,6 @@ module.exports = {
   listUsers, deleteUser, statsByUser,
   findFamilyByName, findFamilyById, createFamily, inviteMember, applyToFamily,
   listFamilyMembers, listPendingRequests, decideRequest,
+  leaveFamily, removeMember, transferCreator, dissolveFamily, renameFamily, withdrawApplication, listMyApplications,
   addFeedback, listFeedbackByUser, listAllFeedback,
 };

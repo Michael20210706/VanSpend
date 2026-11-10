@@ -2,14 +2,14 @@ import { NextResponse } from 'next/server';
 import dbApi from '@/src/db.cjs';
 import uploadsLib from '@/src/uploads.cjs';
 import { requireSession } from '@/src/session';
-import { wrap, readJson, IMAGE_BODY_MAX } from '@/src/http';
+import { wrap, readJson, IMAGE_BODY_MAX, memberScope } from '@/src/http';
 
 export const GET = wrap(async (request) => {
   const { session, response } = await requireSession();
   if (response) return response;
 
   const { searchParams } = new URL(request.url);
-  const scope = session.familyId ? { familyId: session.familyId } : { userId: session.userId };
+  const scope = memberScope(session);
   const rows = await dbApi.listReceipts({
     from: searchParams.get('from') || undefined,
     to: searchParams.get('to') || undefined,
@@ -32,18 +32,17 @@ export const POST = wrap(async (request) => {
     if (bad) return NextResponse.json({ error: bad.error }, { status: bad.status });
   }
   const image_file = image ? uploadsLib.saveImage(image) : null;
+  // 家庭归属(family_id/family_name/family_role/account_type)不从会话取，也不信请求体里的同名字段:
+  // saveReceipt 在事务里按数据库当前值盖章(见 src/db.cjs)，这样请求处理期间发生的退出/移除/改名/解散不会留下过期归属
   const id = await dbApi.saveReceipt(
     {
       ...receipt,
       user_id: session.userId,
-      family_id: session.familyId || null,
-      family_name: session.familyName || null,
-      family_role: session.familyRole || null,
-      account_type: session.accountType || 'individual',
       image_file,
       raw_json: JSON.stringify(raw || { receipt, items }),
     },
-    items
+    items,
+    { stampFamilyFromDb: true }
   );
   return NextResponse.json({ id });
 });

@@ -8,15 +8,18 @@ export const GET = wrap(async () => {
   const { session, response } = await requireSession();
   if (response) return response;
 
-  if (!session.familyId) return NextResponse.json({ family: null });
+  // 不在家庭里: 带上我提交的、还在等审核的申请(可以撤回)
+  if (!session.familyId) return NextResponse.json({ family: null, myApplications: await dbApi.listMyApplications(session.userId) });
 
   const members = await dbApi.listFamilyMembers(session.familyId);
   const pendingRequests = session.isFamilyCreator ? await dbApi.listPendingRequests(session.familyId) : [];
   return NextResponse.json({
+    userId: session.userId,
     family: { id: session.familyId, name: session.familyName },
     role: session.familyRole || null,
     isCreator: !!session.isFamilyCreator,
     members,
     pendingRequests,
+    myApplications: [],
   });
 });
