@@ -6,7 +6,11 @@ const crypto = require('crypto');
 // (明文题目哪怕只是 JSON 字段，脚本都能不做 OCR 直接读值作答，等于没有防护)。
 // 答案不落库/不存会话，用 SESSION_SECRET 签进返回给前端的 token 里，提交注册时原样带回并校验签名+有效期。
 const TTL_MS = 5 * 60 * 1000;
-const SECRET = process.env.SESSION_SECRET || 'vanspend-captcha-fallback-secret';
+// 签名密钥: 必须是不公开的值。SESSION_SECRET 没设、或短于 32 个字符(.env.example 里的占位值就只有 28 个，iron-session 也要求至少 32)时，
+// 改用每次启动随机生成的密钥——和 src/session.js 一样: 重启后旧验证码失效，但绝不能回退到写死在代码里的常量，
+// 否则任何人都能伪造一个答案已知的验证码 token，批量开"开放注册"账号
+const ENV_SECRET = process.env.SESSION_SECRET;
+const SECRET = ENV_SECRET && ENV_SECRET.length >= 32 ? ENV_SECRET : crypto.randomBytes(32).toString('hex');
 const COLORS = ['#5b8def', '#e2685c', '#57b894', '#d9a441', '#b98fe8', '#e6e6e6'];
 
 function sign(payload) {

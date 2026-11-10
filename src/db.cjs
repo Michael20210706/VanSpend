@@ -297,6 +297,11 @@ async function seedAdmin() {
   const username = process.env.ADMIN_USERNAME;
   const password = process.env.ADMIN_PASSWORD;
   if (!username || !password) return;
+  // .env.example 里的示例密码: 原样拷贝到公网部署就会创建一个人人知道密码的管理员，直接拒绝
+  if (password === 'change-me-admin') {
+    console.warn('[db] ADMIN_PASSWORD 还是 .env.example 里的示例值 change-me-admin，未创建管理员账号；请设置一个自己的强密码');
+    return;
+  }
   const [rows] = await pool.execute('SELECT id, is_admin FROM users WHERE username = :username', { username });
   if (rows.length) {
     if (!rows[0].is_admin) {
