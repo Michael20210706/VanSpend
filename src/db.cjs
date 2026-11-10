@@ -497,7 +497,8 @@ async function findFamilyById(id) {
   return rows[0] || null;
 }
 
-// 创建家庭，创建者本人立即成为成员(唯一有权邀请/审核的人)
+// 创建家庭，创建者本人立即成为成员(唯一有权邀请/审核的人)。
+// 创建者已经在某个家庭里(例如并发的邀请/批准刚把他拉进去)返回 null，不覆盖他现有的家庭归属
 async function createFamily(name, creatorId) {
   await ready;
   const conn = await pool.getConnection();
@@ -505,7 +506,11 @@ async function createFamily(name, creatorId) {
     await conn.beginTransaction();
     const [info] = await conn.execute('INSERT INTO families (name, creator_id) VALUES (:name, :creator_id)', { name, creator_id: creatorId });
     const familyId = info.insertId;
-    await conn.execute(`UPDATE users SET family_id = :familyId, account_type = 'family' WHERE id = :creatorId`, { familyId, creatorId });
+    const [upd] = await conn.execute(
+      `UPDATE users SET family_id = :familyId, account_type = 'family' WHERE id = :creatorId AND family_id IS NULL`,
+      { familyId, creatorId }
+    );
+    if (upd.affectedRows === 0) { await conn.rollback(); return null; }
     await conn.commit();
     return familyId;
   } catch (e) {
@@ -894,39 +899,67 @@ async function backfillOwnerlessReceipts(userId) {
 }
 
 // ---- 写入 ----
-// receipt.family_id/family_name/family_role/account_type: 建票时从上传者当前的 users 行拷贝下来的冗余字段
-// (调用方——route handler——负责从 session 填好；测试等不传时落到下面的默认值，等同"个人账号")，
-// 目的是家庭内可见性/统计能直接按 receipts/items 的列过滤或分组，不必每次 JOIN users
-async function saveReceipt(receipt, items) {
+// receipt.family_id/family_name/family_role/account_type: 建票时从上传者当前的 users 行拷贝下来的冗余字段，
+// 目的是家庭内可见性/统计能直接按 receipts/items 的列过滤或分组，不必每次 JOIN users。
+//   默认(不传 opts): 用调用方给的值，不传就落到"个人账号"默认值——测试和脚本用。
+//   { stampFamilyFromDb: true }(路由用): **忽略调用方给的家庭字段，在事务里从数据库取当前值**。
+//     路由是在解析完(可能 16 MB 的)请求体之前读的会话，如果这期间发生了退出/移除/改名/解散，
+//     用会话里的旧值写入就会留下一张"家庭归属已经过期"的小票: 仍然对旧家庭可见、或带着旧家庭名、
+//     或(家庭已解散时)因外键失败变成 500。这里先拿到该家庭行的共享锁(家庭管理操作都要先拿它的排他锁，
+//     所以会等本事务提交)，再用锁定读核对用户当前所属家庭；等锁期间变了就重来。
+async function saveReceipt(receipt, items, { stampFamilyFromDb = false } = {}) {
   await ready;
   const conn = await pool.getConnection();
   try {
-    await conn.beginTransaction();
-    const [info] = await conn.execute(`
-      INSERT INTO receipts (user_id, family_id, family_name, family_role, account_type, store, purchased_at, currency, subtotal, gst, pst, total, image_file, raw_json)
-      VALUES (:user_id, :family_id, :family_name, :family_role, :account_type, :store, :purchased_at, :currency, :subtotal, :gst, :pst, :total, :image_file, :raw_json)
-    `, {
-      family_id: null, family_name: null, family_role: null, account_type: 'individual',
-      ...receipt,
-    });
-    const rid = info.insertId;
-    for (const it of items) {
-      await conn.execute(`
-        INSERT INTO items (receipt_id, family_id, family_name, family_role, account_type, name_raw, name_norm, category, subcategory, qty, unit, unit_price, amount, taxable)
-        VALUES (:receipt_id, :family_id, :family_name, :family_role, :account_type, :name_raw, :name_norm, :category, :subcategory, :qty, :unit, :unit_price, :amount, :taxable)
-      `, {
-        ...it,
-        receipt_id: rid,
-        family_id: receipt.family_id ?? null,
-        family_name: receipt.family_name ?? null,
-        family_role: receipt.family_role ?? null,
-        account_type: receipt.account_type || 'individual',
-      });
+    let fam = {
+      family_id: receipt.family_id ?? null, family_name: receipt.family_name ?? null,
+      family_role: receipt.family_role ?? null, account_type: receipt.account_type || 'individual',
+    };
+    let rid;
+    for (let attempt = 0; ; attempt++) {
+      // 先在事务外(自动提交)读一次，避免事务快照读到旧值
+      let guess = null;
+      if (stampFamilyFromDb) {
+        const [pre] = await conn.execute('SELECT family_id FROM users WHERE id = :uid', { uid: receipt.user_id });
+        guess = (pre[0] && pre[0].family_id) || null;
+      }
+      await conn.beginTransaction();
+      if (stampFamilyFromDb) {
+        let famName = null;
+        if (guess) {
+          const [f] = await conn.execute('SELECT id, name FROM families WHERE id = :fid FOR SHARE', { fid: guess });
+          famName = f[0] ? f[0].name : null;
+          if (!f[0]) guess = null; // 家庭已被解散
+        }
+        const [u] = await conn.execute('SELECT family_id, family_role FROM users WHERE id = :uid FOR SHARE', { uid: receipt.user_id });
+        const current = (u[0] && u[0].family_id) || null;
+        if (current !== guess) {
+          // 等锁期间成员关系变了: 放掉锁，按最新的再来(最多几次，实际上一次就稳定)
+          await conn.rollback();
+          if (attempt >= 4) throw new Error('保存小票时家庭关系持续变化，请稍后重试');
+          continue;
+        }
+        fam = {
+          family_id: guess, family_name: guess ? famName : null,
+          family_role: (u[0] && u[0].family_role) || null, account_type: guess ? 'family' : 'individual',
+        };
+      }
+      const [info] = await conn.execute(`
+        INSERT INTO receipts (user_id, family_id, family_name, family_role, account_type, store, purchased_at, currency, subtotal, gst, pst, total, image_file, raw_json)
+        VALUES (:user_id, :family_id, :family_name, :family_role, :account_type, :store, :purchased_at, :currency, :subtotal, :gst, :pst, :total, :image_file, :raw_json)
+      `, { ...receipt, ...fam });
+      rid = info.insertId;
+      for (const it of items) {
+        await conn.execute(`
+          INSERT INTO items (receipt_id, family_id, family_name, family_role, account_type, name_raw, name_norm, category, subcategory, qty, unit, unit_price, amount, taxable)
+          VALUES (:receipt_id, :family_id, :family_name, :family_role, :account_type, :name_raw, :name_norm, :category, :subcategory, :qty, :unit, :unit_price, :amount, :taxable)
+        `, { ...it, receipt_id: rid, ...fam });
+      }
+      await conn.commit();
+      return rid;
     }
-    await conn.commit();
-    return rid;
   } catch (e) {
-    await conn.rollback();
+    try { await conn.rollback(); } catch (_) { /* 没有进行中的事务 */ }
     throw e;
   } finally {
     conn.release();

@@ -17,6 +17,7 @@ export const POST = wrap(async (request) => {
   }
 
   const familyId = await dbApi.createFamily(name, session.userId);
+  if (familyId === null) return NextResponse.json({ error: '您已经在一个家庭中' }, { status: 400 });
 
   session.familyId = familyId;
   session.familyName = name;

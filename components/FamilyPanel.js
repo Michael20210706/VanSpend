@@ -36,7 +36,11 @@ export default function FamilyPanel({ active, onChanged }) {
   }
 
   const leave = () => {
-    if (!confirm('确认退出这个家庭？退出后你自己上传的小票会跟着你走，其他成员将看不到它们。')) return;
+    const alone = data.isCreator && data.members.length === 1;
+    const text = alone
+      ? '你是这个家庭里唯一的成员，退出会解散这个家庭(家庭名称之后可以重新使用)。你的小票仍归你。确认退出？'
+      : '确认退出这个家庭？退出后你自己上传的小票会跟着你走，其他成员将看不到它们。';
+    if (!confirm(text)) return;
     run('退出', () => api('/api/family/leave', { method: 'POST' }));
   };
   const removeMember = (m) => {
