@@ -5,15 +5,56 @@ import { showToast } from '../lib/toast';
 import { FAMILY_ROLE_LABELS } from '../lib/familyRoles';
 import InviteCodes from './InviteCodes';
 
-export default function FamilyPanel({ active }) {
+export default function FamilyPanel({ active, onChanged }) {
   const [data, setData] = useState(undefined); // undefined=加载中, { family: null|{...}, ... }
   const [createName, setCreateName] = useState('');
   const [applyName, setApplyName] = useState('');
   const [inviteUsername, setInviteUsername] = useState('');
+  const [newName, setNewName] = useState('');
+  const [dissolveName, setDissolveName] = useState('');
 
   async function load() {
     setData(await api('/api/family/me'));
   }
+
+  // 成员关系变了: 重读家庭详情，并让页面重新读一遍用户身份
+  async function changed() {
+    await load();
+    if (onChanged) onChanged();
+  }
+
+  const json = (body) => ({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+
+  async function run(label, fn) {
+    try {
+      await fn();
+      showToast(label + '成功');
+      await changed();
+    } catch (e) {
+      showToast(label + '失败: ' + e.message);
+    }
+  }
+
+  const leave = () => {
+    if (!confirm('确认退出这个家庭？退出后你自己上传的小票会跟着你走，其他成员将看不到它们。')) return;
+    run('退出', () => api('/api/family/leave', { method: 'POST' }));
+  };
+  const removeMember = (m) => {
+    if (!confirm(`确认把「${m.username}」移出家庭？他上传的小票会跟着他走，家庭里将看不到。`)) return;
+    run('移除', () => api('/api/family/members/' + m.id, { method: 'DELETE' }));
+  };
+  const transfer = (m) => {
+    if (!confirm(`确认把创建者身份转让给「${m.username}」？转让后你将不能再邀请/审核/移除成员，也不能解散或改名。`)) return;
+    run('转让', () => api('/api/family/transfer', json({ userId: m.id })));
+  };
+  const rename = () => {
+    if (!newName.trim()) return;
+    run('改名', () => api('/api/family', { ...json({ name: newName.trim() }), method: 'PATCH' }).then(() => setNewName('')));
+  };
+  const dissolve = () => {
+    run('解散', () => api('/api/family/dissolve', json({ name: dissolveName })).then(() => setDissolveName('')));
+  };
+  const withdraw = (id) => run('撤回申请', () => api('/api/family/applications/' + id, { method: 'DELETE' }));
 
   useEffect(() => { if (active) load(); }, [active]);
 
@@ -23,7 +64,7 @@ export default function FamilyPanel({ active }) {
       await api('/api/family', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: createName.trim() }) });
       showToast('家庭已创建');
       setCreateName('');
-      load();
+      changed();
     } catch (e) {
       showToast('创建失败: ' + e.message);
     }
@@ -35,6 +76,7 @@ export default function FamilyPanel({ active }) {
       await api('/api/family/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: applyName.trim() }) });
       showToast('已提交申请，等待创建者审核');
       setApplyName('');
+      load();
     } catch (e) {
       showToast('申请失败: ' + e.message);
     }
@@ -82,6 +124,25 @@ export default function FamilyPanel({ active }) {
             <button onClick={applyFamily}>申请加入</button>
           </div>
         </div>
+        {data.myApplications && data.myApplications.length > 0 && (
+          <div className="card">
+            <h2>我的申请</h2>
+            <div className="table-scroll">
+              <table>
+                <thead><tr><th>家庭</th><th>申请时间</th><th></th></tr></thead>
+                <tbody>
+                  {data.myApplications.map((a) => (
+                    <tr key={a.id}>
+                      <td>{a.family_name}</td>
+                      <td>{a.created_at}</td>
+                      <td><button className="danger" onClick={() => withdraw(a.id)}>撤回</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </>
     );
   }
@@ -96,18 +157,57 @@ export default function FamilyPanel({ active }) {
         </p>
         <div className="table-scroll">
           <table>
-            <thead><tr><th>成员</th><th>角色</th><th>加入时间</th></tr></thead>
+            <thead><tr><th>成员</th><th>角色</th><th>加入时间</th>{data.isCreator ? <th></th> : null}</tr></thead>
             <tbody>
               {data.members.map((m) => (
                 <tr key={m.id}>
                   <td>{m.username}</td>
                   <td>{FAMILY_ROLE_LABELS[m.family_role] || '-'}</td>
                   <td>{m.created_at}</td>
+                  {data.isCreator ? (
+                    <td>
+                      {m.id === data.userId ? <span className="muted">创建者(你)</span> : (
+                        <>
+                          <button onClick={() => transfer(m)}>设为创建者</button>
+                          <button className="danger" onClick={() => removeMember(m)}>移除</button>
+                        </>
+                      )}
+                    </td>
+                  ) : null}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      </div>
+
+      <div className="card">
+        <h2>家庭设置</h2>
+        <div className="row">
+          <button className="danger" onClick={leave}>退出家庭</button>
+          <span className="muted">
+            {data.isCreator
+              ? '你是创建者：还有其他成员时请先转让创建者身份；只剩你一人时退出就是解散家庭。'
+              : '退出后，你上传的小票会跟着你走。'}
+          </span>
+        </div>
+        {data.isCreator && (
+          <>
+            <div className="row" style={{ marginTop: 12 }}>
+              <input placeholder="新的家庭名称" value={newName} onChange={(e) => setNewName(e.target.value)} />
+              <button onClick={rename}>改名</button>
+            </div>
+            <div className="row" style={{ marginTop: 12 }}>
+              <input
+                placeholder={`输入「${data.family.name}」确认解散`}
+                value={dissolveName}
+                onChange={(e) => setDissolveName(e.target.value)}
+              />
+              <button className="danger" disabled={dissolveName !== data.family.name} onClick={dissolve}>解散家庭</button>
+            </div>
+            <p className="muted" style={{ margin: '8px 0 0' }}>解散后所有成员变回个人账号，每个人的小票仍归各自所有；待审申请和家庭邀请码会被清除。</p>
+          </>
+        )}
       </div>
 
       {data.isCreator && (

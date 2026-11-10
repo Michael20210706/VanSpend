@@ -55,6 +55,14 @@ export async function readJson(request, maxBytes) {
   return data;
 }
 
+// 读小票/统计时的可见范围: 在家庭里 = 整个家庭 + 我自己的(加入家庭之前记的个人小票没有家庭归属，只靠家庭条件会从本人视图里
+// 消失；而别人的个人小票两个条件都不满足，仍然私有)；不在家庭 = 只有我自己的。语义见 src/db.cjs 的 scopeClause()。
+export function memberScope(session) {
+  return session.familyId
+    ? { familyId: session.familyId, userId: session.userId }
+    : { userId: session.userId };
+}
+
 // 路由里的 [id] 段: 只接受纯数字(正整数)，否则返回 null，调用方应回 400。
 // 裸的 +id 会把 '1abc' / 'abc' 变成 NaN 再绑进 SQL，最好的结果是 404，坏的结果是 500 带出数据库报错信息
 export function parseId(raw) {

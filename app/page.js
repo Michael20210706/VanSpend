@@ -35,6 +35,11 @@ export default function Home() {
     if (user) api('/api/config').then(setCfg).catch(() => {});
   }, [user]);
 
+  // 家庭成员关系变了(创建/退出/移除/解散/被转让…)之后，重新读一遍身份: Header、"小票记录"里是否显示所有者列等都依赖 user.familyId
+  const refreshUser = useCallback(() => {
+    api('/api/auth/me').then(setUser).catch(() => {});
+  }, []);
+
   async function handleLogout() {
     await api('/api/auth/logout', { method: 'POST' });
     setUser(null);
@@ -68,7 +73,7 @@ export default function Home() {
           <ReceiptsTab active={tab === 'list'} showOwner={!!user?.familyId} />
         </section>
         <section className={'grid' + (tab !== 'family' ? ' hide' : '')}>
-          <FamilyPanel active={tab === 'family'} />
+          <FamilyPanel active={tab === 'family'} onChanged={refreshUser} />
         </section>
       </div>
 
