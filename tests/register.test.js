@@ -78,11 +78,48 @@ describe('邀请码注册', () => {
     expect(await userRow(second)).toBeUndefined();
   });
 
-  it('不存在的码 / 空白码 → 400', async () => {
+  it('不存在的码 → 400，不建账号', async () => {
     logout();
     const username = uniq('x');
     expect((await register({ username, password: 'pw123456', inviteCode: 'no-such-code-0123456789' })).status).toBe(400);
     expect(await userRow(username)).toBeUndefined();
+  });
+
+  it('邀请码前后带空格 → 去掉空格后照常可用', async () => {
+    const c = await newCode(await makeUser());
+    logout();
+    const username = uniq('trim');
+    expect((await register({ username, password: 'pw123456', inviteCode: `  ${c.code}\n` })).status).toBe(200);
+    expect(await userRow(username)).toBeDefined();
+  });
+
+  it('邀请码只有空格 → 当作没填邀请码，走开放注册(验证码失败就 400，验证码通过就建 open 档账号)', async () => {
+    logout();
+    vi.spyOn(captchaApi, 'verify').mockReturnValue(false);
+    expect((await register({ username: uniq('ws'), password: 'pw123456', inviteCode: '   ' })).status).toBe(400);
+    vi.spyOn(captchaApi, 'verify').mockReturnValue(true);
+    const ok = uniq('ws');
+    expect((await register({ username: ok, password: 'pw123456', inviteCode: '   ', captchaToken: 't', captchaAnswer: '1' })).status).toBe(200);
+    expect((await userRow(ok)).scan_tier).toBe('open');
+  });
+
+  it('真正的验证码缺失/错误(不 mock)→ 开放注册被拒', async () => {
+    logout();
+    const username = uniq('nocap');
+    expect((await register({ username, password: 'pw123456' })).status).toBe(400);
+    expect((await register({ username, password: 'pw123456', captchaToken: 'garbage', captchaAnswer: '1' })).status).toBe(400);
+    expect(await userRow(username)).toBeUndefined();
+  });
+
+  it('邀请码路径下，请求体里的 scanTier / signupSource / isAdmin / familyId 同样被忽略', async () => {
+    const c = await newCode(await makeUser());
+    logout();
+    const username = uniq('inj');
+    const res = await register({ username, password: 'pw123456', inviteCode: c.code, scanTier: 'open', signupSource: 'open', isAdmin: true, familyId: 1, invitedBy: 1 });
+    expect(res.status).toBe(200);
+    const u = await userRow(username);
+    expect(u).toMatchObject({ scan_tier: 'normal', signup_source: 'invite', is_admin: 0, family_id: null });
+    expect(u.invited_by).not.toBe(1 + 99999);
   });
 
   it('已过期的码 → 400', async () => {
@@ -106,8 +143,11 @@ describe('邀请码注册', () => {
     const expired = await newCode(await makeUser());
     await dbApi.pool.execute('UPDATE invite_codes SET expires_at = NOW() - INTERVAL 1 SECOND WHERE id = ?', [expired.id]);
     logout();
+    const revoked = await newCode(await makeUser());
+    await dbApi.pool.execute('UPDATE invite_codes SET revoked_at = NOW() WHERE id = ?', [revoked.id]);
+    logout();
     const msgs = new Set();
-    for (const code of [used.code, expired.code, 'nope-nope-nope-nope-nope']) {
+    for (const code of [used.code, expired.code, revoked.code, 'nope-nope-nope-nope-nope']) {
       const res = await register({ username: uniq('x'), password: 'pw123456', inviteCode: code });
       expect(res.status).toBe(400);
       msgs.add((await res.json()).error);
@@ -186,7 +226,7 @@ describe('家庭邀请码注册', () => {
     expect((await dbApi.findFamilyByName(famName)).creator_id).toBe((await userRow(username)).id);
   });
 
-  it('生成家庭码之后创建者已离开该家庭(库里 family_id 被清空)→ 码失效，注册 400', async () => {
+  it('家庭码对应的家庭被删除 → 外键级联删掉这个码，注册 400，不会建出没有家庭的账号', async () => {
     const creator = await makeUser();
     const familyId = await makeFamily(creator);
     const c = await newCode(creator, true);

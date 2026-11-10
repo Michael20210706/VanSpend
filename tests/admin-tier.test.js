@@ -43,6 +43,14 @@ describe('管理员调整额度档位', () => {
     expect((await patch(1, { tier: 'normal' })).status).toBe(401);
   });
 
+  it('id 不是纯数字(abc / 1abc / 0 / -1)→ 400，不是 500', async () => {
+    await loginAs(await makeUser({ admin: true }));
+    for (const id of ['abc', '1abc', '0', '-1', '1.5']) {
+      expect((await patch(id, { tier: 'normal' })).status).toBe(400);
+      expect((await userIdRoute.DELETE(req('/x', { method: 'DELETE' }), ctx({ id }))).status).toBe(400);
+    }
+  });
+
   it('非法档位 / 缺字段 → 400；不存在的用户 → 404', async () => {
     const target = await makeUser();
     await loginAs(await makeUser({ admin: true }));

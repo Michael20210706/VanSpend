@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
 import dbApi from '@/src/db.cjs';
 import { requireAdmin } from '@/src/session';
-import { wrap, readJson, FORM_BODY_MAX } from '@/src/http';
+import { wrap, readJson, parseId, FORM_BODY_MAX } from '@/src/http';
 
 // 级联删除该用户名下所有小票/明细(外键 ON DELETE CASCADE)，禁止误删自己导致锁死管理后台
 export const DELETE = wrap(async (request, { params }) => {
   const { session, response } = await requireAdmin();
   if (response) return response;
 
-  const { id } = await params;
-  if (+id === session.userId) return NextResponse.json({ error: '不能删除自己当前登录的账号' }, { status: 400 });
-  const deleted = await dbApi.deleteUser(+id);
+  const id = parseId((await params).id);
+  if (id === null) return NextResponse.json({ error: '无效的 id' }, { status: 400 });
+  if (id === session.userId) return NextResponse.json({ error: '不能删除自己当前登录的账号' }, { status: 400 });
+  const deleted = await dbApi.deleteUser(id);
   return NextResponse.json({ deleted });
 });
 
@@ -23,8 +24,9 @@ export const PATCH = wrap(async (request, { params }) => {
   if (body.tier !== 'open' && body.tier !== 'normal') {
     return NextResponse.json({ error: 'tier 必须是 open 或 normal' }, { status: 400 });
   }
-  const { id } = await params;
-  const found = await dbApi.setScanTier(+id, body.tier);
+  const id = parseId((await params).id);
+  if (id === null) return NextResponse.json({ error: '无效的 id' }, { status: 400 });
+  const found = await dbApi.setScanTier(id, body.tier);
   if (!found) return NextResponse.json({ error: '用户不存在' }, { status: 404 });
-  return NextResponse.json({ id: +id, tier: body.tier });
+  return NextResponse.json({ id, tier: body.tier });
 });

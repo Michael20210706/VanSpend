@@ -30,7 +30,8 @@ export const POST = wrap(async (request) => {
     await dbApi.finishScan(slot.id, true);
     return NextResponse.json(result);
   } catch (e) {
-    await dbApi.finishScan(slot.id, false);
+    // 记失败本身出错不能盖掉 OpenRouter 的原始错误
+    await dbApi.finishScan(slot.id, false).catch((err) => console.error('[scan] finishScan 失败', err));
     throw e;
   }
 });

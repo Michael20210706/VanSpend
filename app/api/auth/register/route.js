@@ -25,11 +25,11 @@ export const POST = wrap(async (request) => {
   const familyAction = body.familyAction === 'apply' ? 'apply' : 'create';
   const familyName = String(body.familyName || '').trim();
 
-  // inviteCode 没填(缺省/null/空串)= 开放注册；填了就必须是字符串，数组、对象、数字一律当无效码
+  // inviteCode 没填(缺省/null/空串/只有空格)= 开放注册；填了就必须是字符串，数组、对象、数字一律当无效码
   const rawCode = body.inviteCode;
-  const hasCode = !(rawCode === undefined || rawCode === null || rawCode === '');
-  if (hasCode && typeof rawCode !== 'string') return INVALID_CODE();
-  const inviteCode = hasCode ? rawCode.trim() : '';
+  if (rawCode !== undefined && rawCode !== null && typeof rawCode !== 'string') return INVALID_CODE();
+  const inviteCode = typeof rawCode === 'string' ? rawCode.trim() : '';
+  const hasCode = inviteCode !== '';
 
   if (!username || !password) return NextResponse.json({ error: '用户名和密码不能为空' }, { status: 400 });
 

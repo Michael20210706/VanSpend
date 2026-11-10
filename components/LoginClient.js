@@ -35,7 +35,7 @@ export default function LoginClient({ initialMode, initialCode = '' }) {
       )}
 
       <p className="lp-auth-note">
-        注册开放自助完成，需要填一道图形算式验证码。个人账号可以之后再加入家庭。
+        有邀请码的话填上就行，不用验证码；没有邀请码也可以直接注册，需要填一道图形算式验证码，每天可识别的次数较少。个人账号可以之后再加入家庭。
       </p>
 
       <Toast />

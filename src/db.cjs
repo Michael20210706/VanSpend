@@ -331,11 +331,14 @@ async function createUser(username, passwordHash, { familyRole, signupSource } =
 
 // ---- 邀请码 ----
 const INVITE_VALID_DAYS = 7;
-const INVITE_MAX_ACTIVE = 20; // 每人同时持有的未使用有效码上限，防止无限刷码
+// 每人在滚动 INVITE_WINDOW_DAYS 天内最多生成这么多个码——不论用没用、作废没作废都算。
+// (早先只数"未使用"的码，码一被用掉名额就空出来，等于没有频率上限，见 CLAUDE.md 里的邀请码滥用说明)
+const INVITE_MAX_PER_WINDOW = 20;
+const INVITE_WINDOW_DAYS = 7;
 
-// 生成一个邀请码。familyId 非空 = 入家庭码(调用方负责确认调用者是该家庭的创建者)。
+// 生成一个邀请码。familyId 非空 = 入家庭码(调用方负责确认调用者是该家庭的创建者、并且有资格发码)。
 // 在事务里先锁住调用者的 users 行再数、再插入，同一用户并发生成也不会突破上限。
-// 返回码行；已达上限返回 null。
+// 返回码行；7 天内已生成满 INVITE_MAX_PER_WINDOW 个返回 null。
 async function createInviteCode(userId, { familyId } = {}) {
   await ready;
   const conn = await pool.getConnection();
@@ -344,9 +347,9 @@ async function createInviteCode(userId, { familyId } = {}) {
     await conn.execute('SELECT id FROM users WHERE id = :userId FOR UPDATE', { userId });
     const [[{ n }]] = await conn.execute(`
       SELECT COUNT(*) AS n FROM invite_codes
-      WHERE created_by = :userId AND used_by IS NULL AND revoked_at IS NULL AND expires_at > NOW()
+      WHERE created_by = :userId AND created_at > NOW() - INTERVAL ${INVITE_WINDOW_DAYS} DAY
     `, { userId });
-    if (n >= INVITE_MAX_ACTIVE) { await conn.rollback(); return null; }
+    if (n >= INVITE_MAX_PER_WINDOW) { await conn.rollback(); return null; }
     const code = crypto.randomBytes(16).toString('base64url');
     const [info] = await conn.execute(`
       INSERT INTO invite_codes (code, created_by, family_id, expires_at)
@@ -972,6 +975,7 @@ module.exports = {
   updatePassword, getSessionUser, findImageOwner,
   createInviteCode, listInviteCodes, revokeInviteCode, peekInviteCode, registerWithInvite,
   reserveScan, finishScan, setScanTier,
+  migrateUsersInviteColumns, // 导出仅供测试(升级路径)
   countRecentLoginFailures, isLoginLocked, recordLoginFailure, deleteLoginAttempt, clearLoginFailures,
   listUsers, deleteUser, statsByUser,
   findFamilyByName, findFamilyById, createFamily, inviteMember, applyToFamily,

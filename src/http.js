@@ -55,6 +55,15 @@ export async function readJson(request, maxBytes) {
   return data;
 }
 
+// 路由里的 [id] 段: 只接受纯数字(正整数)，否则返回 null，调用方应回 400。
+// 裸的 +id 会把 '1abc' / 'abc' 变成 NaN 再绑进 SQL，最好的结果是 404，坏的结果是 500 带出数据库报错信息
+export function parseId(raw) {
+  const s = String(raw ?? '');
+  if (!/^\d{1,15}$/.test(s)) return null;
+  const n = Number(s);
+  return n > 0 ? n : null;
+}
+
 // 请求体上限: 登录/注册等普通表单 16 KB；带图片的接口 16 MB(10 MB 图片的 base64 约 13.4 MB，加上明细 JSON 留余量)
 export const FORM_BODY_MAX = 16 * 1024;
 export const IMAGE_BODY_MAX = 16 * 1024 * 1024;
