@@ -22,7 +22,7 @@ export const sessionOptions = {
   },
 };
 
-// cookie 里只有 userId 是可信的"身份"；isAdmin / familyId / familyName / familyRole / accountType / isFamilyCreator
+// cookie 里只有 userId 是可信的"身份"；isAdmin / familyId / familyName / familyRole / accountType / isFamilyCreator / scanTier
 // 虽然登录时也会写进 cookie，但鉴权一律以数据库为准: getAuthedSession() 每个请求按 userId 查一次 users(+families)，
 // 用库里的值覆盖这些字段(只改内存里的 session 对象，不回写 cookie)。所以撤销管理员、加入家庭(被邀请/申请通过)、删除账号
 // 都在下一个请求立即生效，不必等 cookie 过期或重新登录。
@@ -45,6 +45,7 @@ export async function getAuthedSession() {
   session.familyName = u.family_name || undefined;
   session.familyRole = u.family_role || undefined;
   session.accountType = u.account_type || 'individual';
+  session.scanTier = u.scan_tier || 'normal';
   session.isFamilyCreator = !!u.family_id && u.family_creator_id === u.id;
   return session;
 }

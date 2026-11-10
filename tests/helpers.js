@@ -7,11 +7,13 @@ let seq = 0;
 export const uniq = (prefix) => `${prefix}_${process.pid}_${Date.now()}_${++seq}`;
 
 // 建一个测试用户；password 给了就存真实 bcrypt 哈希，便于测登录
-export async function makeUser({ admin = false, password } = {}) {
+// tier: 'open'(开放注册档，每天 3 次) 或 'normal'(默认，邀请注册/老账号，每天 20 次)
+export async function makeUser({ admin = false, password, tier } = {}) {
   const username = uniq('u');
   const hash = password ? await bcrypt.hash(password, 4) : 'not-a-real-hash';
   const id = await dbApi.createUser(username, hash);
   if (admin) await dbApi.pool.execute('UPDATE users SET is_admin = 1 WHERE id = :id', { id });
+  if (tier) await dbApi.pool.execute('UPDATE users SET scan_tier = :tier WHERE id = :id', { tier, id });
   return { id, username, password };
 }
 

@@ -3,10 +3,12 @@ import Link from 'next/link';
 import { useState } from 'react';
 import ChangePasswordModal from './ChangePasswordModal';
 import FeedbackModal from './FeedbackModal';
+import InviteModal from './InviteModal';
 
 export default function Header({ cfg, user, onLogout }) {
   const [showPwd, setShowPwd] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
 
   return (
     <>
@@ -20,6 +22,7 @@ export default function Header({ cfg, user, onLogout }) {
           <span className="meta">
             {user.isAdmin ? <><Link href="/admin">管理后台</Link> · </> : null}
             {user.username} · <a href="#" onClick={(e) => { e.preventDefault(); setShowPwd(true); }}>修改密码</a>
+            {' · '}<a href="#" onClick={(e) => { e.preventDefault(); setShowInvite(true); }}>邀请</a>
             {' · '}<a href="#" onClick={(e) => { e.preventDefault(); setShowFeedback(true); }}>意见反馈</a>
             {' · '}<a href="#" onClick={(e) => { e.preventDefault(); onLogout(); }}>退出</a>
           </span>
@@ -27,6 +30,7 @@ export default function Header({ cfg, user, onLogout }) {
       </header>
       {showPwd ? <ChangePasswordModal onClose={() => setShowPwd(false)} /> : null}
       {showFeedback ? <FeedbackModal onClose={() => setShowFeedback(false)} /> : null}
+      {showInvite ? <InviteModal onClose={() => setShowInvite(false)} /> : null}
     </>
   );
 }

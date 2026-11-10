@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
 import { FAMILY_ROLE_LABELS } from '../lib/familyRoles';
+import InviteCodes from './InviteCodes';
 
 export default function FamilyPanel({ active }) {
   const [data, setData] = useState(undefined); // undefined=加载中, { family: null|{...}, ... }
@@ -118,6 +119,10 @@ export default function FamilyPanel({ active }) {
               <input placeholder="用户名" value={inviteUsername} onChange={(e) => setInviteUsername(e.target.value)} />
               <button onClick={invite}>邀请</button>
             </div>
+          </div>
+          <div className="card">
+            <h2>家庭邀请码</h2>
+            <InviteCodes kind="family" />
           </div>
           <div className="card">
             <h2>待审核申请</h2>
