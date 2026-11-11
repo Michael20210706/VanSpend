@@ -111,6 +111,25 @@ describe('开放档识别的全站总预算', () => {
     expect((await scan()).status).toBe(200);
   });
 
+  it('预算边界: 总数正好等于上限时还能识别(第 150 次)，再来一次(第 151 次)被拒', async () => {
+    mockScan();
+    await seedScans(cfg.maxOpenScansPerDay - 2, 'open'); // 另一个账号(只用来占预算，不受 3 次限制约束这里直接造数)
+    const u = await makeUser({ tier: 'open' });
+    await loginAs(u);
+    expect((await scan()).status).toBe(200); // 预算已用 maxOpenScansPerDay - 1
+    expect((await scan()).status).toBe(200); // 正好 maxOpenScansPerDay
+    expect((await scan()).status).toBe(429); // 超出，且是总预算(自己才用了 2 次，没到 3 次)
+  });
+
+  it('管理员的识别记录不占开放预算', async () => {
+    mockScan();
+    const admin = await makeUser({ admin: true });
+    await dbApi.pool.query(`INSERT INTO scan_log (user_id) VALUES ${Array(cfg.maxOpenScansPerDay + 10).fill('(?)').join(',')}`, Array(cfg.maxOpenScansPerDay + 10).fill(admin.id));
+    await dbApi.pool.query("UPDATE users SET scan_tier = 'open' WHERE id = ?", [admin.id]); // 即使管理员账号的档位字段是 open 也不算
+    await loginAs(await makeUser({ tier: 'open' }));
+    expect((await scan()).status).toBe(200);
+  });
+
   it('预算没用满时，开放档账号照常识别(各自 3 次的限制不变)', async () => {
     mockScan();
     const u = await makeUser({ tier: 'open' });

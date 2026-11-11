@@ -975,6 +975,7 @@ async function listPendingRequests(familyId) {
 // 'forbidden' = callerId 给了、但在事务里核对时已经不是这个家庭的创建者(刚转让走了)；
 // 'applicant_in_family' = 批准时申请人已经加入了别的家庭(这条申请按"拒绝"收尾，不再谎报成功)。
 // 加锁顺序: 先家庭行(共享锁，创建者变更/解散要它的排他锁，会等这个事务)，再申请行、用户行。
+// (和"删除申请人账号"仍是相反的顺序——后者先锁用户行、再经外键级联动申请行，压测里会死锁，由 DEADLOCK_RETRY 重试兜底。)
 async function decideRequest(requestId, familyId, approve, callerId) {
   await ready;
   const conn = await pool.getConnection();
@@ -1129,8 +1130,10 @@ async function isPasswordLocked(userId, max, windowMinutes) {
 }
 async function recordPasswordFailure(userId) {
   await ready;
-  const [info] = await pool.execute('INSERT INTO pw_failures (user_id) VALUES (:userId)', { userId });
+  // 先清旧记录、最后才 INSERT: 本函数在 DEADLOCK_RETRY 里，两条语句各自自动提交，如果 INSERT 已提交、后面的 DELETE 才死锁，
+  // 重试就会多插一条失败记录。把 INSERT 放最后，任何一次重试都发生在 INSERT 提交之前
   await pool.execute('DELETE FROM pw_failures WHERE created_at < NOW() - INTERVAL 1 DAY');
+  const [info] = await pool.execute('INSERT INTO pw_failures (user_id) VALUES (:userId)', { userId });
   return info.insertId;
 }
 async function countPasswordFailures(userId, windowMinutes) {

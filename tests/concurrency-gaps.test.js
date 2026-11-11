@@ -105,6 +105,28 @@ describe('此前会死锁返回 500 的并发组合，现在都不再抛错', ()
     await expect(dbApi.dissolveFamily(fam2, other.id, name2)).rejects.toMatchObject({ code: 'ER_LOCK_DEADLOCK' });
   });
 
+  it('重试次数固定: 连续失败 3 次后第 4 次成功 → 成功；失败 4 次 → 抛出(共调用 4 次)', async () => {
+    const creator = await makeUser();
+    const member = await makeUser();
+    await makeFamily(creator, member);
+    const real = dbApi.pool.getConnection.bind(dbApi.pool);
+    let n = 0;
+    vi.spyOn(dbApi.pool, 'getConnection').mockImplementation(async () => {
+      if (n++ < 3) throw Object.assign(new Error('Deadlock'), { code: 'ER_LOCK_DEADLOCK' });
+      return real();
+    });
+    expect(await dbApi.leaveFamily(member.id)).toBe('left');
+    vi.restoreAllMocks();
+    const u = await makeUser();
+    let calls = 0;
+    vi.spyOn(dbApi.pool, 'getConnection').mockImplementation(async () => {
+      calls++;
+      throw Object.assign(new Error('Deadlock'), { code: 'ER_LOCK_DEADLOCK' });
+    });
+    await expect(dbApi.deleteOwnAccount(u.id)).rejects.toMatchObject({ code: 'ER_LOCK_DEADLOCK' });
+    expect(calls).toBe(4);
+  });
+
   it('不是死锁的错误不重试(只调用一次)', async () => {
     const u = await makeUser();
     let n = 0;
@@ -224,5 +246,62 @@ describe('管理员重置密码同时解除"输密码确认"的锁', () => {
     const ok = await passwordRoute.POST(req('/x', { method: 'POST', body: { currentPassword: temporaryPassword, newPassword: 'new-pass-12345' } }));
     expect(ok.status).toBe(200);
     logout();
+  });
+});
+
+describe('先拿家庭行的共享锁(别人持有家庭行的排他锁时，这些操作会等待，而不是抢先去动用户/申请行)', () => {
+  // 在另一个连接里对家庭行 SELECT ... FOR UPDATE 持锁 400ms 后提交；被测操作若按"先家庭行"的顺序，应在持锁期间一直等
+  async function withFamilyLocked(familyId, run) {
+    const conn = await dbApi.pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      await conn.execute('SELECT id FROM families WHERE id = ? FOR UPDATE', [familyId]);
+      let done = false;
+      const p = run().then((r) => { done = true; return r; });
+      await new Promise((r) => setTimeout(r, 400));
+      const waited = !done;
+      await conn.commit();
+      const result = await p;
+      return { waited, result };
+    } finally {
+      conn.release();
+    }
+  }
+
+  it('decideRequest 等家庭行', async () => {
+    const creator = await makeUser();
+    const applicant = await makeUser();
+    const familyId = await makeFamily(creator);
+    const requestId = await dbApi.applyToFamily(familyId, applicant.id);
+    const { waited, result } = await withFamilyLocked(familyId, () => dbApi.decideRequest(requestId, familyId, true, creator.id));
+    expect(waited).toBe(true);
+    expect(result).toBe(true);
+  });
+
+  it('inviteMember 等家庭行', async () => {
+    const creator = await makeUser();
+    const invitee = await makeUser();
+    const familyId = await makeFamily(creator);
+    const { waited, result } = await withFamilyLocked(familyId, () => dbApi.inviteMember(familyId, invitee.username));
+    expect(waited).toBe(true);
+    expect(result).toBe(true);
+  });
+
+  it('家庭邀请码注册(registerWithInvite)等家庭行', async () => {
+    const creator = await makeUser();
+    const familyId = await makeFamily(creator);
+    const code = await dbApi.createInviteCode(creator.id, { familyId });
+    const { waited, result } = await withFamilyLocked(familyId, () => dbApi.registerWithInvite(code.code || code, uniq('fc'), 'hash'));
+    expect(waited).toBe(true);
+    expect(result).toBeTruthy();
+  });
+
+  it('对照: 个人邀请码(不属于任何家庭)的注册不会被家庭行的锁挡住', async () => {
+    const creator = await makeUser();
+    const other = await makeUser();
+    const familyId = await makeFamily(other);
+    const code = await dbApi.createInviteCode(creator.id);
+    const { waited } = await withFamilyLocked(familyId, () => dbApi.registerWithInvite(code.code || code, uniq('pc'), 'hash'));
+    expect(waited).toBe(false);
   });
 });
