@@ -1094,12 +1094,13 @@ async function isLoginLocked(username, ip, max, windowMinutes) {
 // 记一次登录尝试(先记再校验密码，见 login 路由)，返回记录 id。失败就保留，成功或被拒时由调用方删除
 async function recordLoginFailure(username, ip) {
   await ready;
+  // 顺手清掉一天前的旧记录，表不会无限增长。先清旧记录、最后才 INSERT: 本函数在 DEADLOCK_RETRY 里，两条语句各自自动提交，
+  // 如果 INSERT 已提交、后面的 DELETE 才死锁，重试就会多插一条失败记录(与 recordPasswordFailure 同一个顺序)
+  await pool.execute('DELETE FROM login_failures WHERE created_at < NOW() - INTERVAL 1 DAY');
   const [info] = await pool.execute(
     'INSERT INTO login_failures (username, ip) VALUES (:username, :ip)',
     { username: lfUser(username), ip: lfIp(ip) }
   );
-  // 顺手清掉一天前的旧记录，表不会无限增长
-  await pool.execute('DELETE FROM login_failures WHERE created_at < NOW() - INTERVAL 1 DAY');
   return info.insertId;
 }
 
@@ -1632,7 +1633,7 @@ const DEADLOCK_RETRY = [
   'saveReceipt', 'updateReceipt', 'adminDeleteReceipt', 'deleteUser', 'deleteUserFull', 'deleteOwnAccount',
   'resetUserPassword', 'setScanTier', 'registerWithInvite', 'createInviteCode', 'createFamily', 'inviteMember',
   'decideRequest', 'leaveFamily', 'removeMember', 'transferCreator', 'dissolveFamily', 'renameFamily',
-  'recordPasswordFailure',
+  'recordPasswordFailure', 'recordLoginFailure', 'deleteLoginAttempt', 'clearLoginFailures',
 ];
 function withDeadlockRetry(fn) {
   return async function retrying(...args) {
