@@ -78,6 +78,27 @@ describe('/uploads 原图鉴权', () => {
     expect((await get(orphan)).status).toBe(404);
   });
 
+  it('所有 404 也带 Cache-Control: private, no-store(Cloudflare 会缓存无该头的 404)', async () => {
+    const orphan = uniq('orphan') + '.jpg';
+    fs.writeFileSync(path.join(process.env.UPLOAD_DIR, orphan), Buffer.from('x'));
+    const expectNoStore = (res) => {
+      expect(res.status).toBe(404);
+      expect(res.headers.get('cache-control')).toBe('private, no-store');
+    };
+    logout();
+    expectNoStore(await get(file)); // 未登录
+    await loginAs(stranger);
+    expectNoStore(await get(file)); // 无权
+    await loginAs(admin);
+    expectNoStore(await get(orphan)); // 不属于任何小票
+    expectNoStore(await get('nope-' + uniq('x') + '.jpg')); // 不存在
+    expectNoStore(await get('../package.json')); // 非法名字
+    await loginAs(owner);
+    fs.unlinkSync(path.join(process.env.UPLOAD_DIR, file));
+    expectNoStore(await get(file)); // 库里有、磁盘上没有
+    fs.writeFileSync(path.join(process.env.UPLOAD_DIR, file), Buffer.from('fake-jpeg'));
+  });
+
   it('路径穿越 → 404', async () => {
     await loginAs(admin);
     expect((await get('../package.json')).status).toBe(404);

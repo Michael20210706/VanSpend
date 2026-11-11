@@ -16,7 +16,8 @@ const SAFE_NAME = /^[A-Za-z0-9_-]+\.(jpg|jpeg|png|webp|gif)$/i;
 // Cache-Control: private, no-store —— 经 Cloudflare 时 .jpg 等静态扩展名默认会被边缘缓存，
 // 不加这个头，一个人有权看到的图会被缓存后发给任何人。
 export const GET = wrap(async (request, { params }) => {
-  const notFound = () => NextResponse.json({ error: '未找到' }, { status: 404 });
+  // 404 也要带: Cloudflare 会把没有 Cache-Control 的 404 缓存数小时(缓存键不含 cookie)
+  const notFound = () => NextResponse.json({ error: '未找到' }, { status: 404, headers: { 'Cache-Control': 'private, no-store' } });
   const { file } = await params;
   const name = Array.isArray(file) ? file.join('/') : file || '';
   if (!SAFE_NAME.test(name)) return notFound();

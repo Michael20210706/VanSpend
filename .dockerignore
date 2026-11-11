@@ -14,3 +14,8 @@ Dockerfile
 .dockerignore
 backups
 docker-compose.override.yml
+tests
+docs
+vitest.config.js
+.github
+docker-compose*.yml
