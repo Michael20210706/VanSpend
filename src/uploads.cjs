@@ -21,6 +21,23 @@ function dataUrlBytes(dataUrl) {
   return Math.floor((b64.length * 3) / 4) - padding;
 }
 
+// base64 载荷必须是标准字符集、长度为 4 的倍数、非空，并且解码后的开头字节与声明的类型一致
+// (只校验开头几个字节，不解码整张图)。否则 `data:image/png;base64,@@@@` 之类会白白触发计费的识别调用
+const MAGIC = {
+  png: (b) => b.length >= 8 && b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  jpeg: (b) => b.length >= 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
+  gif: (b) => b.length >= 6 && /^GIF8[79]a$/.test(b.subarray(0, 6).toString('latin1')),
+  webp: (b) => b.length >= 12 && b.subarray(0, 4).toString('latin1') === 'RIFF' && b.subarray(8, 12).toString('latin1') === 'WEBP',
+};
+function validPayload(dataUrl) {
+  const m = /^data:image\/(png|jpe?g|webp|gif);base64,(.*)$/s.exec(dataUrl);
+  if (!m) return false;
+  const b64 = m[2];
+  if (b64.length === 0 || b64.length % 4 !== 0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(b64)) return false;
+  const type = m[1] === 'jpg' ? 'jpeg' : m[1];
+  return MAGIC[type](Buffer.from(b64.slice(0, 24), 'base64'));
+}
+
 // 路由用: 判断客户端传来的 image 字段。只接受 png/jpeg/webp/gif 的 base64 data URL(与 /uploads 能提供的扩展名一致)；
 // 非字符串(数组、对象等)一律视为非法——
 // 否则大小检查和 saveImage 的正则会对同一个值得出不同结论(正则会把数组隐式转成字符串)
@@ -30,6 +47,7 @@ function checkImage(image) {
     return { status: 400, error: '图片格式错误' };
   }
   if (dataUrlBytes(image) > MAX_IMAGE_BYTES) return { status: 413, error: '图片超过 10 MB' };
+  if (!validPayload(image)) return { status: 400, error: '图片格式错误' };
   return null;
 }
 

@@ -6,7 +6,7 @@ import openrouterLib from '@/src/openrouter.cjs';
 import * as scanRoute from '@/app/api/scan/route.js';
 import { makeUser, loginAs, logout, req } from './helpers.js';
 
-const IMG = 'data:image/jpeg;base64,' + 'A'.repeat(400);
+const IMG = 'data:image/jpeg;base64,/9j/' + 'A'.repeat(396);
 const scan = (image = IMG) => scanRoute.POST(req('/api/scan', { method: 'POST', body: { image } }));
 const LIMIT = openrouterLib.config.scanQuota;
 const logRows = async (userId) => (await dbApi.pool.query('SELECT * FROM scan_log WHERE user_id = ? ORDER BY id', [userId]))[0];
@@ -110,7 +110,7 @@ describe('scan_log', () => {
     vi.spyOn(openrouterLib, 'scanReceipt').mockRejectedValue(new Error('OpenRouter 请求失败 500'));
     const u = await makeUser({ tier: 'open' });
     await loginAs(u);
-    for (let i = 0; i < LIMIT.open; i++) expect((await scan()).status).toBe(500);
+    for (let i = 0; i < LIMIT.open; i++) expect((await scan()).status).toBe(502);
     const rows = await logRows(u.id);
     expect(rows).toHaveLength(LIMIT.open);
     expect(rows.every((r) => r.success === 0)).toBe(true);
@@ -123,8 +123,8 @@ describe('scan_log', () => {
     const u = await makeUser();
     await loginAs(u);
     const res = await scan();
-    expect(res.status).toBe(500);
-    expect((await res.json()).error).toBe('OpenRouter 请求失败 502');
+    expect(res.status).toBe(502);
+    expect((await res.json()).error).toBe('识别服务暂时不可用，请稍后重试');
   });
 
   it('超额被拒的请求不留 scan_log 记录', async () => {

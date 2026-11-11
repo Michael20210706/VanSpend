@@ -7,7 +7,8 @@ import * as receiptsRoute from '@/app/api/receipts/route.js';
 import { makeUser, loginAs, req } from './helpers.js';
 
 // base64 每 4 个字符解码成 3 字节
-const imageOfBytes = (bytes) => 'data:image/jpeg;base64,' + 'A'.repeat(Math.ceil(bytes / 3) * 4);
+// 开头是 JPEG 魔数('/9j/' 解码为 FF D8 FF)，其余填充
+const imageOfBytes = (bytes) => 'data:image/jpeg;base64,/9j/' + 'A'.repeat(Math.ceil(bytes / 3) * 4 - 4);
 const MB = 1024 * 1024;
 const receiptBody = (image) => ({
   receipt: { store: 'T', purchased_at: '2026-05-01', currency: 'CAD', subtotal: 1, gst: 0, pst: 0, total: 1 },
