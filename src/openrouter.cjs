@@ -152,8 +152,19 @@ function normalize(p) {
   if (!receipt.subtotal && items.length) {
     receipt.subtotal = +items.reduce((s, i) => s + i.amount, 0).toFixed(2);
   }
+  const printedTotal = receipt.total;
   if (!receipt.total) {
     receipt.total = +(receipt.subtotal + receipt.gst + receipt.pst).toFixed(2);
+  }
+
+  // 只印一行合计税的小票(如 T&T)模型常把 GST/PST 都填 0。印出的 total 比 subtotal 多出的部分若不超过 12%(两种税之和的上限)，
+  // 就按 5:7 拆成 GST/PST；更大的差额更像小费或漏读，不动
+  if (printedTotal > 0 && receipt.subtotal > 0 && receipt.gst === 0 && receipt.pst === 0) {
+    const diff = +(printedTotal - receipt.subtotal).toFixed(2);
+    if (diff > 0 && diff <= receipt.subtotal * 0.12 + 0.05) {
+      receipt.gst = +((diff * 5) / 12).toFixed(2);
+      receipt.pst = +(diff - receipt.gst).toFixed(2);
+    }
   }
 
   return { receipt, items, raw: p };
