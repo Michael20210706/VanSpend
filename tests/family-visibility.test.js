@@ -118,8 +118,13 @@ describe('加入家庭之前的个人小票保持私有，但本人仍可见', (
     const r = await makeReceipt(creator, { familyId });
     await loginAs(b);
     const res = await (await import('@/app/api/receipts/[id]/route.js')).DELETE(req('/x', { method: 'DELETE' }), ctx({ id: String(r) }));
-    expect((await res.json()).deleted).toBe(0);
+    expect(res.status).toBe(404);
+    expect((await res.json()).error).toBe('未找到');
     expect((await dbApi.pool.query('SELECT id FROM receipts WHERE id = ?', [r]))[0]).toHaveLength(1);
+    await loginAs(creator);
+    const own = await (await import('@/app/api/receipts/[id]/route.js')).DELETE(req('/x', { method: 'DELETE' }), ctx({ id: String(r) }));
+    expect(own.status).toBe(200);
+    expect((await own.json()).deleted).toBe(1);
   });
 
   it('无家庭用户的行为不变: 只看自己的', async () => {

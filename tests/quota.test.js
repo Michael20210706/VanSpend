@@ -117,7 +117,7 @@ describe('scan_log', () => {
     expect((await scan()).status).toBe(429);
   });
 
-  it('记录失败结果本身出错，仍返回 500(且不泄露内部报错)', async () => {
+  it('记录失败结果本身出错，仍返回 502(不泄露上游报错)', async () => {
     vi.spyOn(openrouterLib, 'scanReceipt').mockRejectedValue(new Error('OpenRouter 请求失败 502'));
     vi.spyOn(dbApi, 'finishScan').mockRejectedValue(new Error('db gone'));
     const u = await makeUser();

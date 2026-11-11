@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
 
 // forced: 管理员重置过密码、必须先改密码的账号——不能关闭、不能取消，改完才进入应用
-export default function ChangePasswordModal({ onClose, forced = false }) {
+export default function ChangePasswordModal({ onClose, forced = false, onLogout }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -56,6 +56,9 @@ export default function ChangePasswordModal({ onClose, forced = false }) {
             <button onClick={submit}>确定</button>
             {forced ? null : <button onClick={onClose} style={{ background: 'var(--line)', color: 'inherit' }}>取消</button>}
           </div>
+          {forced && onLogout ? (
+            <a href="#" onClick={(e) => { e.preventDefault(); onLogout(); }}>退出登录</a>
+          ) : null}
         </div>
       </div>
     </div>
