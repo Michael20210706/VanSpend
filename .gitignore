@@ -3,3 +3,5 @@ node_modules/
 /uploads/
 .next/
 .env.test.local
+docker-compose.override.yml
+/backups/

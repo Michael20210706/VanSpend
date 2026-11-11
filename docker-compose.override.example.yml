@@ -1,0 +1,11 @@
+# 本机开发/跑测试用的可选覆盖: 复制成 docker-compose.override.yml(已 gitignore，compose 会自动加载)。
+# 把自带 MySQL 映射到宿主机的回环地址 127.0.0.1:3307——只有本机能连，局域网/公网连不到。
+# 之后 .env 里写 MYSQL_HOST=127.0.0.1 / MYSQL_PORT=3307，`npm run dev` 就能连上；
+# 跑 `npm test` 需要能建/删 vanspend_test 库，在 .env.test.local(已 gitignore)里写:
+#   MYSQL_USER=root
+#   MYSQL_PASSWORD=<.env 里的 MYSQL_ROOT_PASSWORD>
+# 容器里的 app 不受影响(compose 里 app 的 environment 固定连 mysql:3306)。
+services:
+  mysql:
+    ports:
+      - "127.0.0.1:3307:3306"

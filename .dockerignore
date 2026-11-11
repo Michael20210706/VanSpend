@@ -12,3 +12,5 @@ uploads
 docker-compose.yml
 Dockerfile
 .dockerignore
+backups
+docker-compose.override.yml

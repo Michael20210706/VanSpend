@@ -1,6 +1,6 @@
 # VanSpend · 家庭小票扫描与精细化记账
 
-自托管的多用户版：站点由部署者运营(可经 Cloudflare Tunnel 对公网开放)，用户凭邀请码或开放注册创建各自的账号，各自上传的小票/明细默认只归自己可见，同一家庭的成员互相可见(只读)。上传超市/餐厅小票图片 → 用 OpenRouter 多模态模型(Gemini 2.5 Flash)识别成 **逐行明细(line-items)** → 存入外部 MySQL 数据库 → 在网页里做多维度统计与价格趋势分析。专门处理 Costco、大统华(T&T)等单张长小票，并按 BC 省规则拆分 **GST(5%) / PST(7%)**。
+自托管的多用户版：站点由部署者运营(可经 Cloudflare Tunnel 对公网开放)，用户凭邀请码或开放注册创建各自的账号，各自上传的小票/明细默认只归自己可见，同一家庭的成员互相可见(只读)。上传超市/餐厅小票图片 → 用 OpenRouter 多模态模型(Gemini 2.5 Flash)识别成 **逐行明细(line-items)** → 存入 MySQL 数据库 → 在网页里做多维度统计与价格趋势分析。专门处理 Costco、大统华(T&T)等单张长小票，并按 BC 省规则拆分 **GST(5%) / PST(7%)**。
 
 结构化数据存在你指定的 MySQL 库里,小票原图留在部署机器的 `uploads/` 目录。
 
@@ -40,12 +40,17 @@ npm run build && npm start  # 打开 http://localhost:3000(端口取 .env 里的
 
 ```bash
 cp .env.example .env        # 同上，先填好 .env
-docker compose up -d        # 启动 app + 一个本地 MySQL(仅供试用/演示)
+docker compose up -d        # 启动 app + 自带的专用 MySQL 8.4.7(数据在命名卷 mysql-data，不映射端口，只有 compose 网络里的 app 能连)
 ```
 
-若已有外部 MySQL(生产场景推荐),编辑 `docker-compose.yml` 删掉 `mysql` 这个 service,
-并把 `.env` 里的 `MYSQL_HOST`/`MYSQL_PORT` 指向你的外部实例即可，`app` service 会通过
-`env_file: .env` 读取所有配置。也可以只用 `docker build -t vanspend .` 单独构建镜像。
+`.env` 里需要设置 `MYSQL_ROOT_PASSWORD`、`MYSQL_USER`(不能是 root)、`MYSQL_PASSWORD`、`MYSQL_DATABASE` 三四个值(都换成自己的随机串)：
+首次启动时自带的 MySQL 按它们创建 root、数据库和只有该库权限的专用账号，应用只用这个专用账号，表结构由应用启动时自动创建/升级。
+容器里的 `app` 固定连 `mysql:3306`(compose 的 `environment` 优先于 `.env`)，所以 `.env` 里的 `MYSQL_HOST`/`MYSQL_PORT` 可以写成宿主机视角的地址给
+`npm run dev` / `npm test` 用：复制 `docker-compose.override.example.yml` 为 `docker-compose.override.yml`(已 gitignore)把 MySQL 映射到 **127.0.0.1:3307**(只有本机能连)，
+`.env` 写 `MYSQL_HOST=127.0.0.1`、`MYSQL_PORT=3307`；跑测试需要建/删 `vanspend_test` 库，在 `.env.test.local`(已 gitignore)里写 `MYSQL_USER=root` 和 root 密码。
+**自动备份**：compose 里的 `backup` 服务启动时立即、之后每 24 小时(`BACKUP_INTERVAL_HOURS`)用应用的专用账号导出一份，gzip 压缩后放在 `./backups`(已 gitignore，权限 600)，只保留最近 14 份(`BACKUP_KEEP`)。备份和数据卷在同一台机器上，要防磁盘损坏请把 `./backups` 同步到别处。
+**恢复**(建议先恢复到一个临时库核对)：`gunzip -c backups/<文件>.sql.gz | docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" <库名>'`。手动备份：`docker compose exec mysql sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --no-tablespaces vanspend' > backup.sql`。不要用 `docker compose down -v`(会删掉数据卷)。
+若已有外部 MySQL，删掉 `docker-compose.yml` 里的 `mysql` service(以及 `app` 的 `depends_on` 和 `environment` 里的 MYSQL_HOST/PORT)，把 `.env` 指向外部实例即可。也可以只用 `docker build -t vanspend .` 单独构建镜像。
 
 ## 项目结构
 
@@ -135,7 +140,7 @@ npm test   # vitest run：解析/统计、会话实时校验、原图鉴权、�
 - 部署者可以直接读数据库和 `uploads/`;每次识别会把小票图片发给 OpenRouter 的模型。没有端到端加密,没有导出功能。
 
 **严格约束**
-- 需要一个可达的外部 MySQL 服务;连接信息(`MYSQL_HOST/PORT/USER/PASSWORD/DATABASE`)放在 `.env`,不要提交到版本库。
+- 需要一个可达的 MySQL 服务(默认是 compose 自带的，不对外发布端口，不得对公网可达);连接信息(`MYSQL_HOST/PORT/USER/PASSWORD/DATABASE`)放在 `.env`,不要提交到版本库;应用用专用的低权限账号连接，不用 root。
 - 公网访问只经 Cloudflare Tunnel:`docker-compose.yml` 里应用端口只绑定 `127.0.0.1`,用 `docker compose --profile tunnel up -d` 启动 `cloudflared`(token 写在 `.env` 的 `TUNNEL_TOKEN`)。公网部署必须在 `.env` 设 `COOKIE_SECURE=true`;本地 http://localhost 试用保持 `false`。应用端口和 MySQL 都不要对公网开放——登录防爆破按 `CF-Connecting-IP` 取客户端 IP,只有在应用无法被绕过 Tunnel 直连时这个头才可信。
 - 注册无需管理员审批:要么用邀请码(正常额度的账号能生成;开放注册的账号不能发码,要先由管理员升级),要么开放注册(验证码,每个验证码只能用一次;同一 IP 每 24 小时最多 10 次开放注册尝试、全站每天最多 60 次;开放档账号合计每天最多 150 次识别;识别额度较低);普通账号只能看到自己的数据,加入同一家庭后互相只读可见(加入前记的小票仍只有本人可见)。唯一的例外角色是 `is_admin`,只能通过启动时的 `ADMIN_USERNAME`/`ADMIN_PASSWORD` 初始化,注册接口本身永远不会赋予这个角色。
 - 小票原图仍存本地 `uploads/` 目录,不进 MySQL,只有文件名存在 `receipts.image_file` 里。`/uploads/<文件>` 只给上传者本人、同家庭成员和管理员看,其余情况一律 404,并带 `Cache-Control: private, no-store`(防止 Cloudflare 边缘缓存)。单张图片上限 10 MB,浏览器上传前会把长边压缩到 2000 像素以内。
