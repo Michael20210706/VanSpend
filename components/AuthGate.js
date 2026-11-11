@@ -91,7 +91,7 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login', initialCod
         {mode === 'login' ? '欢迎回来，登录后继续记账' : '有邀请码就填上，不用验证码；没有也可以直接注册(每天识别次数较少)'}
       </p>
       <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
-        <input placeholder="用户名" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} />
+        <input placeholder="用户名" maxLength={100} autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} />
         <input type="password" placeholder="密码" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
         {mode === 'register' && (
           <input
@@ -134,6 +134,7 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login', initialCod
                 </div>
                 <input
                   placeholder={familyAction === 'create' ? '家庭名称(需唯一)' : '要加入的家庭名称'}
+                  maxLength={100}
                   value={familyName}
                   onChange={(e) => setFamilyName(e.target.value)}
                 />

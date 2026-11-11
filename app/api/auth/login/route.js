@@ -2,19 +2,22 @@ import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import dbApi from '@/src/db.cjs';
 import { getSession } from '@/src/session';
-import { wrap, clientIp, readJson, FORM_BODY_MAX } from '@/src/http';
+import { wrap, clientIp, readJson, readString, FORM_BODY_MAX } from '@/src/http';
 
 // 同一用户名或同一 IP 在 LOCK_MINUTES 内失败 MAX_FAILURES 次，即从凑满那一刻起锁定 LOCK_MINUTES 分钟
 const MAX_FAILURES = 10;
 const LOCK_MINUTES = 15;
+
+// cost 10，与注册时一致；对应的明文不会被任何人使用
+const DUMMY_HASH = '$2a$10$nu6ItgRN3LfTMrAGI8wUlu/IhcVx8WOR/K6ajqMtJS2ReU9fGJfEe';
 
 const tooMany = () =>
   NextResponse.json({ error: `登录失败次数过多，请 ${LOCK_MINUTES} 分钟后再试` }, { status: 429 });
 
 export const POST = wrap(async (request) => {
   const body = await readJson(request, FORM_BODY_MAX);
-  const username = String(body.username || '').trim();
-  const password = String(body.password || '');
+  const username = readString(body, 'username', { label: '用户名' });
+  const password = readString(body, 'password', { label: '密码', trim: false });
   const ip = clientIp(request); // 取不到时为 null，此时只按用户名限制
 
   // 1) 锁定期间直接拒绝(密码正确也拒绝，且不透露用户名是否存在)，不写记录
@@ -32,7 +35,8 @@ export const POST = wrap(async (request) => {
 
   // 3) 校验密码。失败就保留刚才的记录；成功则清掉该用户名的所有失败记录(含这一条)
   const user = username ? await dbApi.findUserByUsername(username) : null;
-  if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+  // 用户不存在也跑一次 bcrypt(对固定的哑哈希)，让两种失败的耗时一致，不能靠响应时间判断用户名是否存在
+  if (!(await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH)) || !user) {
     return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
   }
   await dbApi.clearLoginFailures(username);
