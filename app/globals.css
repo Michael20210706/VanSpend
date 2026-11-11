@@ -27,6 +27,10 @@ header .meta { color:var(--mut); font-size:13px; }
 .badge.no { background:rgba(208,59,59,.15); color:var(--bad); }
 .wrap { max-width:1180px; margin:0 auto; padding:28px 24px 60px; }
 .grid { display:grid; gap:18px; animation:fadeIn .32s ease; }
+/* 防止超长内容(如很长的用户名撑开的下拉框)、图表 canvas 把栅格列/页面撑出视口 */
+.grid > *, .chartbox { min-width:0; }
+.chartbox { max-width:100%; }
+select { max-width:100%; }
 @keyframes fadeIn { from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none; } }
 .card { background:linear-gradient(180deg, var(--card), var(--card2)); border:1px solid var(--line); border-radius:var(--radius);
   padding:18px; box-shadow:var(--shadow); transition:border-color .15s ease; min-width:0; }

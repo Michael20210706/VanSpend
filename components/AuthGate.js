@@ -45,7 +45,8 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login', initialCod
     setErr('');
   }
 
-  async function submit() {
+  async function submit(e) {
+    e?.preventDefault();
     if (!username.trim() || !password) { setErr('请输入用户名和密码'); return; }
     if (mode === 'register' && !hasCode && !captchaAnswer.trim()) { setErr('请完成验证码'); return; }
     if (mode === 'register' && accountType === 'family' && !familyName.trim()) { setErr('请填写家庭名称'); return; }
@@ -90,9 +91,9 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login', initialCod
       <p className="muted" style={{ margin: '0 0 14px', fontSize: 12 }}>
         {mode === 'login' ? '欢迎回来，登录后继续记账' : '有邀请码就填上，不用验证码；没有也可以直接注册(每天识别次数较少)'}
       </p>
-      <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
+      <form className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }} onSubmit={submit}>
         <input placeholder="用户名" autoComplete="username" value={username} onChange={(e) => setUsername(e.target.value)} />
-        <input type="password" placeholder="密码" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <input type="password" placeholder="密码" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} value={password} onChange={(e) => setPassword(e.target.value)} />
         {mode === 'register' && (
           <input
             placeholder="邀请码(可选)"
@@ -142,7 +143,7 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login', initialCod
           </>
         )}
         {mode === 'register' && !hasCode && (
-          <div className="row" style={{ gap: 10, alignItems: 'center' }}>
+          <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             {captcha ? (
               <img src={captcha.image} alt="验证码图片，请输入图中算式的计算结果" width={150} height={48} style={{ borderRadius: 6, flexShrink: 0 }} />
             ) : (
@@ -151,7 +152,7 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login', initialCod
             <input
               placeholder="计算结果"
               inputMode="numeric"
-              style={{ flex: 1, minWidth: 0 }}
+              style={{ flex: '1 1 120px', minWidth: 0 }}
               value={captchaAnswer}
               onChange={(e) => setCaptchaAnswer(e.target.value)}
             />
@@ -160,12 +161,12 @@ export default function AuthGate({ onLoggedIn, initialMode = 'login', initialCod
             </a>
           </div>
         )}
-        <button onClick={submit}>{mode === 'login' ? '登录' : '注册'}</button>
+        <button type="submit">{mode === 'login' ? '登录' : '注册'}</button>
         <span style={{ color: 'var(--bad)', fontSize: 13 }}>{err}</span>
         <a href="#" className="meta" onClick={(e) => { e.preventDefault(); toggleMode(); }}>
           {mode === 'login' ? '没有账号？点此注册' : '已有账号？点此登录'}
         </a>
-      </div>
+      </form>
     </div>
   );
 }
