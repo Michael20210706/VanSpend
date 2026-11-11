@@ -256,12 +256,15 @@ describe('开放注册按 IP 限速(滚动 24 小时 10 次)', () => {
     expect(res.status).toBe(200);
   });
 
-  it('取不到 IP(没有 CF-Connecting-IP / X-Forwarded-For)时不限速，不把所有人归进同一个桶', async () => {
+  it('取不到 IP(没有 CF-Connecting-IP / X-Forwarded-For)时不适用按 IP 的上限(记成空串，只受全站总量限制)，不把所有人归进同一个 IP 桶', async () => {
     logout();
-    const [[{ n: before }]] = await dbApi.pool.query('SELECT COUNT(*) n FROM signup_attempts');
-    expect((await reg()).status).toBe(200);
-    const [[{ n: after }]] = await dbApi.pool.query('SELECT COUNT(*) n FROM signup_attempts');
-    expect(after).toBe(before);
+    const [[{ n: before }]] = await dbApi.pool.query("SELECT COUNT(*) n FROM signup_attempts WHERE ip = ''");
+    for (let i = 0; i < 12; i++) { // 超过按 IP 的上限 10 也不会被拒
+      expect((await reg()).status).toBe(200);
+      logout();
+    }
+    const [[{ n: after }]] = await dbApi.pool.query("SELECT COUNT(*) n FROM signup_attempts WHERE ip = ''");
+    expect(after - before).toBe(12);
   });
 
   it('并发: 同一 IP 15 个同时的尝试，放行的绝不超过 10 个(先记后数，宁可多拒也不多放，和扫描额度同一个取舍)', async () => {

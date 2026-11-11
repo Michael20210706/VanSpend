@@ -382,10 +382,13 @@ async function createUser(username, passwordHash, { familyRole, signupSource } =
   return info.insertId;
 }
 
-// ---- 验证码一次性 + 开放注册按 IP 限速 ----
-// 同一个 IP 在滚动 24 小时内最多这么多次"过了验证码的开放注册尝试"(不论最后成没成功——用户名被占用的试探也算，
-// 这样无法靠换用户名反复试探；共用出口 IP 的一家人/一个办公室也远远用不到这个数)。邀请码注册不受影响。
-const OPEN_SIGNUP_MAX_PER_IP = 10;
+// ---- 验证码一次性 + 开放注册限速(按 IP + 全站总量) ----
+// 同一个 IP 在滚动 24 小时内最多 maxAttemptsPerIpPerDay 次"过了验证码的开放注册尝试"(不论最后成没成功——用户名被占用的试探也算，
+// 这样无法靠换用户名反复试探；共用出口 IP 的一家人/一个办公室也远远用不到这个数)；
+// 全站再有一个总上限 maxAttemptsPerDay: 攻击者用很多不同 IP 慢速刷号时，按 IP 的限制拦不住，总量上限把"每天最多多出多少开放账号"封死
+// (代价: 攻击者也能靠失败尝试把当天的名额耗光，开放注册暂时不可用，邀请码注册不受影响)。邀请码注册不受这两个限制。
+// 数值在 config/config.json 的 openRegistration。
+const OPEN_REG = require('../config/config.json').openRegistration;
 const OPEN_SIGNUP_WINDOW_HOURS = 24;
 
 // 记下一个验证码 token 已被使用。第一次返回 true；已经用过返回 false(INSERT 撞主键，由数据库保证并发下只有一个成功)
@@ -401,19 +404,21 @@ async function consumeCaptcha(tokenKey) {
   }
 }
 
-// 先记一笔再数(和登录锁定、扫描额度同一个顺序)，超限就撤销自己这一笔并返回 false——并发的一波请求不会各自读到 0 而全部放行
+// 先记一笔再数(和登录锁定、扫描额度同一个顺序)，超限就撤销自己这一笔——并发的一波请求不会各自读到 0 而全部放行。
+// ip 取不到(没经 Tunnel 的本地访问)时记成空串: 只受全站总量限制，不会把所有人归进同一个"IP 桶"。
+// 返回 'ok' | 'ip_limit' | 'global_limit'
 async function reserveOpenSignup(ip) {
   await ready;
-  const ipKey = String(ip).slice(0, 64);
+  const ipKey = ip ? String(ip).slice(0, 64) : '';
   await pool.execute('DELETE FROM signup_attempts WHERE created_at < NOW() - INTERVAL 2 DAY');
   const [info] = await pool.execute('INSERT INTO signup_attempts (ip) VALUES (:ip)', { ip: ipKey });
   const [rows] = await pool.query(
-    `SELECT COUNT(*) AS n FROM signup_attempts WHERE ip = ? AND created_at > NOW() - INTERVAL ${OPEN_SIGNUP_WINDOW_HOURS} HOUR`, [ipKey]);
-  if (rows[0].n > OPEN_SIGNUP_MAX_PER_IP) {
-    await pool.execute('DELETE FROM signup_attempts WHERE id = :id', { id: info.insertId });
-    return false;
-  }
-  return true;
+    `SELECT COUNT(*) AS total, COALESCE(SUM(ip = ?), 0) AS byIp FROM signup_attempts WHERE created_at > NOW() - INTERVAL ${OPEN_SIGNUP_WINDOW_HOURS} HOUR`, [ipKey]);
+  let verdict = 'ok';
+  if (ipKey && Number(rows[0].byIp) > OPEN_REG.maxAttemptsPerIpPerDay) verdict = 'ip_limit';
+  else if (Number(rows[0].total) > OPEN_REG.maxAttemptsPerDay) verdict = 'global_limit';
+  if (verdict !== 'ok') await pool.execute('DELETE FROM signup_attempts WHERE id = :id', { id: info.insertId });
+  return verdict;
 }
 
 // ---- 邀请码 ----
@@ -501,27 +506,43 @@ async function registerWithInvite(code, username, passwordHash, { familyRole } =
   await ready;
   const conn = await pool.getConnection();
   try {
-    await conn.beginTransaction();
-    const [rows] = await conn.execute(`
-      SELECT c.id, c.created_by, c.family_id, f.name AS family_name
-      FROM invite_codes c LEFT JOIN families f ON f.id = c.family_id
-      WHERE c.code = :code AND c.used_by IS NULL AND c.used_at IS NULL AND c.revoked_at IS NULL AND c.expires_at > NOW()
-      FOR UPDATE
-    `, { code });
-    if (!rows.length) { await conn.rollback(); return null; }
-    const c = rows[0];
-    const [info] = await conn.execute(`
-      INSERT INTO users (username, password_hash, family_role, signup_source, scan_tier, invited_by, family_id, account_type)
-      VALUES (:username, :password_hash, :family_role, 'invite', 'normal', :invited_by, :family_id, :account_type)
-    `, {
-      username, password_hash: passwordHash, family_role: familyRole || null, invited_by: c.created_by,
-      family_id: c.family_id || null, account_type: c.family_id ? 'family' : 'individual',
-    });
-    await conn.execute('UPDATE invite_codes SET used_by = :uid, used_at = NOW() WHERE id = :id', { uid: info.insertId, id: c.id });
-    await conn.commit();
-    return { id: info.insertId, familyId: c.family_id || null, familyName: c.family_name || null, invitedBy: c.created_by };
+    // 家庭码: 加锁顺序必须是"先家庭行、后邀请码行"，和解散/移除等家庭操作一致(它们先锁家庭行，再经外键级联去动邀请码行)。
+    // 反过来(先锁码、再要家庭行的共享锁)会和解散互相死锁(验证中复现过)。所以先不加锁地读出这个码属于哪个家庭，
+    // 开事务后先拿该家庭行的共享锁，再锁码行并重新核对码还有效、还是同一个家庭(不是就放锁重来)。
+    for (let attempt = 0; ; attempt++) {
+      const [peek] = await conn.execute('SELECT family_id FROM invite_codes WHERE code = :code', { code });
+      const guessFamily = (peek[0] && peek[0].family_id) || null;
+      await conn.beginTransaction();
+      if (guessFamily) {
+        const [f] = await conn.execute('SELECT id FROM families WHERE id = :fid FOR SHARE', { fid: guessFamily });
+        if (!f.length) { await conn.rollback(); return null; } // 家庭已被解散，码随之失效
+      }
+      const [rows] = await conn.execute(`
+        SELECT c.id, c.created_by, c.family_id, f.name AS family_name
+        FROM invite_codes c LEFT JOIN families f ON f.id = c.family_id
+        WHERE c.code = :code AND c.used_by IS NULL AND c.used_at IS NULL AND c.revoked_at IS NULL AND c.expires_at > NOW()
+        FOR UPDATE
+      `, { code });
+      if (!rows.length) { await conn.rollback(); return null; }
+      const c = rows[0];
+      if ((c.family_id || null) !== guessFamily) {
+        await conn.rollback();
+        if (attempt >= 4) throw new Error('邀请码状态持续变化，请稍后重试');
+        continue;
+      }
+      const [info] = await conn.execute(`
+        INSERT INTO users (username, password_hash, family_role, signup_source, scan_tier, invited_by, family_id, account_type)
+        VALUES (:username, :password_hash, :family_role, 'invite', 'normal', :invited_by, :family_id, :account_type)
+      `, {
+        username, password_hash: passwordHash, family_role: familyRole || null, invited_by: c.created_by,
+        family_id: c.family_id || null, account_type: c.family_id ? 'family' : 'individual',
+      });
+      await conn.execute('UPDATE invite_codes SET used_by = :uid, used_at = NOW() WHERE id = :id', { uid: info.insertId, id: c.id });
+      await conn.commit();
+      return { id: info.insertId, familyId: c.family_id || null, familyName: c.family_name || null, invitedBy: c.created_by };
+    }
   } catch (e) {
-    await conn.rollback();
+    try { await conn.rollback(); } catch (_) { /* 没有进行中的事务 */ }
     throw e;
   } finally {
     conn.release();
@@ -534,7 +555,7 @@ const SCAN_WINDOW_HOURS = 24; // 滚动 24 小时，不按自然日(避开时区
 // 先记一条再数、超限就撤回自己那条(和登录防爆破同样的顺序): 并发到达的请求都能看到彼此已写入的记录，
 // 保证任何 24 小时窗口里放行的次数不超过 limit。limit 为 null = 不限额(管理员)，只记录。
 // 返回 { ok: true, id } 放行(之后用 finishScan 记成败)，或 { ok: false, used } 超额(已撤回，不留记录)。
-async function reserveScan(userId, model, limit) {
+async function reserveScan(userId, model, limit, openGlobalLimit = null) {
   await ready;
   const [info] = await pool.execute('INSERT INTO scan_log (user_id, model) VALUES (:userId, :model)', { userId, model: model || null });
   if (limit != null) {
@@ -544,6 +565,17 @@ async function reserveScan(userId, model, limit) {
     if (n > limit) {
       await pool.execute('DELETE FROM scan_log WHERE id = :id', { id: info.insertId });
       return { ok: false, used: Math.min(n - 1, limit) };
+    }
+  }
+  // 全站开放档(open 档、非管理员)账号的识别总预算: 每个开放账号每天 3 次，账号多了总花费也要有上限(config openRegistration.maxOpenScansPerDay)
+  if (openGlobalLimit != null) {
+    const [[{ n }]] = await pool.execute(`
+      SELECT COUNT(*) AS n FROM scan_log s JOIN users u ON u.id = s.user_id
+      WHERE u.scan_tier = 'open' AND u.is_admin = 0 AND s.created_at > NOW() - INTERVAL ${SCAN_WINDOW_HOURS} HOUR
+    `);
+    if (n > openGlobalLimit) {
+      await pool.execute('DELETE FROM scan_log WHERE id = :id', { id: info.insertId });
+      return { ok: false, global: true };
     }
   }
   return { ok: true, id: info.insertId };
@@ -616,6 +648,8 @@ async function resetUserPassword(userId, passwordHash, audit) {
     if (!rows.length) { await conn.rollback(); return 'not_found'; }
     if (rows[0].is_admin) { await conn.rollback(); return 'is_admin'; }
     await conn.execute('UPDATE users SET password_hash = :passwordHash, must_change_password = 1 WHERE id = :userId', { passwordHash, userId });
+    // 重置同时解除"输密码确认"的锁，否则用户拿着新的临时密码去改密码还会被之前的错误次数挡 15 分钟
+    await conn.execute('DELETE FROM pw_failures WHERE user_id = :userId', { userId });
     await insertAudit(conn, audit, { action: 'reset_password', target_type: 'user', target_id: userId, target_label: rows[0].username, detail: '重置为临时密码，下次登录须先修改' });
     await conn.commit();
     return 'ok';
@@ -694,11 +728,24 @@ async function createFamily(name, creatorId) {
 // 创建者邀请一个已注册且尚未加入任何家庭的用户，立即生效(邀请人本身即审核人，无需二次确认)
 async function inviteMember(familyId, username) {
   await ready;
-  const [result] = await pool.execute(
-    `UPDATE users SET family_id = :familyId, account_type = 'family' WHERE username = :username AND family_id IS NULL`,
-    { familyId, username }
-  );
-  return result.affectedRows > 0;
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    // 先家庭行(共享锁)、后用户行——与解散/移除同序，避免和它们死锁；家庭已被解散则邀请失败
+    const [f] = await conn.execute('SELECT id FROM families WHERE id = :familyId FOR SHARE', { familyId });
+    if (!f.length) { await conn.rollback(); return false; }
+    const [result] = await conn.execute(
+      `UPDATE users SET family_id = :familyId, account_type = 'family' WHERE username = :username AND family_id IS NULL`,
+      { familyId, username }
+    );
+    await conn.commit();
+    return result.affectedRows > 0;
+  } catch (e) {
+    try { await conn.rollback(); } catch (_) { /* 没有进行中的事务 */ }
+    throw e;
+  } finally {
+    conn.release();
+  }
 }
 
 // 用户主动申请加入某个家庭，需创建者审核；重复申请(仍 pending)不产生新记录
@@ -924,31 +971,42 @@ async function listPendingRequests(familyId) {
 
 // approve=true 通过并把申请人拉进家庭，false 仅标记拒绝；familyId 由调用方(创建者本人)传入，
 // 保证只能审核自己家庭下的申请，不会被猜 requestId 越权批准别的家庭
-async function decideRequest(requestId, familyId, approve) {
+// 创建者批准/拒绝一条加入申请。返回 true = 已处理；false = 申请不存在/已处理/不属于这个家庭；
+// 'forbidden' = callerId 给了、但在事务里核对时已经不是这个家庭的创建者(刚转让走了)；
+// 'applicant_in_family' = 批准时申请人已经加入了别的家庭(这条申请按"拒绝"收尾，不再谎报成功)。
+// 加锁顺序: 先家庭行(共享锁，创建者变更/解散要它的排他锁，会等这个事务)，再申请行、用户行。
+// (和"删除申请人账号"仍是相反的顺序——后者先锁用户行、再经外键级联动申请行，压测里会死锁，由 DEADLOCK_RETRY 重试兜底。)
+async function decideRequest(requestId, familyId, approve, callerId) {
   await ready;
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction();
+    const [f] = await conn.execute('SELECT id, creator_id FROM families WHERE id = :familyId FOR SHARE', { familyId });
+    if (!f.length) { await conn.rollback(); return false; }
+    if (callerId != null && f[0].creator_id !== callerId) { await conn.rollback(); return 'forbidden'; }
     const [rows] = await conn.execute(
-      `SELECT * FROM family_join_requests WHERE id = :requestId AND family_id = :familyId AND status = 'pending'`,
+      `SELECT * FROM family_join_requests WHERE id = :requestId AND family_id = :familyId AND status = 'pending' FOR UPDATE`,
       { requestId, familyId }
     );
     const reqRow = rows[0];
     if (!reqRow) { await conn.rollback(); return false; }
-    await conn.execute(
-      `UPDATE family_join_requests SET status = :status, decided_at = NOW() WHERE id = :requestId`,
-      { requestId, status: approve ? 'approved' : 'rejected' }
-    );
+    let result = true;
+    let status = approve ? 'approved' : 'rejected';
     if (approve) {
-      await conn.execute(
+      const [upd] = await conn.execute(
         `UPDATE users SET family_id = :familyId, account_type = 'family' WHERE id = :userId AND family_id IS NULL`,
         { familyId, userId: reqRow.user_id }
       );
+      if (upd.affectedRows === 0) { status = 'rejected'; result = 'applicant_in_family'; }
     }
+    await conn.execute(
+      `UPDATE family_join_requests SET status = :status, decided_at = NOW() WHERE id = :requestId`,
+      { requestId, status }
+    );
     await conn.commit();
-    return true;
+    return result;
   } catch (e) {
-    await conn.rollback();
+    try { await conn.rollback(); } catch (_) { /* 没有进行中的事务 */ }
     throw e;
   } finally {
     conn.release();
@@ -1072,8 +1130,10 @@ async function isPasswordLocked(userId, max, windowMinutes) {
 }
 async function recordPasswordFailure(userId) {
   await ready;
-  const [info] = await pool.execute('INSERT INTO pw_failures (user_id) VALUES (:userId)', { userId });
+  // 先清旧记录、最后才 INSERT: 本函数在 DEADLOCK_RETRY 里，两条语句各自自动提交，如果 INSERT 已提交、后面的 DELETE 才死锁，
+  // 重试就会多插一条失败记录。把 INSERT 放最后，任何一次重试都发生在 INSERT 提交之前
   await pool.execute('DELETE FROM pw_failures WHERE created_at < NOW() - INTERVAL 1 DAY');
+  const [info] = await pool.execute('INSERT INTO pw_failures (user_id) VALUES (:userId)', { userId });
   return info.insertId;
 }
 async function countPasswordFailures(userId, windowMinutes) {
@@ -1546,7 +1606,7 @@ async function listAllFeedback() {
   return rows;
 }
 
-module.exports = {
+const api = {
   pool, saveReceipt, listReceipts, getReceipt, deleteReceipt, updateReceipt, findDuplicateReceipts,
   statsByCategory, statsBySubcategory, statsMonthly, priceTrend,
   distinctItemNames, overview,
@@ -1563,3 +1623,32 @@ module.exports = {
   leaveFamily, removeMember, transferCreator, dissolveFamily, renameFamily, withdrawApplication, listMyApplications,
   addFeedback, listFeedbackByUser, listAllFeedback,
 };
+
+// 死锁重试: InnoDB 遇到死锁会自动回滚其中一方的事务(ER_LOCK_DEADLOCK)，这时整个函数从头再来一次是安全的——
+// 下面这些函数都是"每次调用自己开事务/自己是单条语句"，失败的那次没有留下任何改动。
+// 加锁顺序已经尽量统一(先家庭行、后用户/小票)，但管理员操作与并发请求之间仍可能偶发死锁，
+// 此前会直接返回 500；现在最多重试 3 次再放弃。
+const DEADLOCK_RETRY = [
+  'saveReceipt', 'updateReceipt', 'adminDeleteReceipt', 'deleteUser', 'deleteUserFull', 'deleteOwnAccount',
+  'resetUserPassword', 'setScanTier', 'registerWithInvite', 'createInviteCode', 'createFamily', 'inviteMember',
+  'decideRequest', 'leaveFamily', 'removeMember', 'transferCreator', 'dissolveFamily', 'renameFamily',
+  'recordPasswordFailure',
+];
+function withDeadlockRetry(fn) {
+  return async function retrying(...args) {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await fn(...args);
+      } catch (e) {
+        if (!e || e.code !== 'ER_LOCK_DEADLOCK' || attempt >= 3) throw e;
+        await new Promise((r) => setTimeout(r, 15 + Math.random() * 35));
+      }
+    }
+  };
+}
+for (const name of DEADLOCK_RETRY) {
+  if (typeof api[name] !== 'function') throw new Error('DEADLOCK_RETRY 里的函数不存在: ' + name);
+  api[name] = withDeadlockRetry(api[name]);
+}
+
+module.exports = api;

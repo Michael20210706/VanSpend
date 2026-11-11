@@ -47,10 +47,13 @@ export const POST = wrap(async (request) => {
       if (!(await dbApi.consumeCaptcha(captchaApi.tokenKey(body.captchaToken)))) return BAD_CAPTCHA();
     }
     if (!answerOk) return BAD_CAPTCHA();
-    // 按 IP 限速: 过了验证码的开放注册尝试，每个 IP 滚动 24 小时有上限。取不到 IP(没经 Tunnel 的本地访问)时跳过，不把所有人归进同一个桶
-    const ip = clientIp(request);
-    if (ip && !(await dbApi.reserveOpenSignup(ip))) {
+    // 限速: 过了验证码的开放注册尝试，每个 IP 滚动 24 小时有上限，全站另有总量上限(config openRegistration)。取不到 IP 时只受总量限制
+    const verdict = await dbApi.reserveOpenSignup(clientIp(request));
+    if (verdict === 'ip_limit') {
       return NextResponse.json({ error: '这个网络今天的注册尝试次数过多，请明天再试，或使用邀请码注册' }, { status: 429 });
+    }
+    if (verdict === 'global_limit') {
+      return NextResponse.json({ error: '今天的开放注册名额已满，请明天再试，或使用邀请码注册' }, { status: 429 });
     }
   }
   if (await dbApi.findUserByUsername(username)) return USERNAME_TAKEN();
