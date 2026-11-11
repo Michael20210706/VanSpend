@@ -120,9 +120,29 @@ export const IMAGE_BODY_MAX = 16 * 1024 * 1024;
 export const EDIT_BODY_MAX = 256 * 1024;
 
 // 统一错误响应，对应旧 Express 版本 server.js 里的 wrap()
+// 写请求的来源校验(CSRF 的第二道防线，第一道是 SameSite=Lax cookie): 浏览器发起的写请求总带 Origin，必须与本站主机(Host，或经代理的
+// X-Forwarded-Host)一致，包括端口，所以"同主机另一个端口上的页面"也进不来。没有 Origin 时(curl、脚本、老客户端)看 Sec-Fetch-Site:
+// 浏览器会带它，只放行 same-origin / none；两者都没有就是非浏览器客户端，放行(它们本来就拿不到别人的 cookie)
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
+export function assertSameOrigin(request) {
+  if (!request || !request.headers || SAFE_METHODS.has(String(request.method).toUpperCase())) return;
+  const h = request.headers;
+  const origin = h.get('origin');
+  if (origin !== null) {
+    let originHost = null;
+    try { originHost = new URL(origin).host; } catch (_) { /* 不是合法 URL(含 "null") */ }
+    const hosts = [h.get('host'), (h.get('x-forwarded-host') || '').split(',')[0].trim()].filter(Boolean).map((x) => x.toLowerCase());
+    if (!originHost || !hosts.includes(originHost.toLowerCase())) throw new HttpError(403, '请求来源不被允许');
+    return;
+  }
+  const site = h.get('sec-fetch-site');
+  if (site && site !== 'same-origin' && site !== 'none') throw new HttpError(403, '请求来源不被允许');
+}
+
 export function wrap(handler) {
   return async (...args) => {
     try {
+      assertSameOrigin(args[0]);
       return await handler(...args);
     } catch (e) {
       if (e instanceof HttpError) return NextResponse.json({ error: e.message }, { status: e.status });
