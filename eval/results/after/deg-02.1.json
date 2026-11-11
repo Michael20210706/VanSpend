@@ -1,0 +1,139 @@
+{
+ "ok": true,
+ "id": "deg-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2162,
+ "receipt": {
+  "store": "Superstore",
+  "purchased_at": "2026-08-04",
+  "currency": "CAD",
+  "subtotal": 24.93,
+  "gst": 0.42,
+  "pst": 0.59,
+  "total": 25.94
+ },
+ "items": [
+  {
+   "name_raw": "BUTTER 454G",
+   "name_norm": "黄油",
+   "category": "乳制品蛋类",
+   "subcategory": "黄油",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 6.49,
+   "amount": 6.49,
+   "taxable": 0
+  },
+  {
+   "name_raw": "PASTA SAUCE",
+   "name_norm": "意面酱",
+   "category": "调味品",
+   "subcategory": "酱料",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 5.98,
+   "amount": 5.98,
+   "taxable": 0
+  },
+  {
+   "name_raw": "SPAGHETTI",
+   "name_norm": "意大利面",
+   "category": "主食粮油",
+   "subcategory": "面食",
+   "qty": 2,
+   "unit": "包",
+   "unit_price": 1.99,
+   "amount": 3.98,
+   "taxable": 0
+  },
+  {
+   "name_raw": "PAPER PLATES",
+   "name_norm": "纸盘",
+   "category": "日用清洁",
+   "subcategory": "一次性餐具",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 4.99,
+   "amount": 4.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "CANDY BAG",
+   "name_norm": "糖果袋",
+   "category": "零食饮料",
+   "subcategory": "糖果",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 3.49,
+   "amount": 3.49,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Superstore",
+  "purchased_at": "2026-08-04",
+  "currency": "CAD",
+  "subtotal": 24.93,
+  "gst": 0.42,
+  "pst": 0.59,
+  "total": 25.94,
+  "items": [
+   {
+    "name_raw": "BUTTER 454G",
+    "name_norm": "黄油",
+    "category": "乳制品蛋类",
+    "subcategory": "黄油",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 6.49,
+    "amount": 6.49,
+    "taxable": false
+   },
+   {
+    "name_raw": "PASTA SAUCE",
+    "name_norm": "意面酱",
+    "category": "调味品",
+    "subcategory": "酱料",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 5.98,
+    "amount": 5.98,
+    "taxable": false
+   },
+   {
+    "name_raw": "SPAGHETTI",
+    "name_norm": "意大利面",
+    "category": "主食粮油",
+    "subcategory": "面食",
+    "qty": 2,
+    "unit": "包",
+    "unit_price": 1.99,
+    "amount": 3.98,
+    "taxable": false
+   },
+   {
+    "name_raw": "PAPER PLATES",
+    "name_norm": "纸盘",
+    "category": "日用清洁",
+    "subcategory": "一次性餐具",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 4.99,
+    "amount": 4.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "CANDY BAG",
+    "name_norm": "糖果袋",
+    "category": "零食饮料",
+    "subcategory": "糖果",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 3.49,
+    "amount": 3.49,
+    "taxable": true
+   }
+  ]
+ }
+}

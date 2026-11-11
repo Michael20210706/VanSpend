@@ -1,7 +1,8 @@
 {
- "total": 37,
+ "total": 80,
  "byLabel": {
   "smoke": 1,
-  "baseline": 36
+  "baseline": 36,
+  "after": 43
  }
 }
