@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import dbApi from '@/src/db.cjs';
 import { requireSession, requireFamilyCreator } from '@/src/session';
-import { wrap, readJson, FORM_BODY_MAX } from '@/src/http';
+import { wrap, readJson, readString, FORM_BODY_MAX } from '@/src/http';
+
+const FAMILY_NAME_MAX = 100; // families.name 列宽
 
 // 个人账号事后创建家庭(注册时选"个人"的用户，后来想建家庭也走这里，和注册时创建家庭是同一套逻辑)
 export const POST = wrap(async (request) => {
@@ -10,8 +12,7 @@ export const POST = wrap(async (request) => {
   if (session.familyId) return NextResponse.json({ error: '您已经在一个家庭中' }, { status: 400 });
 
   const body = await readJson(request, FORM_BODY_MAX);
-  const name = (body.name || '').trim();
-  if (!name) return NextResponse.json({ error: '请填写家庭名称' }, { status: 400 });
+  const name = readString(body, 'name', { label: '家庭名称', required: true, max: FAMILY_NAME_MAX });
   if (await dbApi.findFamilyByName(name)) {
     return NextResponse.json({ error: '该家庭名称已被使用，换一个名称，或选择"申请加入"' }, { status: 400 });
   }
@@ -33,9 +34,7 @@ export const PATCH = wrap(async (request) => {
   if (response) return response;
 
   const body = await readJson(request, FORM_BODY_MAX);
-  const name = typeof body.name === 'string' ? body.name.trim() : '';
-  if (!name) return NextResponse.json({ error: '请填写家庭名称' }, { status: 400 });
-  if (name.length > 100) return NextResponse.json({ error: '家庭名称不能超过 100 个字符' }, { status: 400 });
+  const name = readString(body, 'name', { label: '家庭名称', required: true, max: FAMILY_NAME_MAX });
 
   const result = await dbApi.renameFamily(session.familyId, session.userId, name);
   if (result === 'forbidden') return NextResponse.json({ error: '无权限' }, { status: 403 });

@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import dbApi from '@/src/db.cjs';
 import captchaApi from '@/src/captcha.cjs';
 import { getSession } from '@/src/session';
-import { wrap, readJson, clientIp, FORM_BODY_MAX } from '@/src/http';
+import { wrap, readJson, readString, clientIp, PASSWORD_MAX_BYTES, FORM_BODY_MAX } from '@/src/http';
 
 const FAMILY_ROLES = ['dad', 'mom', 'child', 'other'];
 
@@ -18,12 +18,13 @@ const USERNAME_TAKEN = () => NextResponse.json({ error: '用户名已存在' }, 
 // signupSource / scanTier / isAdmin 永远由服务端按路径决定，请求体里同名字段一律忽略。
 export const POST = wrap(async (request) => {
   const body = await readJson(request, FORM_BODY_MAX);
-  const username = String(body.username || '').trim();
-  const password = String(body.password || '');
+  // 所有字段的类型和长度都在消耗邀请码/验证码/IP 名额之前校验: 超长或非字符串直接 400，不消耗任何东西
+  const username = readString(body, 'username', { label: '用户名', max: 100 }); // users.username 列宽
+  const password = readString(body, 'password', { label: '密码', trim: false, maxBytes: PASSWORD_MAX_BYTES });
   const familyRole = FAMILY_ROLES.includes(body.familyRole) ? body.familyRole : null;
   const accountType = body.accountType === 'family' ? 'family' : 'individual';
   const familyAction = body.familyAction === 'apply' ? 'apply' : 'create';
-  const familyName = String(body.familyName || '').trim();
+  const familyName = readString(body, 'familyName', { label: '家庭名称', max: 100 });
 
   // inviteCode 没填(缺省/null/空串/只有空格)= 开放注册；填了就必须是字符串，数组、对象、数字一律当无效码
   const rawCode = body.inviteCode;

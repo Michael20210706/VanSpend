@@ -117,14 +117,14 @@ describe('scan_log', () => {
     expect((await scan()).status).toBe(429);
   });
 
-  it('记录失败结果本身出错，不能盖掉 OpenRouter 的原始错误', async () => {
+  it('记录失败结果本身出错，仍返回 500(且不泄露内部报错)', async () => {
     vi.spyOn(openrouterLib, 'scanReceipt').mockRejectedValue(new Error('OpenRouter 请求失败 502'));
     vi.spyOn(dbApi, 'finishScan').mockRejectedValue(new Error('db gone'));
     const u = await makeUser();
     await loginAs(u);
     const res = await scan();
     expect(res.status).toBe(500);
-    expect((await res.json()).error).toBe('OpenRouter 请求失败 502');
+    expect((await res.json()).error).toBe('服务器内部错误，请稍后重试'); // 未映射的异常不再把内部报错回给客户端
   });
 
   it('超额被拒的请求不留 scan_log 记录', async () => {

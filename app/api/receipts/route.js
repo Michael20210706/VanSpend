@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import dbApi from '@/src/db.cjs';
 import uploadsLib from '@/src/uploads.cjs';
 import { requireSession } from '@/src/session';
-import { wrap, readJson, IMAGE_BODY_MAX, memberScope } from '@/src/http';
+import { wrap, readJson, IMAGE_BODY_MAX, memberScope, readDateParam } from '@/src/http';
 
 export const GET = wrap(async (request) => {
   const { session, response } = await requireSession();
@@ -11,8 +11,8 @@ export const GET = wrap(async (request) => {
   const { searchParams } = new URL(request.url);
   const scope = memberScope(session);
   const rows = await dbApi.listReceipts({
-    from: searchParams.get('from') || undefined,
-    to: searchParams.get('to') || undefined,
+    from: readDateParam(searchParams, 'from'),
+    to: readDateParam(searchParams, 'to'),
     search: searchParams.get('search') || undefined,
     scope,
   });

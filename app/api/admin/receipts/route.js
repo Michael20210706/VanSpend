@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbApi from '@/src/db.cjs';
 import { requireAdmin } from '@/src/session';
-import { wrap } from '@/src/http';
+import { wrap, readDateParam, readIdParam } from '@/src/http';
 
 // 与 /api/receipts 的区别: userId 可选，不传就是全部用户的小票
 export const GET = wrap(async (request) => {
@@ -9,12 +9,12 @@ export const GET = wrap(async (request) => {
   if (response) return response;
 
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId');
+  const userId = readIdParam(searchParams, 'userId');
   const rows = await dbApi.listReceipts({
-    from: searchParams.get('from') || undefined,
-    to: searchParams.get('to') || undefined,
+    from: readDateParam(searchParams, 'from'),
+    to: readDateParam(searchParams, 'to'),
     search: searchParams.get('search') || undefined,
-    scope: userId ? { userId: +userId } : undefined,
+    scope: userId ? { userId } : undefined,
   });
   return NextResponse.json(rows);
 });
