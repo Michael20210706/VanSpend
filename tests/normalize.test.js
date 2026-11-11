@@ -22,3 +22,33 @@ describe('normalize()', () => {
     expect(items[0].taxable).toBe(0);
   });
 });
+
+describe('normalize(): 只印一行合计税时按 5:7 拆分(issue #28)', () => {
+  const base = { store: 'T&T', purchased_at: '2026-05-10', currency: 'CAD', items: [{ name_raw: 'X', category: '其他', amount: 100, taxable: true }] };
+  const run = (over) => openrouterLib.normalize({ ...base, ...over }).receipt;
+
+  it('gst=pst=0 且 total 比 subtotal 多 12.00(正好 12%) → gst 5.00、pst 7.00', () => {
+    const r = run({ subtotal: 100, gst: 0, pst: 0, total: 112 });
+    expect([r.gst, r.pst]).toEqual([5, 7]);
+    expect(r.subtotal + r.gst + r.pst).toBeCloseTo(r.total, 2);
+  });
+  it('差额不能被 12 整除时，gst 取整到分，pst = 差额 - gst，两者相加仍等于差额', () => {
+    const r = run({ subtotal: 50, gst: 0, pst: 0, total: 55.5 });
+    expect(r.gst).toBe(2.29);
+    expect(+(r.gst + r.pst).toFixed(2)).toBe(5.5);
+  });
+  it('只有 gst 或 pst 一个不为 0 → 不动', () => {
+    expect(run({ subtotal: 100, gst: 5, pst: 0, total: 112 })).toMatchObject({ gst: 5, pst: 0 });
+    expect(run({ subtotal: 100, gst: 0, pst: 7, total: 112 })).toMatchObject({ gst: 0, pst: 7 });
+  });
+  it('差额超过 subtotal 的 12%(更像小费或漏读) → 不拆，保持 0/0', () => {
+    expect(run({ subtotal: 100, gst: 0, pst: 0, total: 120 })).toMatchObject({ gst: 0, pst: 0 });
+  });
+  it('total 不大于 subtotal(税确实为 0) → 不拆', () => {
+    expect(run({ subtotal: 100, gst: 0, pst: 0, total: 100 })).toMatchObject({ gst: 0, pst: 0 });
+    expect(run({ subtotal: 100, gst: 0, pst: 0, total: 99 })).toMatchObject({ gst: 0, pst: 0 });
+  });
+  it('total 缺失(靠 subtotal+gst+pst 兜底) → 不会凭空拆分', () => {
+    expect(run({ subtotal: 100, gst: 0, pst: 0, total: 0 })).toMatchObject({ gst: 0, pst: 0, total: 100 });
+  });
+});
