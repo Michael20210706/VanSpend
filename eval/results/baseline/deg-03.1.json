@@ -1,0 +1,139 @@
+{
+ "ok": true,
+ "id": "deg-03",
+ "run": 1,
+ "attempts": 1,
+ "ms": 10624,
+ "receipt": {
+  "store": "Costco",
+  "purchased_at": "2026-09-29",
+  "currency": "CAD",
+  "subtotal": 63.45,
+  "gst": 0.95,
+  "pst": 1.33,
+  "total": 65.73
+ },
+ "items": [
+  {
+   "name_raw": "KS WATER 40PK",
+   "name_norm": "瓶装水",
+   "category": "零食饮料",
+   "subcategory": "饮用水",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 4.99,
+   "amount": 4.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "ROTISSERIE CHICKEN",
+   "name_norm": "烤鸡",
+   "category": "餐厅外食",
+   "subcategory": "熟食",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 7.99,
+   "amount": 7.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "TRASH BAGS",
+   "name_norm": "垃圾袋",
+   "category": "日用清洁",
+   "subcategory": "清洁用品",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 18.99,
+   "amount": 18.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "TOMATOES",
+   "name_norm": "番茄",
+   "category": "蔬菜",
+   "subcategory": "茄果类",
+   "qty": 1,
+   "unit": "磅",
+   "unit_price": 6.49,
+   "amount": 6.49,
+   "taxable": 0
+  },
+  {
+   "name_raw": "KS COFFEE",
+   "name_norm": "咖啡",
+   "category": "零食饮料",
+   "subcategory": "咖啡茶饮",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 24.99,
+   "amount": 24.99,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "Costco",
+  "purchased_at": "2026-09-29",
+  "currency": "CAD",
+  "subtotal": 63.45,
+  "gst": 0.95,
+  "pst": 1.33,
+  "total": 65.73,
+  "items": [
+   {
+    "name_raw": "KS WATER 40PK",
+    "name_norm": "瓶装水",
+    "category": "零食饮料",
+    "subcategory": "饮用水",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 4.99,
+    "amount": 4.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "ROTISSERIE CHICKEN",
+    "name_norm": "烤鸡",
+    "category": "餐厅外食",
+    "subcategory": "熟食",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 7.99,
+    "amount": 7.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "TRASH BAGS",
+    "name_norm": "垃圾袋",
+    "category": "日用清洁",
+    "subcategory": "清洁用品",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 18.99,
+    "amount": 18.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "TOMATOES",
+    "name_norm": "番茄",
+    "category": "蔬菜",
+    "subcategory": "茄果类",
+    "qty": 1,
+    "unit": "磅",
+    "unit_price": 6.49,
+    "amount": 6.49,
+    "taxable": false
+   },
+   {
+    "name_raw": "KS COFFEE",
+    "name_norm": "咖啡",
+    "category": "零食饮料",
+    "subcategory": "咖啡茶饮",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 24.99,
+    "amount": 24.99,
+    "taxable": false
+   }
+  ]
+ }
+}

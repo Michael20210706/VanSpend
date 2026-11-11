@@ -1,0 +1,139 @@
+{
+ "ok": true,
+ "id": "rest-03",
+ "run": 1,
+ "attempts": 1,
+ "ms": 10730,
+ "receipt": {
+  "store": "Sushi Garden",
+  "purchased_at": "2026-08-15",
+  "currency": "CAD",
+  "subtotal": 52,
+  "gst": 2.6,
+  "pst": 0,
+  "total": 61.8
+ },
+ "items": [
+  {
+   "name_raw": "Salmon Sashimi",
+   "name_norm": "三文鱼刺身",
+   "category": "海鲜",
+   "subcategory": "三文鱼",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 16,
+   "amount": 16,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Dragon Roll",
+   "name_norm": "龙卷寿司",
+   "category": "餐厅外食",
+   "subcategory": "寿司",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 14.5,
+   "amount": 14.5,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Miso Soup",
+   "name_norm": "味噌汤",
+   "category": "餐厅外食",
+   "subcategory": "汤",
+   "qty": 2,
+   "unit": "份",
+   "unit_price": 3,
+   "amount": 6,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Chicken Teriyaki",
+   "name_norm": "照烧鸡肉",
+   "category": "餐厅外食",
+   "subcategory": "主菜",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 15.5,
+   "amount": 15.5,
+   "taxable": 1
+  },
+  {
+   "name_raw": "GRATUITY",
+   "name_norm": "小费",
+   "category": "其他",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 7.2,
+   "amount": 7.2,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "Sushi Garden",
+  "purchased_at": "2026-08-15",
+  "currency": "CAD",
+  "subtotal": 52,
+  "gst": 2.6,
+  "pst": 0,
+  "total": 61.8,
+  "items": [
+   {
+    "name_raw": "Salmon Sashimi",
+    "name_norm": "三文鱼刺身",
+    "category": "海鲜",
+    "subcategory": "三文鱼",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 16,
+    "amount": 16,
+    "taxable": true
+   },
+   {
+    "name_raw": "Dragon Roll",
+    "name_norm": "龙卷寿司",
+    "category": "餐厅外食",
+    "subcategory": "寿司",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 14.5,
+    "amount": 14.5,
+    "taxable": true
+   },
+   {
+    "name_raw": "Miso Soup",
+    "name_norm": "味噌汤",
+    "category": "餐厅外食",
+    "subcategory": "汤",
+    "qty": 2,
+    "unit": "份",
+    "unit_price": 3,
+    "amount": 6,
+    "taxable": true
+   },
+   {
+    "name_raw": "Chicken Teriyaki",
+    "name_norm": "照烧鸡肉",
+    "category": "餐厅外食",
+    "subcategory": "主菜",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 15.5,
+    "amount": 15.5,
+    "taxable": true
+   },
+   {
+    "name_raw": "GRATUITY",
+    "name_norm": "小费",
+    "category": "其他",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 7.2,
+    "amount": 7.2,
+    "taxable": false
+   }
+  ]
+ }
+}

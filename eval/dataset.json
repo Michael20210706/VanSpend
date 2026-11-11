@@ -1,0 +1,3857 @@
+{
+ "generated_by": "eval/build-dataset.cjs",
+ "receipts": [
+  {
+   "id": "costco-01",
+   "group": "costco",
+   "features": [],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "Costco",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Burnaby #148",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "4500 Still Creek Dr",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "10/14/2026 14:32",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "  100000 KS EGGS 24CT",
+     "r": "11.99"
+    },
+    {
+     "l": "  107919 KS SALTED BUTTER",
+     "r": "26.98"
+    },
+    {
+     "l": "   2 @ 13.49",
+     "s": 0.85
+    },
+    {
+     "l": "  123757 ORG BANANAS",
+     "r": "2.99"
+    },
+    {
+     "l": "B 131676 SOFTSOAP 6PK",
+     "r": "17.99"
+    },
+    {
+     "l": "B 139595 LAUNDRY PODS",
+     "r": "24.99"
+    },
+    {
+     "l": "A 147514 VITAMIN D 600",
+     "r": "15.99"
+    },
+    {
+     "l": "B 155433 COKE 35PK",
+     "r": "19.49"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "120.42"
+    },
+    {
+     "l": "GST 5%",
+     "r": "3.92"
+    },
+    {
+     "l": "PST 7%",
+     "r": "4.37"
+    },
+    {
+     "l": "TOTAL",
+     "r": "128.71",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "A=GST  B=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Costco",
+    "date": "2026-10-14",
+    "items": [
+     {
+      "name": "KS EGGS 24CT",
+      "qty": 1,
+      "amount": 11.99,
+      "taxable": false
+     },
+     {
+      "name": "KS BUTTER",
+      "qty": 2,
+      "amount": 26.98,
+      "taxable": false
+     },
+     {
+      "name": "ORG BANANAS",
+      "qty": 1,
+      "amount": 2.99,
+      "taxable": false
+     },
+     {
+      "name": "SOFTSOAP 6PK",
+      "qty": 1,
+      "amount": 17.99,
+      "taxable": true
+     },
+     {
+      "name": "LAUNDRY PODS",
+      "qty": 1,
+      "amount": 24.99,
+      "taxable": true
+     },
+     {
+      "name": "VITAMIN D 600",
+      "qty": 1,
+      "amount": 15.99,
+      "taxable": true
+     },
+     {
+      "name": "COKE 35PK",
+      "qty": 1,
+      "amount": 19.49,
+      "taxable": true
+     }
+    ],
+    "subtotal": 120.42,
+    "gst": 3.92,
+    "pst": 4.37,
+    "total": 128.71
+   },
+   "printed": {
+    "subtotal": 120.42,
+    "tip": 0
+   }
+  },
+  {
+   "id": "costco-02",
+   "group": "costco",
+   "features": [],
+   "dateAmbiguous": true,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "Costco",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Vancouver #1500",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "605 Hastings St",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "09/03/2026 11:05",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "  100000 KS BEEF RIBEYE",
+     "r": "40.49"
+    },
+    {
+     "l": "   1.842 kg @ 21.98/kg",
+     "s": 0.85
+    },
+    {
+     "l": "  115838 CHICKEN BRST",
+     "r": "17.88"
+    },
+    {
+     "l": "  123757 SOCKEYE FILLET",
+     "r": "29.96"
+    },
+    {
+     "l": "B 131676 PAPER TOWEL 12",
+     "r": "26.99"
+    },
+    {
+     "l": "B 139595 TOOTHPASTE 4PK",
+     "r": "14.99"
+    },
+    {
+     "l": "  147514 MILK 4L",
+     "r": "6.89"
+    },
+    {
+     "l": "  155433 RICE 20LB",
+     "r": "28.99"
+    },
+    {
+     "l": "B 163352 CHIPS VARIETY",
+     "r": "15.49"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "181.68"
+    },
+    {
+     "l": "GST 5%",
+     "r": "2.87"
+    },
+    {
+     "l": "PST 7%",
+     "r": "4.02"
+    },
+    {
+     "l": "TOTAL",
+     "r": "188.57",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "A=GST  B=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Costco",
+    "date": "2026-09-03",
+    "items": [
+     {
+      "name": "RIBEYE STEAK",
+      "qty": 1.842,
+      "amount": 40.49,
+      "taxable": false
+     },
+     {
+      "name": "CHICKEN BRST",
+      "qty": 1,
+      "amount": 17.88,
+      "taxable": false
+     },
+     {
+      "name": "SOCKEYE FILLET",
+      "qty": 1,
+      "amount": 29.96,
+      "taxable": false
+     },
+     {
+      "name": "PAPER TOWEL 12",
+      "qty": 1,
+      "amount": 26.99,
+      "taxable": true
+     },
+     {
+      "name": "TOOTHPASTE 4PK",
+      "qty": 1,
+      "amount": 14.99,
+      "taxable": true
+     },
+     {
+      "name": "MILK 4L",
+      "qty": 1,
+      "amount": 6.89,
+      "taxable": false
+     },
+     {
+      "name": "RICE 20LB",
+      "qty": 1,
+      "amount": 28.99,
+      "taxable": false
+     },
+     {
+      "name": "CHIPS VARIETY",
+      "qty": 1,
+      "amount": 15.49,
+      "taxable": true
+     }
+    ],
+    "subtotal": 181.68,
+    "gst": 2.87,
+    "pst": 4.02,
+    "total": 188.57
+   },
+   "printed": {
+    "subtotal": 181.68,
+    "tip": 0
+   }
+  },
+  {
+   "id": "tnt-01",
+   "group": "tnt-combined",
+   "features": [
+    "combined_tax"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "T&T Supermarket",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Richmond Store",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "8181 Cambie Rd",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "Oct 2, 2026  18:21",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "PORK BELLY SLICED",
+     "r": "10.07"
+    },
+    {
+     "l": "   1.12 lb @ 8.99/lb",
+     "s": 0.85
+    },
+    {
+     "l": "BOK CHOY",
+     "r": "2.14"
+    },
+    {
+     "l": "   0.86 lb @ 2.49/lb",
+     "s": 0.85
+    },
+    {
+     "l": "LAY'S CHIPS",
+     "r": "7.98 T"
+    },
+    {
+     "l": "   2 @ 3.99",
+     "s": 0.85
+    },
+    {
+     "l": "SOY MILK",
+     "r": "3.49 T"
+    },
+    {
+     "l": "TISSUE 12RL",
+     "r": "12.99 T"
+    },
+    {
+     "l": "TOFU FIRM",
+     "r": "4.58"
+    },
+    {
+     "l": "   2 @ 2.29",
+     "s": 0.85
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "41.25"
+    },
+    {
+     "l": "TAX",
+     "r": "2.93"
+    },
+    {
+     "l": "TOTAL",
+     "r": "44.18",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "T = Taxable",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "T&T Supermarket",
+    "date": "2026-10-02",
+    "items": [
+     {
+      "name": "PORK BELLY SLICED",
+      "qty": 1.12,
+      "amount": 10.07,
+      "taxable": false
+     },
+     {
+      "name": "BOK CHOY",
+      "qty": 0.86,
+      "amount": 2.14,
+      "taxable": false
+     },
+     {
+      "name": "LAY'S CHIPS",
+      "qty": 2,
+      "amount": 7.98,
+      "taxable": true
+     },
+     {
+      "name": "SOY MILK",
+      "qty": 1,
+      "amount": 3.49,
+      "taxable": true
+     },
+     {
+      "name": "TISSUE 12RL",
+      "qty": 1,
+      "amount": 12.99,
+      "taxable": true
+     },
+     {
+      "name": "TOFU FIRM",
+      "qty": 2,
+      "amount": 4.58,
+      "taxable": false
+     }
+    ],
+    "subtotal": 41.25,
+    "gst": 1.22,
+    "pst": 1.71,
+    "total": 44.18
+   },
+   "printed": {
+    "subtotal": 41.25,
+    "tip": 0
+   }
+  },
+  {
+   "id": "tnt-02",
+   "group": "tnt-combined",
+   "features": [
+    "combined_tax"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "T&T Supermarket",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Metrotown",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "4700 Kingsway",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "2026-08-21 12:47",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "GREEN TEA 500ML",
+     "r": "7.96 T"
+    },
+    {
+     "l": "   4 @ 1.99",
+     "s": 0.85
+    },
+    {
+     "l": "INSTANT NOODLE 5PK",
+     "r": "11.98"
+    },
+    {
+     "l": "   2 @ 5.99",
+     "s": 0.85
+    },
+    {
+     "l": "DISH SOAP",
+     "r": "4.49 T"
+    },
+    {
+     "l": "SHRIMP FROZEN",
+     "r": "14.99"
+    },
+    {
+     "l": "COOKIES",
+     "r": "8.37 T"
+    },
+    {
+     "l": "   3 @ 2.79",
+     "s": 0.85
+    },
+    {
+     "l": "EGG 12CT",
+     "r": "4.99"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "52.78"
+    },
+    {
+     "l": "Sales Tax",
+     "r": "2.50"
+    },
+    {
+     "l": "TOTAL",
+     "r": "55.28",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "T = Taxable",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "T&T Supermarket",
+    "date": "2026-08-21",
+    "items": [
+     {
+      "name": "GREEN TEA 500ML",
+      "qty": 4,
+      "amount": 7.96,
+      "taxable": true
+     },
+     {
+      "name": "INSTANT NOODLE 5PK",
+      "qty": 2,
+      "amount": 11.98,
+      "taxable": false
+     },
+     {
+      "name": "DISH SOAP",
+      "qty": 1,
+      "amount": 4.49,
+      "taxable": true
+     },
+     {
+      "name": "SHRIMP FROZEN",
+      "qty": 1,
+      "amount": 14.99,
+      "taxable": false
+     },
+     {
+      "name": "COOKIES",
+      "qty": 3,
+      "amount": 8.37,
+      "taxable": true
+     },
+     {
+      "name": "EGG 12CT",
+      "qty": 1,
+      "amount": 4.99,
+      "taxable": false
+     }
+    ],
+    "subtotal": 52.78,
+    "gst": 1.04,
+    "pst": 1.46,
+    "total": 55.28
+   },
+   "printed": {
+    "subtotal": 52.78,
+    "tip": 0
+   }
+  },
+  {
+   "id": "tnt-03",
+   "group": "tnt-combined",
+   "features": [
+    "combined_tax"
+   ],
+   "dateAmbiguous": true,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "T&T Supermarket",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Coquitlam",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "1200 Pinetree Way",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "11/01/2026 16:09",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "BEEF SHORT RIB",
+     "r": "30.01"
+    },
+    {
+     "l": "   2.31 lb @ 12.99/lb",
+     "s": 0.85
+    },
+    {
+     "l": "SPARKLING WATER 12PK",
+     "r": "7.99 T"
+    },
+    {
+     "l": "SHAMPOO",
+     "r": "9.99 T"
+    },
+    {
+     "l": "MANDARIN ORANGE",
+     "r": "6.99"
+    },
+    {
+     "l": "SNACK MIX",
+     "r": "8.98 T"
+    },
+    {
+     "l": "   2 @ 4.49",
+     "s": 0.85
+    },
+    {
+     "l": "BREAD SLICED",
+     "r": "3.99"
+    },
+    {
+     "l": "CANDY ASSORTED",
+     "r": "5.49 T"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "73.44"
+    },
+    {
+     "l": "TAX (GST+PST)",
+     "r": "3.89"
+    },
+    {
+     "l": "TOTAL",
+     "r": "77.33",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "T = Taxable",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "T&T Supermarket",
+    "date": "2026-11-01",
+    "items": [
+     {
+      "name": "BEEF SHORT RIB",
+      "qty": 2.31,
+      "amount": 30.01,
+      "taxable": false
+     },
+     {
+      "name": "SPARKLING WATER 12PK",
+      "qty": 1,
+      "amount": 7.99,
+      "taxable": true
+     },
+     {
+      "name": "SHAMPOO",
+      "qty": 1,
+      "amount": 9.99,
+      "taxable": true
+     },
+     {
+      "name": "MANDARIN ORANGE",
+      "qty": 1,
+      "amount": 6.99,
+      "taxable": false
+     },
+     {
+      "name": "SNACK MIX",
+      "qty": 2,
+      "amount": 8.98,
+      "taxable": true
+     },
+     {
+      "name": "BREAD SLICED",
+      "qty": 1,
+      "amount": 3.99,
+      "taxable": false
+     },
+     {
+      "name": "CANDY ASSORTED",
+      "qty": 1,
+      "amount": 5.49,
+      "taxable": true
+     }
+    ],
+    "subtotal": 73.44,
+    "gst": 1.62,
+    "pst": 2.27,
+    "total": 77.33
+   },
+   "printed": {
+    "subtotal": 73.44,
+    "tip": 0
+   }
+  },
+  {
+   "id": "tnt-04",
+   "group": "tnt-combined",
+   "features": [
+    "combined_tax"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "T&T Supermarket",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Vancouver",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "179 Keefer Pl",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "Jul 18, 2026 10:30",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "BUBBLE TEA KIT",
+     "r": "11.99 T"
+    },
+    {
+     "l": "TAPIOCA PEARLS",
+     "r": "4.99 T"
+    },
+    {
+     "l": "MILK 2L",
+     "r": "5.49"
+    },
+    {
+     "l": "PLASTIC WRAP",
+     "r": "6.49 T"
+    },
+    {
+     "l": "DUMPLINGS PORK",
+     "r": "19.98"
+    },
+    {
+     "l": "   2 @ 9.99",
+     "s": 0.85
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "48.94"
+    },
+    {
+     "l": "Tax",
+     "r": "2.81"
+    },
+    {
+     "l": "TOTAL",
+     "r": "51.75",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "T = Taxable",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "T&T Supermarket",
+    "date": "2026-07-18",
+    "items": [
+     {
+      "name": "BUBBLE TEA KIT",
+      "qty": 1,
+      "amount": 11.99,
+      "taxable": true
+     },
+     {
+      "name": "TAPIOCA PEARLS",
+      "qty": 1,
+      "amount": 4.99,
+      "taxable": true
+     },
+     {
+      "name": "MILK 2L",
+      "qty": 1,
+      "amount": 5.49,
+      "taxable": false
+     },
+     {
+      "name": "PLASTIC WRAP",
+      "qty": 1,
+      "amount": 6.49,
+      "taxable": true
+     },
+     {
+      "name": "DUMPLINGS PORK",
+      "qty": 2,
+      "amount": 19.98,
+      "taxable": false
+     }
+    ],
+    "subtotal": 48.94,
+    "gst": 1.17,
+    "pst": 1.64,
+    "total": 51.75
+   },
+   "printed": {
+    "subtotal": 48.94,
+    "tip": 0
+   }
+  },
+  {
+   "id": "rest-01",
+   "group": "restaurant-tip",
+   "features": [
+    "tip"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "Golden Palace Restaurant",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Richmond, BC",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "2026-09-27 19:14  Table 12",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Hot & Sour Soup",
+     "r": "8.50 G"
+    },
+    {
+     "l": "Kung Pao Chicken",
+     "r": "19.00 G"
+    },
+    {
+     "l": "Beef Chow Fun",
+     "r": "18.50 G"
+    },
+    {
+     "l": "Steamed Rice",
+     "r": "4.00 G"
+    },
+    {
+     "l": "   2 @ 2.00",
+     "s": 0.85
+    },
+    {
+     "l": "Jasmine Tea",
+     "r": "5.00 G"
+    },
+    {
+     "l": "   2 @ 2.50",
+     "s": 0.85
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "55.00"
+    },
+    {
+     "l": "GST 5%",
+     "r": "2.75"
+    },
+    {
+     "l": "TIP",
+     "r": "9.50"
+    },
+    {
+     "l": "TOTAL",
+     "r": "67.25",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Golden Palace Restaurant",
+    "date": "2026-09-27",
+    "items": [
+     {
+      "name": "Hot & Sour Soup",
+      "qty": 1,
+      "amount": 8.5,
+      "taxable": true
+     },
+     {
+      "name": "Kung Pao Chicken",
+      "qty": 1,
+      "amount": 19,
+      "taxable": true
+     },
+     {
+      "name": "Beef Chow Fun",
+      "qty": 1,
+      "amount": 18.5,
+      "taxable": true
+     },
+     {
+      "name": "Steamed Rice",
+      "qty": 2,
+      "amount": 4,
+      "taxable": true
+     },
+     {
+      "name": "Jasmine Tea",
+      "qty": 2,
+      "amount": 5,
+      "taxable": true
+     },
+     {
+      "name": "Tip",
+      "qty": 1,
+      "amount": 9.5,
+      "taxable": false,
+      "is_tip": true
+     }
+    ],
+    "subtotal": 64.5,
+    "gst": 2.75,
+    "pst": 0,
+    "total": 67.25
+   },
+   "printed": {
+    "subtotal": 55,
+    "tip": 9.5
+   }
+  },
+  {
+   "id": "rest-02",
+   "group": "restaurant-tip",
+   "features": [
+    "tip"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "Pasta Bella",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Gastown, Vancouver",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "Oct 9, 2026  7:42 PM",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Caesar Salad",
+     "r": "11.00 G"
+    },
+    {
+     "l": "Spaghetti Carbonara",
+     "r": "22.00 G"
+    },
+    {
+     "l": "Margherita Pizza",
+     "r": "20.00 G"
+    },
+    {
+     "l": "Tiramisu",
+     "r": "10.00 G"
+    },
+    {
+     "l": "Sparkling Water",
+     "r": "6.50 G"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "69.50"
+    },
+    {
+     "l": "GST 5%",
+     "r": "3.48"
+    },
+    {
+     "l": "TIP",
+     "r": "12.00"
+    },
+    {
+     "l": "TOTAL",
+     "r": "84.98",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Pasta Bella",
+    "date": "2026-10-09",
+    "items": [
+     {
+      "name": "Caesar Salad",
+      "qty": 1,
+      "amount": 11,
+      "taxable": true
+     },
+     {
+      "name": "Spaghetti Carbonara",
+      "qty": 1,
+      "amount": 22,
+      "taxable": true
+     },
+     {
+      "name": "Margherita Pizza",
+      "qty": 1,
+      "amount": 20,
+      "taxable": true
+     },
+     {
+      "name": "Tiramisu",
+      "qty": 1,
+      "amount": 10,
+      "taxable": true
+     },
+     {
+      "name": "Sparkling Water",
+      "qty": 1,
+      "amount": 6.5,
+      "taxable": true
+     },
+     {
+      "name": "Tip",
+      "qty": 1,
+      "amount": 12,
+      "taxable": false,
+      "is_tip": true
+     }
+    ],
+    "subtotal": 81.5,
+    "gst": 3.48,
+    "pst": 0,
+    "total": 84.98
+   },
+   "printed": {
+    "subtotal": 69.5,
+    "tip": 12
+   }
+  },
+  {
+   "id": "rest-03",
+   "group": "restaurant-tip",
+   "features": [
+    "tip"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "Sushi Garden",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Burnaby, BC",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "2026-08-15 12:20",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Salmon Sashimi",
+     "r": "16.00 G"
+    },
+    {
+     "l": "Dragon Roll",
+     "r": "14.50 G"
+    },
+    {
+     "l": "Miso Soup",
+     "r": "6.00 G"
+    },
+    {
+     "l": "   2 @ 3.00",
+     "s": 0.85
+    },
+    {
+     "l": "Chicken Teriyaki",
+     "r": "15.50 G"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "52.00"
+    },
+    {
+     "l": "GST 5%",
+     "r": "2.60"
+    },
+    {
+     "l": "GRATUITY",
+     "r": "7.20"
+    },
+    {
+     "l": "TOTAL",
+     "r": "61.80",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Sushi Garden",
+    "date": "2026-08-15",
+    "items": [
+     {
+      "name": "Salmon Sashimi",
+      "qty": 1,
+      "amount": 16,
+      "taxable": true
+     },
+     {
+      "name": "Dragon Roll",
+      "qty": 1,
+      "amount": 14.5,
+      "taxable": true
+     },
+     {
+      "name": "Miso Soup",
+      "qty": 2,
+      "amount": 6,
+      "taxable": true
+     },
+     {
+      "name": "Chicken Teriyaki",
+      "qty": 1,
+      "amount": 15.5,
+      "taxable": true
+     },
+     {
+      "name": "Tip",
+      "qty": 1,
+      "amount": 7.2,
+      "taxable": false,
+      "is_tip": true
+     }
+    ],
+    "subtotal": 59.2,
+    "gst": 2.6,
+    "pst": 0,
+    "total": 61.8
+   },
+   "printed": {
+    "subtotal": 52,
+    "tip": 7.2
+   }
+  },
+  {
+   "id": "disc-01",
+   "group": "discount-weighed",
+   "features": [
+    "discount",
+    "weighed"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "Real Canadian Superstore",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Marine Drive",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "Vancouver, BC",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "2026-10-20 09:58",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "CHICKEN THIGH",
+     "r": "10.15"
+    },
+    {
+     "l": "   1.318 kg @ 7.70/kg",
+     "s": 0.85
+    },
+    {
+     "l": "BANANAS",
+     "r": "1.57"
+    },
+    {
+     "l": "   0.905 kg @ 1.74/kg",
+     "s": 0.85
+    },
+    {
+     "l": "DETERGENT",
+     "r": "15.99 GP"
+    },
+    {
+     "l": "DETERGENT COUPON",
+     "r": "3.00- GP"
+    },
+    {
+     "l": "YOGURT 650G",
+     "r": "8.98"
+    },
+    {
+     "l": "   2 @ 4.49",
+     "s": 0.85
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "33.69"
+    },
+    {
+     "l": "GST 5%",
+     "r": "0.65"
+    },
+    {
+     "l": "PST 7%",
+     "r": "0.91"
+    },
+    {
+     "l": "TOTAL",
+     "r": "35.25",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Real Canadian Superstore",
+    "date": "2026-10-20",
+    "items": [
+     {
+      "name": "CHICKEN THIGH",
+      "qty": 1.318,
+      "amount": 10.15,
+      "taxable": false
+     },
+     {
+      "name": "BANANAS",
+      "qty": 0.905,
+      "amount": 1.57,
+      "taxable": false
+     },
+     {
+      "name": "DETERGENT",
+      "qty": 1,
+      "amount": 15.99,
+      "taxable": true
+     },
+     {
+      "name": "PC INSTANT SAVINGS",
+      "qty": 1,
+      "amount": -3,
+      "taxable": true
+     },
+     {
+      "name": "YOGURT 650G",
+      "qty": 2,
+      "amount": 8.98,
+      "taxable": false
+     }
+    ],
+    "subtotal": 33.69,
+    "gst": 0.65,
+    "pst": 0.91,
+    "total": 35.25
+   },
+   "printed": {
+    "subtotal": 33.69,
+    "tip": 0
+   }
+  },
+  {
+   "id": "disc-02",
+   "group": "discount-weighed",
+   "features": [
+    "discount",
+    "weighed"
+   ],
+   "dateAmbiguous": true,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "Save-On-Foods",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Kitsilano",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "Vancouver BC",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "09/11/2026 17:40",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "SALMON FILLET",
+     "r": "15.29"
+    },
+    {
+     "l": "   0.612 kg @ 24.99/kg",
+     "s": 0.85
+    },
+    {
+     "l": "GRAPES RED",
+     "r": "4.04"
+    },
+    {
+     "l": "   0.734 kg @ 5.50/kg",
+     "s": 0.85
+    },
+    {
+     "l": "POTATO CHIPS",
+     "r": "5.99 GP"
+    },
+    {
+     "l": "SALE DISCOUNT",
+     "r": "1.50- GP"
+    },
+    {
+     "l": "BREAD",
+     "r": "4.29"
+    },
+    {
+     "l": "SPARKLING JUICE",
+     "r": "8.97 GP"
+    },
+    {
+     "l": "   3 @ 2.99",
+     "s": 0.85
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "37.08"
+    },
+    {
+     "l": "GST 5%",
+     "r": "0.67"
+    },
+    {
+     "l": "PST 7%",
+     "r": "0.94"
+    },
+    {
+     "l": "TOTAL",
+     "r": "38.69",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Save-On-Foods",
+    "date": "2026-09-11",
+    "items": [
+     {
+      "name": "SALMON FILLET",
+      "qty": 0.612,
+      "amount": 15.29,
+      "taxable": false
+     },
+     {
+      "name": "GRAPES RED",
+      "qty": 0.734,
+      "amount": 4.04,
+      "taxable": false
+     },
+     {
+      "name": "POTATO CHIPS",
+      "qty": 1,
+      "amount": 5.99,
+      "taxable": true
+     },
+     {
+      "name": "CHIPS SALE",
+      "qty": 1,
+      "amount": -1.5,
+      "taxable": true
+     },
+     {
+      "name": "BREAD",
+      "qty": 1,
+      "amount": 4.29,
+      "taxable": false
+     },
+     {
+      "name": "SPARKLING JUICE",
+      "qty": 3,
+      "amount": 8.97,
+      "taxable": true
+     }
+    ],
+    "subtotal": 37.08,
+    "gst": 0.67,
+    "pst": 0.94,
+    "total": 38.69
+   },
+   "printed": {
+    "subtotal": 37.08,
+    "tip": 0
+   }
+  },
+  {
+   "id": "disc-03",
+   "group": "discount-weighed",
+   "features": [
+    "discount"
+   ],
+   "dateAmbiguous": true,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "Walmart",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Supercentre #3055",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "Surrey, BC",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "11/05/2026 13:15",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "KIDS T-SHIRT",
+     "r": "16.00 G"
+    },
+    {
+     "l": "   2 @ 8.00",
+     "s": 0.85
+    },
+    {
+     "l": "LUNCH BOX",
+     "r": "14.97 GP"
+    },
+    {
+     "l": "ROLLBACK LUNCH BOX",
+     "r": "2.00- GP"
+    },
+    {
+     "l": "CEREAL",
+     "r": "5.47"
+    },
+    {
+     "l": "NOTEBOOK 3PK",
+     "r": "6.97 GP"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "41.41"
+    },
+    {
+     "l": "GST 5%",
+     "r": "1.80"
+    },
+    {
+     "l": "PST 7%",
+     "r": "1.40"
+    },
+    {
+     "l": "TOTAL",
+     "r": "44.61",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Walmart",
+    "date": "2026-11-05",
+    "items": [
+     {
+      "name": "KIDS T-SHIRT",
+      "qty": 2,
+      "amount": 16,
+      "taxable": true
+     },
+     {
+      "name": "LUNCH BOX",
+      "qty": 1,
+      "amount": 14.97,
+      "taxable": true
+     },
+     {
+      "name": "ROLLBACK",
+      "qty": 1,
+      "amount": -2,
+      "taxable": true
+     },
+     {
+      "name": "CEREAL",
+      "qty": 1,
+      "amount": 5.47,
+      "taxable": false
+     },
+     {
+      "name": "NOTEBOOK 3PK",
+      "qty": 1,
+      "amount": 6.97,
+      "taxable": true
+     }
+    ],
+    "subtotal": 41.41,
+    "gst": 1.8,
+    "pst": 1.4,
+    "total": 44.61
+   },
+   "printed": {
+    "subtotal": 41.41,
+    "tip": 0
+   }
+  },
+  {
+   "id": "cn-01",
+   "group": "chinese",
+   "features": [
+    "chinese"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "PingFangSC-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "大统华超市",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "列治文店",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "2026年9月18日 15:36",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "五花肉 (斤)",
+     "r": "9.44"
+    },
+    {
+     "l": "   1.35 lb @ 6.99/lb",
+     "s": 0.85
+    },
+    {
+     "l": "上海青",
+     "r": "3.29"
+    },
+    {
+     "l": "豆腐",
+     "r": "4.38"
+    },
+    {
+     "l": "   2 @ 2.19",
+     "s": 0.85
+    },
+    {
+     "l": "酱油 1L",
+     "r": "5.99"
+    },
+    {
+     "l": "卫生纸 12卷",
+     "r": "11.99 GP"
+    },
+    {
+     "l": "可乐 6罐",
+     "r": "5.49 GP"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "小计",
+     "r": "40.58"
+    },
+    {
+     "l": "联邦税 GST 5%",
+     "r": "0.87"
+    },
+    {
+     "l": "省税 PST 7%",
+     "r": "1.22"
+    },
+    {
+     "l": "总计",
+     "r": "42.67",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "谢谢惠顾",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "大统华超市",
+    "date": "2026-09-18",
+    "items": [
+     {
+      "name": "五花肉 (斤)",
+      "qty": 1.35,
+      "amount": 9.44,
+      "taxable": false
+     },
+     {
+      "name": "上海青",
+      "qty": 1,
+      "amount": 3.29,
+      "taxable": false
+     },
+     {
+      "name": "豆腐",
+      "qty": 2,
+      "amount": 4.38,
+      "taxable": false
+     },
+     {
+      "name": "酱油 1L",
+      "qty": 1,
+      "amount": 5.99,
+      "taxable": false
+     },
+     {
+      "name": "卫生纸 12卷",
+      "qty": 1,
+      "amount": 11.99,
+      "taxable": true
+     },
+     {
+      "name": "可乐 6罐",
+      "qty": 1,
+      "amount": 5.49,
+      "taxable": true
+     }
+    ],
+    "subtotal": 40.58,
+    "gst": 0.87,
+    "pst": 1.22,
+    "total": 42.67
+   },
+   "printed": {
+    "subtotal": 40.58,
+    "tip": 0
+   }
+  },
+  {
+   "id": "cn-02",
+   "group": "chinese",
+   "features": [
+    "chinese"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "PingFangSC-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "华美海鲜酒楼",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "本拿比",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "2026年10月5日 18:50",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "清蒸鲈鱼",
+     "r": "38.00 G"
+    },
+    {
+     "l": "蒜蓉粉丝蒸扇贝",
+     "r": "22.00 G"
+    },
+    {
+     "l": "炒时蔬",
+     "r": "14.00 G"
+    },
+    {
+     "l": "白饭",
+     "r": "4.50 G"
+    },
+    {
+     "l": "   3 @ 1.50",
+     "s": 0.85
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "小计",
+     "r": "78.50"
+    },
+    {
+     "l": "联邦税 GST 5%",
+     "r": "3.93"
+    },
+    {
+     "l": "小费",
+     "r": "8.00"
+    },
+    {
+     "l": "总计",
+     "r": "90.43",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "谢谢惠顾",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "华美海鲜酒楼",
+    "date": "2026-10-05",
+    "items": [
+     {
+      "name": "清蒸鲈鱼",
+      "qty": 1,
+      "amount": 38,
+      "taxable": true
+     },
+     {
+      "name": "蒜蓉粉丝蒸扇贝",
+      "qty": 1,
+      "amount": 22,
+      "taxable": true
+     },
+     {
+      "name": "炒时蔬",
+      "qty": 1,
+      "amount": 14,
+      "taxable": true
+     },
+     {
+      "name": "白饭",
+      "qty": 3,
+      "amount": 4.5,
+      "taxable": true
+     },
+     {
+      "name": "Tip",
+      "qty": 1,
+      "amount": 8,
+      "taxable": false,
+      "is_tip": true
+     }
+    ],
+    "subtotal": 86.5,
+    "gst": 3.93,
+    "pst": 0,
+    "total": 90.43
+   },
+   "printed": {
+    "subtotal": 78.5,
+    "tip": 8
+   }
+  },
+  {
+   "id": "cn-03",
+   "group": "chinese",
+   "features": [
+    "chinese"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "PingFangSC-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "百汇生鲜超市",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "温哥华 Kingsway",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "2026年11月8日",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "鲜虾仁",
+     "r": "12.99"
+    },
+    {
+     "l": "鸡蛋 12枚",
+     "r": "4.99"
+    },
+    {
+     "l": "牛奶 2L",
+     "r": "5.29"
+    },
+    {
+     "l": "方便面",
+     "r": "5.16"
+    },
+    {
+     "l": "   4 @ 1.29",
+     "s": 0.85
+    },
+    {
+     "l": "洗洁精",
+     "r": "3.99 GP"
+    },
+    {
+     "l": "维生素C",
+     "r": "12.99 G"
+    },
+    {
+     "l": "大米 10kg",
+     "r": "22.99"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "小计",
+     "r": "68.40"
+    },
+    {
+     "l": "联邦税 GST 5%",
+     "r": "0.85"
+    },
+    {
+     "l": "省税 PST 7%",
+     "r": "0.28"
+    },
+    {
+     "l": "总计",
+     "r": "69.53",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "谢谢惠顾",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "百汇生鲜超市",
+    "date": "2026-11-08",
+    "items": [
+     {
+      "name": "鲜虾仁",
+      "qty": 1,
+      "amount": 12.99,
+      "taxable": false
+     },
+     {
+      "name": "鸡蛋 12枚",
+      "qty": 1,
+      "amount": 4.99,
+      "taxable": false
+     },
+     {
+      "name": "牛奶 2L",
+      "qty": 1,
+      "amount": 5.29,
+      "taxable": false
+     },
+     {
+      "name": "方便面",
+      "qty": 4,
+      "amount": 5.16,
+      "taxable": false
+     },
+     {
+      "name": "洗洁精",
+      "qty": 1,
+      "amount": 3.99,
+      "taxable": true
+     },
+     {
+      "name": "维生素C",
+      "qty": 1,
+      "amount": 12.99,
+      "taxable": true
+     },
+     {
+      "name": "大米 10kg",
+      "qty": 1,
+      "amount": 22.99,
+      "taxable": false
+     }
+    ],
+    "subtotal": 68.4,
+    "gst": 0.85,
+    "pst": 0.28,
+    "total": 69.53
+   },
+   "printed": {
+    "subtotal": 68.4,
+    "tip": 0
+   }
+  },
+  {
+   "id": "mix-01",
+   "group": "mixed-tax",
+   "features": [
+    "gst_only"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "Shoppers Drug Mart",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "West Broadway",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "Vancouver, BC",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "2026-08-30 10:12",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "VITAMIN C 500MG",
+     "r": "14.99 G"
+    },
+    {
+     "l": "MULTIVITAMIN",
+     "r": "21.99 G"
+    },
+    {
+     "l": "SHAMPOO 400ML",
+     "r": "8.99 GP"
+    },
+    {
+     "l": "MILK 2%",
+     "r": "4.99"
+    },
+    {
+     "l": "BREAD",
+     "r": "3.49"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "54.45"
+    },
+    {
+     "l": "GST 5%",
+     "r": "2.30"
+    },
+    {
+     "l": "PST 7%",
+     "r": "0.63"
+    },
+    {
+     "l": "TOTAL",
+     "r": "57.38",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Shoppers Drug Mart",
+    "date": "2026-08-30",
+    "items": [
+     {
+      "name": "VITAMIN C 500MG",
+      "qty": 1,
+      "amount": 14.99,
+      "taxable": true
+     },
+     {
+      "name": "MULTIVITAMIN",
+      "qty": 1,
+      "amount": 21.99,
+      "taxable": true
+     },
+     {
+      "name": "SHAMPOO 400ML",
+      "qty": 1,
+      "amount": 8.99,
+      "taxable": true
+     },
+     {
+      "name": "MILK 2%",
+      "qty": 1,
+      "amount": 4.99,
+      "taxable": false
+     },
+     {
+      "name": "BREAD",
+      "qty": 1,
+      "amount": 3.49,
+      "taxable": false
+     }
+    ],
+    "subtotal": 54.45,
+    "gst": 2.3,
+    "pst": 0.63,
+    "total": 57.38
+   },
+   "printed": {
+    "subtotal": 54.45,
+    "tip": 0
+   }
+  },
+  {
+   "id": "mix-02",
+   "group": "mixed-tax",
+   "features": [
+    "gst_only"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "Safeway",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Granville St",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "Vancouver, BC",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "Oct 25, 2026 08:49",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "KIDS SOCKS 5PK",
+     "r": "9.99 G"
+    },
+    {
+     "l": "APPLES GALA",
+     "r": "5.49"
+    },
+    {
+     "l": "COOKIES CHOC",
+     "r": "4.99 GP"
+    },
+    {
+     "l": "CHEESE CHEDDAR",
+     "r": "8.49"
+    },
+    {
+     "l": "GREETING CARD",
+     "r": "4.50 G"
+    },
+    {
+     "l": "SODA 12PK",
+     "r": "7.99 GP"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "41.45"
+    },
+    {
+     "l": "GST 5%",
+     "r": "1.37"
+    },
+    {
+     "l": "PST 7%",
+     "r": "0.91"
+    },
+    {
+     "l": "TOTAL",
+     "r": "43.73",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Safeway",
+    "date": "2026-10-25",
+    "items": [
+     {
+      "name": "KIDS SOCKS 5PK",
+      "qty": 1,
+      "amount": 9.99,
+      "taxable": true
+     },
+     {
+      "name": "APPLES GALA",
+      "qty": 1,
+      "amount": 5.49,
+      "taxable": false
+     },
+     {
+      "name": "COOKIES CHOC",
+      "qty": 1,
+      "amount": 4.99,
+      "taxable": true
+     },
+     {
+      "name": "CHEESE CHEDDAR",
+      "qty": 1,
+      "amount": 8.49,
+      "taxable": false
+     },
+     {
+      "name": "GREETING CARD",
+      "qty": 1,
+      "amount": 4.5,
+      "taxable": true
+     },
+     {
+      "name": "SODA 12PK",
+      "qty": 1,
+      "amount": 7.99,
+      "taxable": true
+     }
+    ],
+    "subtotal": 41.45,
+    "gst": 1.37,
+    "pst": 0.91,
+    "total": 43.73
+   },
+   "printed": {
+    "subtotal": 41.45,
+    "tip": 0
+   }
+  },
+  {
+   "id": "mix-03",
+   "group": "mixed-tax",
+   "features": [
+    "gst_only"
+   ],
+   "dateAmbiguous": true,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "London Drugs",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Oakridge",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "Vancouver, BC",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "09/07/2026 14:03",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "CHILD BOOK",
+     "r": "12.99 G"
+    },
+    {
+     "l": "FISH OIL",
+     "r": "18.99 G"
+    },
+    {
+     "l": "BATTERIES AA 8PK",
+     "r": "11.99 GP"
+    },
+    {
+     "l": "EGGS 18CT",
+     "r": "6.99"
+    },
+    {
+     "l": "ORANGE JUICE",
+     "r": "4.79"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "55.75"
+    },
+    {
+     "l": "GST 5%",
+     "r": "2.20"
+    },
+    {
+     "l": "PST 7%",
+     "r": "0.84"
+    },
+    {
+     "l": "TOTAL",
+     "r": "58.79",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "London Drugs",
+    "date": "2026-09-07",
+    "items": [
+     {
+      "name": "CHILD BOOK",
+      "qty": 1,
+      "amount": 12.99,
+      "taxable": true
+     },
+     {
+      "name": "FISH OIL",
+      "qty": 1,
+      "amount": 18.99,
+      "taxable": true
+     },
+     {
+      "name": "BATTERIES AA 8PK",
+      "qty": 1,
+      "amount": 11.99,
+      "taxable": true
+     },
+     {
+      "name": "EGGS 18CT",
+      "qty": 1,
+      "amount": 6.99,
+      "taxable": false
+     },
+     {
+      "name": "ORANGE JUICE",
+      "qty": 1,
+      "amount": 4.79,
+      "taxable": false
+     }
+    ],
+    "subtotal": 55.75,
+    "gst": 2.2,
+    "pst": 0.84,
+    "total": 58.79
+   },
+   "printed": {
+    "subtotal": 55.75,
+    "tip": 0
+   }
+  },
+  {
+   "id": "deg-01",
+   "group": "degraded",
+   "features": [
+    "tilt_noise"
+   ],
+   "dateAmbiguous": true,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {
+    "rotate": 4.5,
+    "noise": 0.08,
+    "blur": 0.8,
+    "light": 0.35,
+    "desk": true
+   },
+   "lines": [
+    {
+     "l": "Safeway",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Main St",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "Vancouver, BC",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "10/12/2026 19:01",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "CHICKEN WINGS",
+     "r": "9.99"
+    },
+    {
+     "l": "TORTILLA CHIPS",
+     "r": "4.49 GP"
+    },
+    {
+     "l": "SALSA",
+     "r": "3.99"
+    },
+    {
+     "l": "LIME 3CT",
+     "r": "1.50"
+    },
+    {
+     "l": "DISH SOAP",
+     "r": "3.79 GP"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "23.76"
+    },
+    {
+     "l": "GST 5%",
+     "r": "0.41"
+    },
+    {
+     "l": "PST 7%",
+     "r": "0.58"
+    },
+    {
+     "l": "TOTAL",
+     "r": "24.75",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Safeway",
+    "date": "2026-10-12",
+    "items": [
+     {
+      "name": "CHICKEN WINGS",
+      "qty": 1,
+      "amount": 9.99,
+      "taxable": false
+     },
+     {
+      "name": "TORTILLA CHIPS",
+      "qty": 1,
+      "amount": 4.49,
+      "taxable": true
+     },
+     {
+      "name": "SALSA",
+      "qty": 1,
+      "amount": 3.99,
+      "taxable": false
+     },
+     {
+      "name": "LIME 3CT",
+      "qty": 1,
+      "amount": 1.5,
+      "taxable": false
+     },
+     {
+      "name": "DISH SOAP",
+      "qty": 1,
+      "amount": 3.79,
+      "taxable": true
+     }
+    ],
+    "subtotal": 23.76,
+    "gst": 0.41,
+    "pst": 0.58,
+    "total": 24.75
+   },
+   "printed": {
+    "subtotal": 23.76,
+    "tip": 0
+   }
+  },
+  {
+   "id": "deg-02",
+   "group": "degraded",
+   "features": [
+    "low_contrast"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {
+    "contrast": 0.45,
+    "noise": 0.05,
+    "light": 0.25,
+    "blur": 0.5
+   },
+   "lines": [
+    {
+     "l": "Superstore",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Kingsway",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "2026-08-04 20:20",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "BUTTER 454G",
+     "r": "6.49"
+    },
+    {
+     "l": "PASTA SAUCE",
+     "r": "5.98"
+    },
+    {
+     "l": "   2 @ 2.99",
+     "s": 0.85
+    },
+    {
+     "l": "SPAGHETTI",
+     "r": "3.98"
+    },
+    {
+     "l": "   2 @ 1.99",
+     "s": 0.85
+    },
+    {
+     "l": "PAPER PLATES",
+     "r": "4.99 GP"
+    },
+    {
+     "l": "CANDY BAG",
+     "r": "3.49 GP"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "24.93"
+    },
+    {
+     "l": "GST 5%",
+     "r": "0.42"
+    },
+    {
+     "l": "PST 7%",
+     "r": "0.59"
+    },
+    {
+     "l": "TOTAL",
+     "r": "25.94",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Superstore",
+    "date": "2026-08-04",
+    "items": [
+     {
+      "name": "BUTTER 454G",
+      "qty": 1,
+      "amount": 6.49,
+      "taxable": false
+     },
+     {
+      "name": "PASTA SAUCE",
+      "qty": 2,
+      "amount": 5.98,
+      "taxable": false
+     },
+     {
+      "name": "SPAGHETTI",
+      "qty": 2,
+      "amount": 3.98,
+      "taxable": false
+     },
+     {
+      "name": "PAPER PLATES",
+      "qty": 1,
+      "amount": 4.99,
+      "taxable": true
+     },
+     {
+      "name": "CANDY BAG",
+      "qty": 1,
+      "amount": 3.49,
+      "taxable": true
+     }
+    ],
+    "subtotal": 24.93,
+    "gst": 0.42,
+    "pst": 0.59,
+    "total": 25.94
+   },
+   "printed": {
+    "subtotal": 24.93,
+    "tip": 0
+   }
+  },
+  {
+   "id": "deg-03",
+   "group": "degraded",
+   "features": [
+    "photo_like"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {
+    "rotate": -3,
+    "persp": 0.06,
+    "noise": 0.07,
+    "blur": 1.1,
+    "light": 0.5,
+    "desk": true,
+    "jpeg": 0.55
+   },
+   "lines": [
+    {
+     "l": "Costco",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Richmond #1521",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "09/29/2026 16:44",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "  100000 KS WATER 40PK",
+     "r": "4.99"
+    },
+    {
+     "l": "  107919 ROTISSERIE CHICKEN",
+     "r": "7.99"
+    },
+    {
+     "l": "B 115838 TRASH BAGS",
+     "r": "18.99"
+    },
+    {
+     "l": "  123757 TOMATOES",
+     "r": "6.49"
+    },
+    {
+     "l": "  131676 KS COFFEE",
+     "r": "24.99"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "63.45"
+    },
+    {
+     "l": "GST 5%",
+     "r": "0.95"
+    },
+    {
+     "l": "PST 7%",
+     "r": "1.33"
+    },
+    {
+     "l": "TOTAL",
+     "r": "65.73",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "A=GST  B=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Costco",
+    "date": "2026-09-29",
+    "items": [
+     {
+      "name": "KS WATER 40PK",
+      "qty": 1,
+      "amount": 4.99,
+      "taxable": false
+     },
+     {
+      "name": "ROTISSERIE CHICKEN",
+      "qty": 1,
+      "amount": 7.99,
+      "taxable": false
+     },
+     {
+      "name": "TRASH BAGS",
+      "qty": 1,
+      "amount": 18.99,
+      "taxable": true
+     },
+     {
+      "name": "TOMATOES",
+      "qty": 1,
+      "amount": 6.49,
+      "taxable": false
+     },
+     {
+      "name": "KS COFFEE",
+      "qty": 1,
+      "amount": 24.99,
+      "taxable": false
+     }
+    ],
+    "subtotal": 63.45,
+    "gst": 0.95,
+    "pst": 1.33,
+    "total": 65.73
+   },
+   "printed": {
+    "subtotal": 63.45,
+    "tip": 0
+   }
+  },
+  {
+   "id": "deg-04",
+   "group": "degraded",
+   "features": [
+    "small_dim"
+   ],
+   "dateAmbiguous": false,
+   "width": 360,
+   "font": "Menlo-Regular",
+   "effects": {
+    "rotate": -2,
+    "noise": 0.1,
+    "blur": 1.2,
+    "light": 0.3,
+    "contrast": 0.7,
+    "desk": true,
+    "jpeg": 0.5
+   },
+   "lines": [
+    {
+     "l": "Walmart",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Langley, BC",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "10/31/2026 21:10",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "HALLOWEEN CANDY",
+     "r": "17.94 GP"
+    },
+    {
+     "l": "   2 @ 8.97",
+     "s": 0.85
+    },
+    {
+     "l": "PUMPKIN",
+     "r": "5.00"
+    },
+    {
+     "l": "COSTUME KIDS",
+     "r": "19.97 G"
+    },
+    {
+     "l": "BATTERIES",
+     "r": "7.97 GP"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "50.88"
+    },
+    {
+     "l": "GST 5%",
+     "r": "2.29"
+    },
+    {
+     "l": "PST 7%",
+     "r": "1.81"
+    },
+    {
+     "l": "TOTAL",
+     "r": "54.98",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Walmart",
+    "date": "2026-10-31",
+    "items": [
+     {
+      "name": "HALLOWEEN CANDY",
+      "qty": 2,
+      "amount": 17.94,
+      "taxable": true
+     },
+     {
+      "name": "PUMPKIN",
+      "qty": 1,
+      "amount": 5,
+      "taxable": false
+     },
+     {
+      "name": "COSTUME KIDS",
+      "qty": 1,
+      "amount": 19.97,
+      "taxable": true
+     },
+     {
+      "name": "BATTERIES",
+      "qty": 1,
+      "amount": 7.97,
+      "taxable": true
+     }
+    ],
+    "subtotal": 50.88,
+    "gst": 2.29,
+    "pst": 1.81,
+    "total": 54.98
+   },
+   "printed": {
+    "subtotal": 50.88,
+    "tip": 0
+   }
+  },
+  {
+   "id": "long-01",
+   "group": "long",
+   "features": [
+    "long"
+   ],
+   "dateAmbiguous": false,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "Superstore",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Marine Drive",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "Vancouver, BC",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "2026-10-18 11:22",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "BANANAS",
+     "r": "1.99"
+    },
+    {
+     "l": "AVOCADO 4CT",
+     "r": "5.99"
+    },
+    {
+     "l": "SPINACH",
+     "r": "3.99"
+    },
+    {
+     "l": "CHICKEN BREAST",
+     "r": "12.50"
+    },
+    {
+     "l": "GROUND BEEF",
+     "r": "9.49"
+    },
+    {
+     "l": "MILK 4L",
+     "r": "6.19"
+    },
+    {
+     "l": "EGGS 12",
+     "r": "4.79"
+    },
+    {
+     "l": "YOGURT",
+     "r": "6.98"
+    },
+    {
+     "l": "   2 @ 3.49",
+     "s": 0.85
+    },
+    {
+     "l": "CEREAL",
+     "r": "5.99"
+    },
+    {
+     "l": "PASTA",
+     "r": "5.67"
+    },
+    {
+     "l": "   3 @ 1.89",
+     "s": 0.85
+    },
+    {
+     "l": "PASTA SAUCE",
+     "r": "5.98"
+    },
+    {
+     "l": "   2 @ 2.99",
+     "s": 0.85
+    },
+    {
+     "l": "COFFEE",
+     "r": "11.99"
+    },
+    {
+     "l": "POTATO CHIPS",
+     "r": "8.98 GP"
+    },
+    {
+     "l": "   2 @ 4.49",
+     "s": 0.85
+    },
+    {
+     "l": "COLA 12PK",
+     "r": "8.99 GP"
+    },
+    {
+     "l": "TOILET PAPER",
+     "r": "13.99 GP"
+    },
+    {
+     "l": "DISH SOAP",
+     "r": "3.99 GP"
+    },
+    {
+     "l": "SHAMPOO",
+     "r": "7.49 GP"
+    },
+    {
+     "l": "VITAMIN D",
+     "r": "11.99 G"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "136.98"
+    },
+    {
+     "l": "GST 5%",
+     "r": "2.77"
+    },
+    {
+     "l": "PST 7%",
+     "r": "3.04"
+    },
+    {
+     "l": "TOTAL",
+     "r": "142.79",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "G=GST  GP=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Superstore",
+    "date": "2026-10-18",
+    "items": [
+     {
+      "name": "BANANAS",
+      "qty": 1,
+      "amount": 1.99,
+      "taxable": false
+     },
+     {
+      "name": "AVOCADO 4CT",
+      "qty": 1,
+      "amount": 5.99,
+      "taxable": false
+     },
+     {
+      "name": "SPINACH",
+      "qty": 1,
+      "amount": 3.99,
+      "taxable": false
+     },
+     {
+      "name": "CHICKEN BREAST",
+      "qty": 1,
+      "amount": 12.5,
+      "taxable": false
+     },
+     {
+      "name": "GROUND BEEF",
+      "qty": 1,
+      "amount": 9.49,
+      "taxable": false
+     },
+     {
+      "name": "MILK 4L",
+      "qty": 1,
+      "amount": 6.19,
+      "taxable": false
+     },
+     {
+      "name": "EGGS 12",
+      "qty": 1,
+      "amount": 4.79,
+      "taxable": false
+     },
+     {
+      "name": "YOGURT",
+      "qty": 2,
+      "amount": 6.98,
+      "taxable": false
+     },
+     {
+      "name": "CEREAL",
+      "qty": 1,
+      "amount": 5.99,
+      "taxable": false
+     },
+     {
+      "name": "PASTA",
+      "qty": 3,
+      "amount": 5.67,
+      "taxable": false
+     },
+     {
+      "name": "PASTA SAUCE",
+      "qty": 2,
+      "amount": 5.98,
+      "taxable": false
+     },
+     {
+      "name": "COFFEE",
+      "qty": 1,
+      "amount": 11.99,
+      "taxable": false
+     },
+     {
+      "name": "POTATO CHIPS",
+      "qty": 2,
+      "amount": 8.98,
+      "taxable": true
+     },
+     {
+      "name": "COLA 12PK",
+      "qty": 1,
+      "amount": 8.99,
+      "taxable": true
+     },
+     {
+      "name": "TOILET PAPER",
+      "qty": 1,
+      "amount": 13.99,
+      "taxable": true
+     },
+     {
+      "name": "DISH SOAP",
+      "qty": 1,
+      "amount": 3.99,
+      "taxable": true
+     },
+     {
+      "name": "SHAMPOO",
+      "qty": 1,
+      "amount": 7.49,
+      "taxable": true
+     },
+     {
+      "name": "VITAMIN D",
+      "qty": 1,
+      "amount": 11.99,
+      "taxable": true
+     }
+    ],
+    "subtotal": 136.98,
+    "gst": 2.77,
+    "pst": 3.04,
+    "total": 142.79
+   },
+   "printed": {
+    "subtotal": 136.98,
+    "tip": 0
+   }
+  },
+  {
+   "id": "long-02",
+   "group": "long",
+   "features": [
+    "long"
+   ],
+   "dateAmbiguous": true,
+   "width": 520,
+   "font": "Menlo-Regular",
+   "effects": {},
+   "lines": [
+    {
+     "l": "Costco",
+     "align": "c",
+     "b": true,
+     "s": 1.35
+    },
+    {
+     "l": "Burnaby #148",
+     "align": "c",
+     "s": 0.85
+    },
+    {
+     "l": "11/02/2026 12:08",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "  100000 KS CHICKEN BREAST",
+     "r": "18.99"
+    },
+    {
+     "l": "  107919 KS BACON",
+     "r": "12.99"
+    },
+    {
+     "l": "  115838 SALMON FILLET",
+     "r": "22.50"
+    },
+    {
+     "l": "  123757 KS TORTILLAS",
+     "r": "6.99"
+    },
+    {
+     "l": "  131676 ROMAINE 6CT",
+     "r": "5.99"
+    },
+    {
+     "l": "  139595 KS BUTTER",
+     "r": "13.49"
+    },
+    {
+     "l": "  147514 CHEESE BLOCK",
+     "r": "12.99"
+    },
+    {
+     "l": "  155433 KS COFFEE",
+     "r": "24.99"
+    },
+    {
+     "l": "  163352 GREEK YOGURT",
+     "r": "9.99"
+    },
+    {
+     "l": "  171271 STRAWBERRIES",
+     "r": "7.99"
+    },
+    {
+     "l": "  179190 BLUEBERRIES",
+     "r": "8.49"
+    },
+    {
+     "l": "  187109 KS OLIVE OIL",
+     "r": "17.99"
+    },
+    {
+     "l": "B 195028 PAPER TOWEL",
+     "r": "26.99"
+    },
+    {
+     "l": "B 202947 LAUNDRY SOAP",
+     "r": "22.99"
+    },
+    {
+     "l": "B 210866 SNACK BARS",
+     "r": "15.99"
+    },
+    {
+     "l": "B 218785 SPARKLING WATER",
+     "r": "11.99"
+    },
+    {
+     "l": "------------------------------",
+     "align": "c",
+     "s": 0.9
+    },
+    {
+     "l": "Subtotal",
+     "r": "241.35"
+    },
+    {
+     "l": "GST 5%",
+     "r": "3.90"
+    },
+    {
+     "l": "PST 7%",
+     "r": "5.46"
+    },
+    {
+     "l": "TOTAL",
+     "r": "250.71",
+     "b": true,
+     "s": 1.15
+    },
+    {
+     "l": "A=GST  B=GST+PST",
+     "align": "c",
+     "s": 0.8,
+     "gap": 4
+    },
+    {
+     "l": "THANK YOU",
+     "align": "c",
+     "s": 0.9,
+     "gap": 6
+    }
+   ],
+   "truth": {
+    "store": "Costco",
+    "date": "2026-11-02",
+    "items": [
+     {
+      "name": "KS CHICKEN BREAST",
+      "qty": 1,
+      "amount": 18.99,
+      "taxable": false
+     },
+     {
+      "name": "KS BACON",
+      "qty": 1,
+      "amount": 12.99,
+      "taxable": false
+     },
+     {
+      "name": "SALMON FILLET",
+      "qty": 1,
+      "amount": 22.5,
+      "taxable": false
+     },
+     {
+      "name": "KS TORTILLAS",
+      "qty": 1,
+      "amount": 6.99,
+      "taxable": false
+     },
+     {
+      "name": "ROMAINE 6CT",
+      "qty": 1,
+      "amount": 5.99,
+      "taxable": false
+     },
+     {
+      "name": "KS BUTTER",
+      "qty": 1,
+      "amount": 13.49,
+      "taxable": false
+     },
+     {
+      "name": "CHEESE BLOCK",
+      "qty": 1,
+      "amount": 12.99,
+      "taxable": false
+     },
+     {
+      "name": "KS COFFEE",
+      "qty": 1,
+      "amount": 24.99,
+      "taxable": false
+     },
+     {
+      "name": "GREEK YOGURT",
+      "qty": 1,
+      "amount": 9.99,
+      "taxable": false
+     },
+     {
+      "name": "STRAWBERRIES",
+      "qty": 1,
+      "amount": 7.99,
+      "taxable": false
+     },
+     {
+      "name": "BLUEBERRIES",
+      "qty": 1,
+      "amount": 8.49,
+      "taxable": false
+     },
+     {
+      "name": "KS OLIVE OIL",
+      "qty": 1,
+      "amount": 17.99,
+      "taxable": false
+     },
+     {
+      "name": "PAPER TOWEL",
+      "qty": 1,
+      "amount": 26.99,
+      "taxable": true
+     },
+     {
+      "name": "LAUNDRY SOAP",
+      "qty": 1,
+      "amount": 22.99,
+      "taxable": true
+     },
+     {
+      "name": "SNACK BARS",
+      "qty": 1,
+      "amount": 15.99,
+      "taxable": true
+     },
+     {
+      "name": "SPARKLING WATER",
+      "qty": 1,
+      "amount": 11.99,
+      "taxable": true
+     }
+    ],
+    "subtotal": 241.35,
+    "gst": 3.9,
+    "pst": 5.46,
+    "total": 250.71
+   },
+   "printed": {
+    "subtotal": 241.35,
+    "tip": 0
+   }
+  },
+  {
+   "id": "nonreceipt-01",
+   "group": "non-receipt",
+   "features": [
+    "non_receipt"
+   ],
+   "width": 520,
+   "font": "Helvetica",
+   "effects": {
+    "noise": 0.03
+   },
+   "nonreceipt": true,
+   "lines": [
+    {
+     "l": "Happy Birthday!",
+     "align": "c",
+     "b": true,
+     "s": 2.2,
+     "gap": 30
+    },
+    {
+     "l": "Wishing you a wonderful day",
+     "align": "c",
+     "s": 1
+    },
+    {
+     "l": "Party at 5 pm, Saturday",
+     "align": "c",
+     "s": 1,
+     "gap": 20
+    },
+    {
+     "l": "Bring a friend",
+     "align": "c",
+     "s": 1
+    }
+   ],
+   "truth": {
+    "store": "",
+    "date": "",
+    "items": [],
+    "subtotal": 0,
+    "gst": 0,
+    "pst": 0,
+    "total": 0
+   }
+  }
+ ]
+}

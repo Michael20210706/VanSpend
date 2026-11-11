@@ -1,0 +1,27 @@
+{
+ "ok": true,
+ "id": "nonreceipt-01",
+ "run": 1,
+ "attempts": 1,
+ "ms": 10328,
+ "receipt": {
+  "store": "未知",
+  "purchased_at": "2026-11-11",
+  "currency": "CAD",
+  "subtotal": 0,
+  "gst": 0,
+  "pst": 0,
+  "total": 0
+ },
+ "items": [],
+ "raw": {
+  "store": "",
+  "purchased_at": "",
+  "currency": "CAD",
+  "subtotal": 0,
+  "gst": 0,
+  "pst": 0,
+  "total": 0,
+  "items": []
+ }
+}

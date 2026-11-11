@@ -1,0 +1,183 @@
+{
+ "ok": true,
+ "id": "cn-03",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2217,
+ "receipt": {
+  "store": "百汇生鲜超市",
+  "purchased_at": "2026-11-08",
+  "currency": "CAD",
+  "subtotal": 68.4,
+  "gst": 0.85,
+  "pst": 0.28,
+  "total": 69.53
+ },
+ "items": [
+  {
+   "name_raw": "鲜虾仁",
+   "name_norm": "鲜虾仁",
+   "category": "海鲜",
+   "subcategory": "其他海鲜",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 12.99,
+   "amount": 12.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "鸡蛋 12枚",
+   "name_norm": "鸡蛋",
+   "category": "乳制品蛋类",
+   "subcategory": "蛋类",
+   "qty": 1,
+   "unit": "打",
+   "unit_price": 4.99,
+   "amount": 4.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "牛奶 2L",
+   "name_norm": "牛奶",
+   "category": "乳制品蛋类",
+   "subcategory": "牛奶",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 5.29,
+   "amount": 5.29,
+   "taxable": 0
+  },
+  {
+   "name_raw": "方便面",
+   "name_norm": "方便面",
+   "category": "主食粮油",
+   "subcategory": "面食",
+   "qty": 4,
+   "unit": "包",
+   "unit_price": 1.29,
+   "amount": 5.16,
+   "taxable": 0
+  },
+  {
+   "name_raw": "洗洁精",
+   "name_norm": "洗洁精",
+   "category": "日用清洁",
+   "subcategory": "清洁剂",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 3.99,
+   "amount": 3.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "维生素C",
+   "name_norm": "维生素C",
+   "category": "个护健康",
+   "subcategory": "维生素",
+   "qty": 1,
+   "unit": "盒",
+   "unit_price": 12.99,
+   "amount": 12.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "大米 10kg",
+   "name_norm": "大米",
+   "category": "主食粮油",
+   "subcategory": "米面",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 22.99,
+   "amount": 22.99,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "百汇生鲜超市",
+  "purchased_at": "2026-11-08",
+  "currency": "CAD",
+  "subtotal": 68.4,
+  "gst": 0.85,
+  "pst": 0.28,
+  "total": 69.53,
+  "items": [
+   {
+    "name_raw": "鲜虾仁",
+    "name_norm": "鲜虾仁",
+    "category": "海鲜",
+    "subcategory": "其他海鲜",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 12.99,
+    "amount": 12.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "鸡蛋 12枚",
+    "name_norm": "鸡蛋",
+    "category": "乳制品蛋类",
+    "subcategory": "蛋类",
+    "qty": 1,
+    "unit": "打",
+    "unit_price": 4.99,
+    "amount": 4.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "牛奶 2L",
+    "name_norm": "牛奶",
+    "category": "乳制品蛋类",
+    "subcategory": "牛奶",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 5.29,
+    "amount": 5.29,
+    "taxable": false
+   },
+   {
+    "name_raw": "方便面",
+    "name_norm": "方便面",
+    "category": "主食粮油",
+    "subcategory": "面食",
+    "qty": 4,
+    "unit": "包",
+    "unit_price": 1.29,
+    "amount": 5.16,
+    "taxable": false
+   },
+   {
+    "name_raw": "洗洁精",
+    "name_norm": "洗洁精",
+    "category": "日用清洁",
+    "subcategory": "清洁剂",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 3.99,
+    "amount": 3.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "维生素C",
+    "name_norm": "维生素C",
+    "category": "个护健康",
+    "subcategory": "维生素",
+    "qty": 1,
+    "unit": "盒",
+    "unit_price": 12.99,
+    "amount": 12.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "大米 10kg",
+    "name_norm": "大米",
+    "category": "主食粮油",
+    "subcategory": "米面",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 22.99,
+    "amount": 22.99,
+    "taxable": false
+   }
+  ]
+ }
+}

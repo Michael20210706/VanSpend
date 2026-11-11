@@ -1,0 +1,139 @@
+{
+ "ok": true,
+ "id": "mix-03",
+ "run": 1,
+ "attempts": 1,
+ "ms": 1986,
+ "receipt": {
+  "store": "London Drugs",
+  "purchased_at": "2026-09-07",
+  "currency": "CAD",
+  "subtotal": 55.75,
+  "gst": 2.2,
+  "pst": 0.84,
+  "total": 58.79
+ },
+ "items": [
+  {
+   "name_raw": "CHILD BOOK",
+   "name_norm": "儿童读物",
+   "category": "其他",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "个",
+   "unit_price": 12.99,
+   "amount": 12.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "FISH OIL",
+   "name_norm": "鱼油",
+   "category": "个护健康",
+   "subcategory": "保健品",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 18.99,
+   "amount": 18.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "BATTERIES AA 8PK",
+   "name_norm": "AA电池 8粒装",
+   "category": "日用清洁",
+   "subcategory": "电池",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 11.99,
+   "amount": 11.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "EGGS 18CT",
+   "name_norm": "鸡蛋 18个装",
+   "category": "乳制品蛋类",
+   "subcategory": "鸡蛋",
+   "qty": 1,
+   "unit": "盒",
+   "unit_price": 6.99,
+   "amount": 6.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "ORANGE JUICE",
+   "name_norm": "橙汁",
+   "category": "零食饮料",
+   "subcategory": "果汁",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 4.79,
+   "amount": 4.79,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "London Drugs",
+  "purchased_at": "2026-09-07",
+  "currency": "CAD",
+  "subtotal": 55.75,
+  "gst": 2.2,
+  "pst": 0.84,
+  "total": 58.79,
+  "items": [
+   {
+    "name_raw": "CHILD BOOK",
+    "name_norm": "儿童读物",
+    "category": "其他",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "个",
+    "unit_price": 12.99,
+    "amount": 12.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "FISH OIL",
+    "name_norm": "鱼油",
+    "category": "个护健康",
+    "subcategory": "保健品",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 18.99,
+    "amount": 18.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "BATTERIES AA 8PK",
+    "name_norm": "AA电池 8粒装",
+    "category": "日用清洁",
+    "subcategory": "电池",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 11.99,
+    "amount": 11.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "EGGS 18CT",
+    "name_norm": "鸡蛋 18个装",
+    "category": "乳制品蛋类",
+    "subcategory": "鸡蛋",
+    "qty": 1,
+    "unit": "盒",
+    "unit_price": 6.99,
+    "amount": 6.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "ORANGE JUICE",
+    "name_norm": "橙汁",
+    "category": "零食饮料",
+    "subcategory": "果汁",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 4.79,
+    "amount": 4.79,
+    "taxable": false
+   }
+  ]
+ }
+}

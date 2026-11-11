@@ -1,0 +1,139 @@
+{
+ "ok": true,
+ "id": "disc-01",
+ "run": 2,
+ "attempts": 1,
+ "ms": 1916,
+ "receipt": {
+  "store": "Real Canadian Superstore",
+  "purchased_at": "2026-10-20",
+  "currency": "CAD",
+  "subtotal": 33.69,
+  "gst": 0.65,
+  "pst": 0.91,
+  "total": 35.25
+ },
+ "items": [
+  {
+   "name_raw": "CHICKEN THIGH",
+   "name_norm": "鸡腿肉",
+   "category": "肉类",
+   "subcategory": "鸡肉",
+   "qty": 1.318,
+   "unit": "kg",
+   "unit_price": 7.7,
+   "amount": 10.15,
+   "taxable": 0
+  },
+  {
+   "name_raw": "BANANAS",
+   "name_norm": "香蕉",
+   "category": "水果",
+   "subcategory": "香蕉",
+   "qty": 0.905,
+   "unit": "kg",
+   "unit_price": 1.74,
+   "amount": 1.57,
+   "taxable": 0
+  },
+  {
+   "name_raw": "DETERGENT",
+   "name_norm": "洗涤剂",
+   "category": "日用清洁",
+   "subcategory": "清洁剂",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 15.99,
+   "amount": 15.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "DETERGENT COUPON",
+   "name_norm": "洗涤剂优惠券",
+   "category": "日用清洁",
+   "subcategory": "清洁剂",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 3,
+   "amount": -3,
+   "taxable": 1
+  },
+  {
+   "name_raw": "YOGURT 650G",
+   "name_norm": "酸奶",
+   "category": "乳制品蛋类",
+   "subcategory": "酸奶",
+   "qty": 2,
+   "unit": "份",
+   "unit_price": 4.49,
+   "amount": 8.98,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "Real Canadian Superstore",
+  "purchased_at": "2026-10-20",
+  "currency": "CAD",
+  "subtotal": 33.69,
+  "gst": 0.65,
+  "pst": 0.91,
+  "total": 35.25,
+  "items": [
+   {
+    "name_raw": "CHICKEN THIGH",
+    "name_norm": "鸡腿肉",
+    "category": "肉类",
+    "subcategory": "鸡肉",
+    "qty": 1.318,
+    "unit": "kg",
+    "unit_price": 7.7,
+    "amount": 10.15,
+    "taxable": false
+   },
+   {
+    "name_raw": "BANANAS",
+    "name_norm": "香蕉",
+    "category": "水果",
+    "subcategory": "香蕉",
+    "qty": 0.905,
+    "unit": "kg",
+    "unit_price": 1.74,
+    "amount": 1.57,
+    "taxable": false
+   },
+   {
+    "name_raw": "DETERGENT",
+    "name_norm": "洗涤剂",
+    "category": "日用清洁",
+    "subcategory": "清洁剂",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 15.99,
+    "amount": 15.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "DETERGENT COUPON",
+    "name_norm": "洗涤剂优惠券",
+    "category": "日用清洁",
+    "subcategory": "清洁剂",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 3,
+    "amount": -3,
+    "taxable": true
+   },
+   {
+    "name_raw": "YOGURT 650G",
+    "name_norm": "酸奶",
+    "category": "乳制品蛋类",
+    "subcategory": "酸奶",
+    "qty": 2,
+    "unit": "份",
+    "unit_price": 4.49,
+    "amount": 8.98,
+    "taxable": false
+   }
+  ]
+ }
+}

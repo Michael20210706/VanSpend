@@ -1,0 +1,139 @@
+{
+ "ok": true,
+ "id": "deg-01",
+ "run": 2,
+ "attempts": 1,
+ "ms": 1857,
+ "receipt": {
+  "store": "Safeway",
+  "purchased_at": "2026-10-12",
+  "currency": "CAD",
+  "subtotal": 23.76,
+  "gst": 0.41,
+  "pst": 0.58,
+  "total": 24.75
+ },
+ "items": [
+  {
+   "name_raw": "CHICKEN WINGS",
+   "name_norm": "鸡翅",
+   "category": "肉类",
+   "subcategory": "鸡肉",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 9.99,
+   "amount": 9.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "TORTILLA CHIPS",
+   "name_norm": "玉米片",
+   "category": "零食饮料",
+   "subcategory": "零食",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 4.49,
+   "amount": 4.49,
+   "taxable": 1
+  },
+  {
+   "name_raw": "SALSA",
+   "name_norm": "莎莎酱",
+   "category": "调味品",
+   "subcategory": "酱料",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 3.99,
+   "amount": 3.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "LIME 3CT",
+   "name_norm": "青柠",
+   "category": "水果",
+   "subcategory": "水果",
+   "qty": 3,
+   "unit": "个",
+   "unit_price": 0.5,
+   "amount": 1.5,
+   "taxable": 0
+  },
+  {
+   "name_raw": "DISH SOAP",
+   "name_norm": "洗洁精",
+   "category": "日用清洁",
+   "subcategory": "清洁剂",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 3.79,
+   "amount": 3.79,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Safeway",
+  "purchased_at": "2026-10-12",
+  "currency": "CAD",
+  "subtotal": 23.76,
+  "gst": 0.41,
+  "pst": 0.58,
+  "total": 24.75,
+  "items": [
+   {
+    "name_raw": "CHICKEN WINGS",
+    "name_norm": "鸡翅",
+    "category": "肉类",
+    "subcategory": "鸡肉",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 9.99,
+    "amount": 9.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "TORTILLA CHIPS",
+    "name_norm": "玉米片",
+    "category": "零食饮料",
+    "subcategory": "零食",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 4.49,
+    "amount": 4.49,
+    "taxable": true
+   },
+   {
+    "name_raw": "SALSA",
+    "name_norm": "莎莎酱",
+    "category": "调味品",
+    "subcategory": "酱料",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 3.99,
+    "amount": 3.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "LIME 3CT",
+    "name_norm": "青柠",
+    "category": "水果",
+    "subcategory": "水果",
+    "qty": 3,
+    "unit": "个",
+    "unit_price": 0.5,
+    "amount": 1.5,
+    "taxable": false
+   },
+   {
+    "name_raw": "DISH SOAP",
+    "name_norm": "洗洁精",
+    "category": "日用清洁",
+    "subcategory": "清洁剂",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 3.79,
+    "amount": 3.79,
+    "taxable": true
+   }
+  ]
+ }
+}

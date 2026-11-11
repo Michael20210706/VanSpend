@@ -1,0 +1,161 @@
+{
+ "ok": true,
+ "id": "cn-01",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2154,
+ "receipt": {
+  "store": "大统华超市",
+  "purchased_at": "2026-09-18",
+  "currency": "CAD",
+  "subtotal": 40.58,
+  "gst": 0.87,
+  "pst": 1.22,
+  "total": 42.67
+ },
+ "items": [
+  {
+   "name_raw": "五花肉 (斤)",
+   "name_norm": "五花肉",
+   "category": "肉类",
+   "subcategory": "猪肉",
+   "qty": 1.35,
+   "unit": "lb",
+   "unit_price": 6.99,
+   "amount": 9.44,
+   "taxable": 0
+  },
+  {
+   "name_raw": "上海青",
+   "name_norm": "上海青",
+   "category": "蔬菜",
+   "subcategory": "绿叶菜",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 3.29,
+   "amount": 3.29,
+   "taxable": 0
+  },
+  {
+   "name_raw": "豆腐",
+   "name_norm": "豆腐",
+   "category": "其他",
+   "subcategory": "豆制品",
+   "qty": 2,
+   "unit": "份",
+   "unit_price": 2.19,
+   "amount": 4.38,
+   "taxable": 0
+  },
+  {
+   "name_raw": "酱油 1L",
+   "name_norm": "酱油",
+   "category": "调味品",
+   "subcategory": "酱料",
+   "qty": 1,
+   "unit": "L",
+   "unit_price": 5.99,
+   "amount": 5.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "卫生纸 12卷",
+   "name_norm": "卫生纸",
+   "category": "日用清洁",
+   "subcategory": "纸制品",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 11.99,
+   "amount": 11.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "可乐 6罐",
+   "name_norm": "可乐",
+   "category": "零食饮料",
+   "subcategory": "碳酸饮料",
+   "qty": 6,
+   "unit": "罐",
+   "unit_price": 0.915,
+   "amount": 5.49,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "大统华超市",
+  "purchased_at": "2026-09-18",
+  "currency": "CAD",
+  "subtotal": 40.58,
+  "gst": 0.87,
+  "pst": 1.22,
+  "total": 42.67,
+  "items": [
+   {
+    "name_raw": "五花肉 (斤)",
+    "name_norm": "五花肉",
+    "category": "肉类",
+    "subcategory": "猪肉",
+    "qty": 1.35,
+    "unit": "lb",
+    "unit_price": 6.99,
+    "amount": 9.44,
+    "taxable": false
+   },
+   {
+    "name_raw": "上海青",
+    "name_norm": "上海青",
+    "category": "蔬菜",
+    "subcategory": "绿叶菜",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 3.29,
+    "amount": 3.29,
+    "taxable": false
+   },
+   {
+    "name_raw": "豆腐",
+    "name_norm": "豆腐",
+    "category": "其他",
+    "subcategory": "豆制品",
+    "qty": 2,
+    "unit": "份",
+    "unit_price": 2.19,
+    "amount": 4.38,
+    "taxable": false
+   },
+   {
+    "name_raw": "酱油 1L",
+    "name_norm": "酱油",
+    "category": "调味品",
+    "subcategory": "酱料",
+    "qty": 1,
+    "unit": "L",
+    "unit_price": 5.99,
+    "amount": 5.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "卫生纸 12卷",
+    "name_norm": "卫生纸",
+    "category": "日用清洁",
+    "subcategory": "纸制品",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 11.99,
+    "amount": 11.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "可乐 6罐",
+    "name_norm": "可乐",
+    "category": "零食饮料",
+    "subcategory": "碳酸饮料",
+    "qty": 6,
+    "unit": "罐",
+    "unit_price": null,
+    "amount": 5.49,
+    "taxable": true
+   }
+  ]
+ }
+}
