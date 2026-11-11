@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getSession } from '@/src/session';
+import { wrap } from '@/src/http';
 
-export async function POST() {
+export const POST = wrap(async () => {
   const session = await getSession();
   session.destroy();
   return NextResponse.json({ ok: true });
-}
+});
