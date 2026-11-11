@@ -33,8 +33,7 @@ function buildPrompt() {
 3. 细分(subcategory): 给更细的类型。肉类必须细分为 牛肉/猪肉/鸡肉/羊肉/其他肉类; 海鲜细分为 三文鱼/虾/蟹/鱼类/贝类/其他海鲜; 其余大类可给合理细分或留空。
 4. 每行给出: 数量 qty、单位 unit(个/kg/lb/包/份)、单价 unit_price、该行金额 amount(税前)。读不到就用 null。
 5. taxable: 该商品是否计税。BC 省多数食品(basic groceries)免 GST/PST; 预制食品、汽水、日用品、餐厅餐食通常计税。小票上常用 G/P/H 或星号等标记，请据此判断 true/false。
-6. 税额: 按小票上实际印出的税行还原 gst 与 pst(BC: GST=5%, PST=7%)。若小票只印了一个不区分 GST/PST 的合计税(如 Tax、Sales Tax、GST+PST 合并一行)，必须把这个金额按 5:7 拆开: gst = 合计税 × 5/12，pst = 合计税 × 7/12(各四舍五入到分)，两者相加等于印出的合计税，不要把它整个放进 gst 或 pst，也不要留 0。小票分别印了 GST 和 PST(或只印了 GST)时，按印出的填，没印的填 0。
-   小费/服务费(Tip、Gratuity、小费)那一行也要作为一条明细(category 填 "其他"，taxable 为 false，amount 为小费金额)，并计入 subtotal(subtotal 为所有明细 amount 之和)，使 subtotal + gst + pst = total。
+6. 税额: 按小票上实际印出的税行还原 gst 与 pst(BC: GST=5%, PST=7%)。若小票只给了一个合计税(如 HST/Tax)，尽量按 5%/7% 比例拆分; 拆不出就把能确定的填上、其余填 0。
 7. store(商家名)、purchased_at(购买日期 YYYY-MM-DD，读不到用空字符串)、subtotal(税前合计)、total(实付总额)。
 8. 金额都用数字(不带货币符号)，货币 currency 默认 "CAD"。
 
@@ -160,4 +159,4 @@ function normalize(p) {
   return { receipt, items, raw: p };
 }
 
-module.exports = { scanReceipt, normalize, buildPrompt, config };
+module.exports = { scanReceipt, normalize, config };
