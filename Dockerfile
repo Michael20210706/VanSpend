@@ -31,4 +31,8 @@ USER vanspend
 EXPOSE 3000
 ENV PORT=3000
 
+# standalone 的 server.js 绑定在 $HOSTNAME(容器 IP)而不是 127.0.0.1，所以探测也连 $HOSTNAME。只报告健康状态(Docker 不会自动重启 unhealthy 的容器)。/api/auth/captcha 不查库，库不可达时也返回 200。
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD node -e "require('http').get({host:process.env.HOSTNAME,port:3000,path:'/api/auth/captcha'},r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+
 CMD ["node", "server.js"]
