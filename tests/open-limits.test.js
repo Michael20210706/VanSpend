@@ -163,8 +163,12 @@ describe('安全响应头', () => {
     expect(find(hs, 'Strict-Transport-Security').value).not.toMatch(/includeSubDomains|preload/);
     expect(find(hs, 'Permissions-Policy').value).toContain('camera=()');
     const csp = find(hs, 'Content-Security-Policy').value;
-    for (const d of ["default-src 'self'", "frame-ancestors 'none'", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "connect-src 'self'", "script-src 'self' 'unsafe-inline'"]) expect(csp).toContain(d);
-    expect(csp).not.toMatch(/unsafe-eval|\*|https?:/); // 没有通配、没有放行外部来源
+    for (const d of ["default-src 'self'", "frame-ancestors 'none'", "object-src 'none'", "base-uri 'self'", "form-action 'self'"]) expect(csp).toContain(d);
+    // 唯一放行的外部来源是 Cloudflare Web Analytics 的两个确切主机名: 脚本 + 数据上报
+    expect(csp).toContain("script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com;");
+    expect(csp).toContain("connect-src 'self' https://cloudflareinsights.com;");
+    expect(csp.match(/https?:\/\/[^\s;]+/g).sort()).toEqual(['https://cloudflareinsights.com', 'https://static.cloudflareinsights.com']);
+    expect(csp).not.toMatch(/unsafe-eval|\*/); // 没有通配、没有 eval
     expect(csp).toContain('img-src');
     expect(csp).toContain('data:'); // 验证码图片和上传预览是 data URL
   });
