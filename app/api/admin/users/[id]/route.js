@@ -14,6 +14,7 @@ export const DELETE = wrap(async (request, { params }) => {
   if (id === session.userId) return NextResponse.json({ error: '不能删除自己当前登录的账号' }, { status: 400 });
   const { deleted, images } = await dbApi.deleteUserFull(id, { id: session.userId, username: session.username });
   if (deleted) uploadsLib.deleteImages(images); // 数据库已提交，再删该用户小票的原图文件
+  if (!deleted) return NextResponse.json({ error: '用户不存在' }, { status: 404 });
   return NextResponse.json({ deleted });
 });
 

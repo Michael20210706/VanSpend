@@ -181,9 +181,12 @@ describe('安全响应头', () => {
 
   it('next.config 的 headers() 对所有路径生效', async () => {
     const rules = await nextConfig.headers();
-    expect(rules).toHaveLength(1);
+    expect(rules).toHaveLength(2);
     expect(rules[0].source).toBe('/:path*');
     expect(rules[0].headers.length).toBeGreaterThanOrEqual(6);
+    expect(rules[1].source).toBe('/api/auth/:path*');
+    expect(rules[1].headers).toEqual([{ key: 'Cache-Control', value: 'private, no-store' }]);
+    expect(nextConfig.poweredByHeader).toBe(false);
     expect(nextConfig.output).toBe('standalone');
   });
 });
