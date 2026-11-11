@@ -26,14 +26,20 @@ const cents = (v) => Math.round(v * 100) / 100;
 const hasNul = (v) => typeof v === 'string' && v.includes('\u0000');
 const MAX_DERIVED_UNIT_PRICE = 999999.9999; // DECIMAL(10,4)
 
-// 返回 { error } 或 { receipt, items }(receipt 里没有 currency，由调用方沿用原值)
-function validateEdit(body, currency) {
+// 保存(save)与编辑(edit)共用的字段校验——系统边界上的唯一一份。两者只在 subtotal/total 上不同(见 validate 末尾):
+// edit 按明细重算，save 沿用用户确认过的值(可能是小票印刷的总额)，但同样校验范围并取整到分。
+// 返回 { error } 或 { receipt, items }(receipt 里的 currency: edit 沿用 currency 参数，save 取请求值，缺省用参数)
+function validate(body, mode, currency) {
   const r = body && body.receipt;
   const items = body && body.items;
   if (!r || typeof r !== 'object' || Array.isArray(r) || !Array.isArray(items)) return { error: '数据格式错误' };
   if (typeof r.store !== 'string' || !r.store.trim() || r.store.length > 255 || hasNul(r.store)) return { error: '商家不能为空，且不能超过 255 个字符' };
   if (!realDate(r.purchased_at)) return { error: '日期格式应为 YYYY-MM-DD' };
   if (!isNum(r.gst, MAX_MONEY) || !isNum(r.pst, MAX_MONEY)) return { error: 'GST/PST 必须是数字' };
+  if (mode === 'save') {
+    if (!isNum(r.subtotal, MAX_MONEY) || !isNum(r.total, MAX_MONEY)) return { error: '小计/总额必须是数字' };
+    if (r.currency != null && (typeof r.currency !== 'string' || !r.currency.trim() || r.currency.length > 10)) return { error: '币种格式错误' };
+  }
   if (items.length < 1) return { error: '至少保留一条明细' };
   if (items.length > MAX_ITEMS) return { error: `明细最多 ${MAX_ITEMS} 条` };
   for (const it of items) {
@@ -51,16 +57,24 @@ function validateEdit(body, currency) {
     if (!(it.taxable === 0 || it.taxable === 1 || typeof it.taxable === 'boolean')) return { error: '是否应税格式错误' };
   }
   const n = normalize({
-    store: r.store, purchased_at: r.purchased_at, currency,
+    store: r.store, purchased_at: r.purchased_at, currency: mode === 'save' && r.currency != null ? r.currency : currency,
     subtotal: 0, gst: cents(r.gst), pst: cents(r.pst), total: 0,
     items: items.map((it) => ({ ...it, amount: cents(it.amount) })),
   });
   // normalize() 在单价缺失时按 金额/数量 回推，回推值可能超出 DECIMAL(10,4)，这里挡成 400 而不是让数据库报 500
   if (n.items.some((it) => it.unit_price != null && Math.abs(it.unit_price) > MAX_DERIVED_UNIT_PRICE)) return { error: '单价超出范围(请核对数量和金额)' };
-  n.receipt.subtotal = cents(n.receipt.subtotal);
-  n.receipt.total = cents(n.receipt.total);
-  if (Math.abs(n.receipt.subtotal) > MAX_MONEY || Math.abs(n.receipt.total) > MAX_MONEY) return { error: '金额合计超出范围' };
+  if (mode === 'save') {
+    n.receipt.subtotal = cents(r.subtotal);
+    n.receipt.total = cents(r.total);
+  } else {
+    n.receipt.subtotal = cents(n.receipt.subtotal);
+    n.receipt.total = cents(n.receipt.total);
+    if (Math.abs(n.receipt.subtotal) > MAX_MONEY || Math.abs(n.receipt.total) > MAX_MONEY) return { error: '金额合计超出范围' };
+  }
   return { receipt: n.receipt, items: n.items };
 }
 
-module.exports = { validateEdit, realDate };
+const validateEdit = (body, currency) => validate(body, 'edit', currency);
+const validateSave = (body, currency) => validate(body, 'save', currency);
+
+module.exports = { validateEdit, validateSave, realDate };

@@ -86,7 +86,7 @@ export default function ReceiptsTab({ active, showOwner, userId, cfg }) {
                 <td className="num">{fmt(r.total)}</td><td className="num">{r.item_count}</td>
                 <td>
                   <button className="ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => viewRec(r.id)}>明细</button>
-                  <button className="danger" onClick={() => delRec(r.id)}>删</button>
+                  {r.user_id === userId ? <button className="danger" onClick={() => delRec(r.id)}>删</button> : null}
                 </td>
               </tr>
             ))}

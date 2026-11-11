@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
 import dbApi from '@/src/db.cjs';
 import uploadsLib from '@/src/uploads.cjs';
+import receiptInput from '@/src/receiptInput.cjs';
+import openrouterLib from '@/src/openrouter.cjs';
 import { requireSession } from '@/src/session';
-import { wrap, readJson, IMAGE_BODY_MAX, memberScope } from '@/src/http';
+import { wrap, readJson, IMAGE_BODY_MAX, memberScope, readDateParam } from '@/src/http';
 
 export const GET = wrap(async (request) => {
   const { session, response } = await requireSession();
@@ -11,8 +13,8 @@ export const GET = wrap(async (request) => {
   const { searchParams } = new URL(request.url);
   const scope = memberScope(session);
   const rows = await dbApi.listReceipts({
-    from: searchParams.get('from') || undefined,
-    to: searchParams.get('to') || undefined,
+    from: readDateParam(searchParams, 'from'),
+    to: readDateParam(searchParams, 'to'),
     search: searchParams.get('search') || undefined,
     scope,
   });
@@ -26,7 +28,9 @@ export const POST = wrap(async (request) => {
 
   const body = await readJson(request, IMAGE_BODY_MAX);
   const { receipt, items, image, raw } = body;
-  if (!receipt || !Array.isArray(items)) return NextResponse.json({ error: '数据格式错误' }, { status: 400 });
+  // 先校验全部字段(与编辑接口共用规则)，通过后才写图片: 非法输入一律 400，不落盘、不入库
+  const v = receiptInput.validateSave({ receipt, items }, openrouterLib.config.currency);
+  if (v.error) return NextResponse.json({ error: v.error }, { status: 400 });
   if (image) {
     const bad = uploadsLib.checkImage(image);
     if (bad) return NextResponse.json({ error: bad.error }, { status: bad.status });
@@ -39,12 +43,12 @@ export const POST = wrap(async (request) => {
   try {
     id = await dbApi.saveReceipt(
       {
-        ...receipt,
+        ...v.receipt,
         user_id: session.userId,
         image_file,
         raw_json: JSON.stringify(raw || { receipt, items }),
       },
-      items,
+      v.items,
       { stampFamilyFromDb: true }
     );
   } catch (e) {

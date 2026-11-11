@@ -32,27 +32,55 @@ function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function escapeXml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-}
+// 字形表: 每个字符是一组折线(坐标在 10x16 的盒子里)，由 renderSvg 缩放/旋转/抖动后画成 <path>。
+// 图片里没有 <text>、字体或任何拼出算式的字符数据，答案只存在于路径几何中，脚本必须真做图像识别才能读出
+const rot180 = (strokes) => strokes.map((st) => st.map(([x, y]) => [10 - x, 16 - y]));
+const SIX = [[[9, 1], [5, 0], [1.5, 3], [0, 9], [0.5, 13.5], [3, 16], [7, 16], [10, 13], [9.5, 9.5], [7, 7.5], [3.5, 7.5], [0.5, 10]]];
+const GLYPHS = {
+  0: [[[5, 0], [8.5, 1.5], [10, 5], [10, 11], [8.5, 14.5], [5, 16], [1.5, 14.5], [0, 11], [0, 5], [1.5, 1.5], [5, 0]]],
+  1: [[[2, 4], [5, 0], [5, 16]], [[2, 16], [8, 16]]],
+  2: [[[0, 4.5], [1.5, 1.5], [5, 0], [8.5, 1.5], [10, 4.5], [8.5, 8], [0, 16], [10, 16]]],
+  3: [[[0, 2], [3, 0], [7, 0], [10, 2.5], [9, 6], [4.5, 7.5], [9.5, 9.5], [10, 13], [7, 16], [3, 16], [0, 14]]],
+  4: [[[8, 16], [8, 0], [0, 11], [10, 11]]],
+  5: [[[9, 0], [1.5, 0], [0.5, 7], [5, 6], [9, 7.5], [10, 11.5], [8, 15], [4.5, 16], [0, 14.5]]],
+  6: SIX,
+  7: [[[0, 0], [10, 0], [4, 16]]],
+  8: [[[5, 7.5], [1.5, 6], [1, 2.5], [5, 0], [9, 2.5], [8.5, 6], [5, 7.5], [0.5, 10], [0, 13], [2.5, 16], [7.5, 16], [10, 13], [9.5, 10], [5, 7.5]]],
+  9: rot180(SIX),
+  '+': [[[5, 3], [5, 13]], [[0, 8], [10, 8]]],
+  '-': [[[0.5, 8], [9.5, 8]]],
+  '=': [[[0, 5], [10, 5]], [[0, 11], [10, 11]]],
+  '?': [[[0, 4], [1.5, 1.5], [5, 0], [8.5, 1.5], [10, 4.5], [8.5, 7.5], [5, 9.5], [5, 12]], [[5, 15.4], [5, 16]]],
+};
 
-// 手写 SVG，不引入第三方验证码库：每个字符独立随机旋转/位移/配色，叠加干扰线和干扰点，
-// 提高机器 OCR 识别难度，同时保持纯文本+样式，无需额外 npm 依赖或图像处理库
+// 手写 SVG，不引入第三方验证码库：每个字符用自己的字形表画成描边 <path>，独立随机旋转/位移/缩放/配色，
+// 每个控制点再单独抖动，叠加干扰曲线和干扰点。字形描边(2.6，'-' 3.4)明显粗于干扰线(1.1)，负号不会和噪声混淆
 function renderSvg(text) {
   const width = 150;
   const height = 48;
   const step = (width - 16) / text.length;
   let glyphs = '';
   for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
     const cx = 12 + i * step + step / 2 + rand(-3, 3);
-    const cy = height / 2 + rand(-5, 5);
-    const rotate = rand(-18, 18);
-    const size = rand(20, 26);
-    glyphs += `<text x="${cx.toFixed(1)}" y="${cy.toFixed(1)}" font-size="${size.toFixed(1)}" font-family="Menlo, Consolas, 'Courier New', monospace" font-weight="700" fill="${pick(COLORS)}" text-anchor="middle" dominant-baseline="middle" transform="rotate(${rotate.toFixed(1)} ${cx.toFixed(1)} ${cy.toFixed(1)})">${escapeXml(text[i])}</text>`;
+    const cy = height / 2 + rand(-4, 4);
+    const rad = (rand(-16, 16) * Math.PI) / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    const scale = rand(1.4, 1.65);
+    let d = '';
+    for (const stroke of GLYPHS[ch]) {
+      stroke.forEach(([gx, gy], k) => {
+        const x = (gx - 5 + rand(-0.45, 0.45)) * scale;
+        const y = (gy - 8 + rand(-0.45, 0.45)) * scale;
+        d += `${k === 0 ? 'M' : 'L'}${(cx + x * cos - y * sin).toFixed(1)} ${(cy + x * sin + y * cos).toFixed(1)}`;
+      });
+    }
+    glyphs += `<path d="${d}" stroke="${pick(COLORS)}" stroke-width="${ch === '-' ? 3.4 : 2.6}" stroke-linecap="round" stroke-linejoin="round" fill="none"/>`;
   }
   let noise = '';
   for (let i = 0; i < 4; i++) {
-    noise += `<path d="M${rand(0, width).toFixed(1)} ${rand(0, height).toFixed(1)} Q${rand(0, width).toFixed(1)} ${rand(0, height).toFixed(1)} ${rand(0, width).toFixed(1)} ${rand(0, height).toFixed(1)}" stroke="${pick(COLORS)}" stroke-width="1" fill="none" opacity="0.45"/>`;
+    noise += `<path d="M${rand(0, width).toFixed(1)} ${rand(0, height).toFixed(1)} Q${rand(0, width).toFixed(1)} ${rand(0, height).toFixed(1)} ${rand(0, width).toFixed(1)} ${rand(0, height).toFixed(1)}" stroke="${pick(COLORS)}" stroke-width="1.1" fill="none" opacity="0.45"/>`;
   }
   for (let i = 0; i < 18; i++) {
     noise += `<circle cx="${rand(0, width).toFixed(1)}" cy="${rand(0, height).toFixed(1)}" r="1" fill="${pick(COLORS)}" opacity="0.5"/>`;
@@ -115,4 +143,4 @@ function tokenKey(token) {
   return crypto.createHash('sha256').update(String(token)).digest('hex');
 }
 
-module.exports = { generate, verify, isWellFormed, tokenKey };
+module.exports = { generate, verify, isWellFormed, tokenKey, renderSvg };

@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { checkPasswordLimited, lockedBody } from '@/src/passwordGuard';
 import dbApi from '@/src/db.cjs';
 import { requireSession } from '@/src/session';
-import { wrap, readJson, FORM_BODY_MAX } from '@/src/http';
+import { wrap, readJson, readString, PASSWORD_MAX_BYTES, FORM_BODY_MAX } from '@/src/http';
 
 export const POST = wrap(async (request) => {
   // 被管理员重置过密码的账号只能走这个接口(和 /api/auth/me、退出)，所以放行
@@ -11,11 +11,9 @@ export const POST = wrap(async (request) => {
   if (response) return response;
 
   const body = await readJson(request, FORM_BODY_MAX);
-  const currentPassword = body.currentPassword || '';
-  const newPassword = body.newPassword || '';
-  if (!currentPassword || !newPassword) {
-    return NextResponse.json({ error: '请输入当前密码和新密码' }, { status: 400 });
-  }
+  const pw = { trim: false, required: true, emptyMessage: '请输入当前密码和新密码' };
+  const currentPassword = readString(body, 'currentPassword', { ...pw, label: '当前密码' });
+  const newPassword = readString(body, 'newPassword', { ...pw, label: '新密码', maxBytes: PASSWORD_MAX_BYTES });
 
   if (newPassword === currentPassword) return NextResponse.json({ error: '新密码不能和当前密码相同' }, { status: 400 });
 

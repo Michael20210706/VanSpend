@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbApi from '@/src/db.cjs';
 import { requireAdmin } from '@/src/session';
-import { wrap } from '@/src/http';
+import { wrap, readDateParam, readIdParam } from '@/src/http';
 
 // userId 可选: 不传就是全部用户汇总
 export const GET = wrap(async (request) => {
@@ -9,7 +9,7 @@ export const GET = wrap(async (request) => {
   if (response) return response;
 
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId');
-  const data = await dbApi.overview(searchParams.get('from') || undefined, searchParams.get('to') || undefined, userId ? { userId: +userId } : undefined);
+  const userId = readIdParam(searchParams, 'userId');
+  const data = await dbApi.overview(readDateParam(searchParams, 'from'), readDateParam(searchParams, 'to'), userId ? { userId } : undefined);
   return NextResponse.json(data);
 });

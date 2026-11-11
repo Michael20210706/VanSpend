@@ -27,7 +27,7 @@ describe('各 [id] 路由对非法 id 返回 400', () => {
     }
   });
 
-  it('合法 id 的老行为不变: 自己的小票 200，不存在 404，删别人的不会删掉', async () => {
+  it('合法 id 的老行为: 自己的小票 200，不存在 404，删别人的 404 且不会删掉', async () => {
     const owner = await makeUser();
     const other = await makeUser();
     const rid = await makeReceipt(owner);
@@ -36,7 +36,10 @@ describe('各 [id] 路由对非法 id 返回 400', () => {
     expect((await receiptRoute.GET(req('/x'), ctx({ id: '99999999' }))).status).toBe(404);
     await loginAs(other);
     const res = await receiptRoute.DELETE(req('/x', { method: 'DELETE' }), ctx({ id: String(rid) }));
-    expect((await res.json()).deleted).toBe(0);
+    expect(res.status).toBe(404);
+    expect((await res.json()).error).toBe('未找到');
+    const gone = await receiptRoute.DELETE(req('/x', { method: 'DELETE' }), ctx({ id: '99999999' }));
+    expect(gone.status).toBe(404);
   });
 
   it('管理员小票详情 / 删除', async () => {

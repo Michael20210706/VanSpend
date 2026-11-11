@@ -8,7 +8,7 @@ import ScanTab from '../components/ScanTab';
 import DashboardTab from '../components/DashboardTab';
 import ReceiptsTab from '../components/ReceiptsTab';
 import FamilyPanel from '../components/FamilyPanel';
-import { api, setUnauthorizedHandler } from '../lib/api';
+import { api, setUnauthorizedHandler, setPasswordChangeHandler } from '../lib/api';
 
 const TABS = [
   { key: 'scan', label: '上传识别' },
@@ -41,6 +41,8 @@ export default function Home() {
     api('/api/auth/me').then(setUser).catch(() => {});
   }, []);
 
+  useEffect(() => setPasswordChangeHandler(refreshUser), [refreshUser]);
+
   async function handleLogout() {
     await api('/api/auth/logout', { method: 'POST' });
     setUser(null);
@@ -53,10 +55,7 @@ export default function Home() {
   if (user.mustChangePassword) {
     return (
       <>
-        <ChangePasswordModal forced onClose={refreshUser} />
-        <p style={{ textAlign: 'center', marginTop: 24 }}>
-          <a href="#" onClick={(e) => { e.preventDefault(); handleLogout(); }}>退出登录</a>
-        </p>
+        <ChangePasswordModal forced onClose={refreshUser} onLogout={handleLogout} />
         <Toast />
       </>
     );

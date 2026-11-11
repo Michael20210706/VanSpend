@@ -116,7 +116,7 @@ export default function FamilyPanel({ active, onChanged }) {
           <h2>创建新家庭</h2>
           <p className="muted">家庭名称需在全站唯一；创建后你就是该家庭的创建者，可以邀请成员、审核加入申请。</p>
           <div className="row">
-            <input placeholder="家庭名称" value={createName} onChange={(e) => setCreateName(e.target.value)} />
+            <input placeholder="家庭名称" maxLength={100} value={createName} onChange={(e) => setCreateName(e.target.value)} />
             <button onClick={createFamily}>创建</button>
           </div>
         </div>
@@ -124,7 +124,7 @@ export default function FamilyPanel({ active, onChanged }) {
           <h2>申请加入已有家庭</h2>
           <p className="muted">提交后需等待该家庭的创建者审核通过才会生效。</p>
           <div className="row">
-            <input placeholder="要加入的家庭名称" value={applyName} onChange={(e) => setApplyName(e.target.value)} />
+            <input placeholder="要加入的家庭名称" maxLength={100} value={applyName} onChange={(e) => setApplyName(e.target.value)} />
             <button onClick={applyFamily}>申请加入</button>
           </div>
         </div>
@@ -198,7 +198,7 @@ export default function FamilyPanel({ active, onChanged }) {
         {data.isCreator && (
           <>
             <div className="row" style={{ marginTop: 12 }}>
-              <input placeholder="新的家庭名称" value={newName} onChange={(e) => setNewName(e.target.value)} />
+              <input placeholder="新的家庭名称" maxLength={100} value={newName} onChange={(e) => setNewName(e.target.value)} />
               <button onClick={rename}>改名</button>
             </div>
             <div className="row" style={{ marginTop: 12 }}>
@@ -220,7 +220,7 @@ export default function FamilyPanel({ active, onChanged }) {
             <h2>邀请成员</h2>
             <p className="muted">直接输入一个已注册且尚未加入任何家庭的用户名，立即生效。</p>
             <div className="row">
-              <input placeholder="用户名" value={inviteUsername} onChange={(e) => setInviteUsername(e.target.value)} />
+              <input placeholder="用户名" maxLength={100} value={inviteUsername} onChange={(e) => setInviteUsername(e.target.value)} />
               <button onClick={invite}>邀请</button>
             </div>
           </div>

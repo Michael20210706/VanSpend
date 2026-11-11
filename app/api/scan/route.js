@@ -3,7 +3,7 @@ import openrouterLib from '@/src/openrouter.cjs';
 import dbApi from '@/src/db.cjs';
 import uploadsLib from '@/src/uploads.cjs';
 import { requireSession } from '@/src/session';
-import { wrap, readJson, IMAGE_BODY_MAX } from '@/src/http';
+import { wrap, readJson, HttpError, IMAGE_BODY_MAX } from '@/src/http';
 
 // 仅识别，不入库，返回给前端确认/编辑
 export const POST = wrap(async (request) => {
@@ -37,6 +37,8 @@ export const POST = wrap(async (request) => {
   } catch (e) {
     // 记失败本身出错不能盖掉 OpenRouter 的原始错误
     await dbApi.finishScan(slot.id, false).catch((err) => console.error('[scan] finishScan 失败', err));
-    throw e;
+    // 上游错误原文(状态码、响应体)只写服务端日志，不透给用户
+    console.error('[scan] 识别失败', e);
+    throw new HttpError(502, '识别服务暂时不可用，请稍后重试');
   }
 });
