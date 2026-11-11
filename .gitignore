@@ -4,3 +4,4 @@ node_modules/
 .next/
 .env.test.local
 docker-compose.override.yml
+/backups/

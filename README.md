@@ -48,7 +48,8 @@ docker compose up -d        # 启动 app + 自带的专用 MySQL 8.4.7(数据在
 容器里的 `app` 固定连 `mysql:3306`(compose 的 `environment` 优先于 `.env`)，所以 `.env` 里的 `MYSQL_HOST`/`MYSQL_PORT` 可以写成宿主机视角的地址给
 `npm run dev` / `npm test` 用：复制 `docker-compose.override.example.yml` 为 `docker-compose.override.yml`(已 gitignore)把 MySQL 映射到 **127.0.0.1:3307**(只有本机能连)，
 `.env` 写 `MYSQL_HOST=127.0.0.1`、`MYSQL_PORT=3307`；跑测试需要建/删 `vanspend_test` 库，在 `.env.test.local`(已 gitignore)里写 `MYSQL_USER=root` 和 root 密码。
-**备份**：`docker compose exec mysql sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --no-tablespaces vanspend' > backup.sql`；不要用 `docker compose down -v`(会删掉数据卷)。
+**自动备份**：compose 里的 `backup` 服务启动时立即、之后每 24 小时(`BACKUP_INTERVAL_HOURS`)用应用的专用账号导出一份，gzip 压缩后放在 `./backups`(已 gitignore，权限 600)，只保留最近 14 份(`BACKUP_KEEP`)。备份和数据卷在同一台机器上，要防磁盘损坏请把 `./backups` 同步到别处。
+**恢复**(建议先恢复到一个临时库核对)：`gunzip -c backups/<文件>.sql.gz | docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" <库名>'`。手动备份：`docker compose exec mysql sh -c 'mysqldump -uroot -p"$MYSQL_ROOT_PASSWORD" --single-transaction --no-tablespaces vanspend' > backup.sql`。不要用 `docker compose down -v`(会删掉数据卷)。
 若已有外部 MySQL，删掉 `docker-compose.yml` 里的 `mysql` service(以及 `app` 的 `depends_on` 和 `environment` 里的 MYSQL_HOST/PORT)，把 `.env` 指向外部实例即可。也可以只用 `docker build -t vanspend .` 单独构建镜像。
 
 ## 项目结构
