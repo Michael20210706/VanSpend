@@ -7,6 +7,11 @@ services:
       - "127.0.0.1:${PORT:-3000}:3000"
     env_file:
       - .env
+    # 容器内连 compose 自带的 mysql 服务: 这里的 environment 优先于 env_file，所以 .env 里的 MYSQL_HOST/MYSQL_PORT
+    # 可以保持写成"宿主机视角"的地址(给 npm run dev / npm test 用，见 docker-compose.override.yml 的说明)，两边共用一份 .env
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
     volumes:
       - ./uploads:/app/uploads
     depends_on:
@@ -28,23 +33,27 @@ services:
     restart: unless-stopped
     profiles: ["tunnel"]
 
-  # 本地/演示用的 MySQL(不映射端口到宿主机，只有 compose 内部的 app 能连)；若已有外部 MySQL，删掉这个 service，
-  # 并把 .env 里的 MYSQL_HOST/PORT 指向那个外部实例即可。
+  # 自带的 MySQL(默认就用它): 不映射端口到宿主机，只有 compose 网络里的 app 能连——不对局域网/公网暴露。
+  # 版本固定为 8.4.7(与此前外部实例同一个小版本，数据迁移无兼容问题)。数据在命名卷 mysql-data 里，
+  # `docker compose down` 不会删它(`down -v` 才会，别加 -v)。
+  # 首次启动时按下面的环境变量创建 root(强密码，必填)、MYSQL_DATABASE 库和只有该库权限的专用账号 MYSQL_USER；
+  # 表结构由应用启动时自动创建/升级(不再挂载 sql/schema.sql)。MYSQL_USER 不能是 root。
+  # 若已有外部 MySQL，删掉这个 service 和 app 的 depends_on/environment 里的 MYSQL_HOST/PORT，把 .env 指向那个实例即可。
   mysql:
-    image: mysql:8.0
+    image: mysql:8.4.7
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在 .env 里设置 MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-vanspend}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER:?请在 .env 里设置 MYSQL_USER(不能是 root)}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?请在 .env 里设置 MYSQL_PASSWORD}
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-changeme}"]
+      # $$ 让变量在容器里的 shell 里展开(密码不会出现在 compose 配置/docker inspect 的命令行里)
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
     restart: unless-stopped
 
 volumes:
