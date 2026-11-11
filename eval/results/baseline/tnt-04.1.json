@@ -1,0 +1,139 @@
+{
+ "ok": true,
+ "id": "tnt-04",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2045,
+ "receipt": {
+  "store": "T&T Supermarket",
+  "purchased_at": "2026-07-18",
+  "currency": "CAD",
+  "subtotal": 48.94,
+  "gst": 0,
+  "pst": 0,
+  "total": 51.75
+ },
+ "items": [
+  {
+   "name_raw": "BUBBLE TEA KIT",
+   "name_norm": "奶茶粉",
+   "category": "零食饮料",
+   "subcategory": "饮品",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 11.99,
+   "amount": 11.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "TAPIOCA PEARLS",
+   "name_norm": "木薯粉圆",
+   "category": "零食饮料",
+   "subcategory": "饮品配料",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 4.99,
+   "amount": 4.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "MILK 2L",
+   "name_norm": "牛奶",
+   "category": "乳制品蛋类",
+   "subcategory": "牛奶",
+   "qty": 1,
+   "unit": "升",
+   "unit_price": 5.49,
+   "amount": 5.49,
+   "taxable": 0
+  },
+  {
+   "name_raw": "PLASTIC WRAP",
+   "name_norm": "保鲜膜",
+   "category": "日用清洁",
+   "subcategory": "厨房用品",
+   "qty": 1,
+   "unit": "卷",
+   "unit_price": 6.49,
+   "amount": 6.49,
+   "taxable": 1
+  },
+  {
+   "name_raw": "DUMPLINGS PORK",
+   "name_norm": "猪肉饺子",
+   "category": "其他",
+   "subcategory": "速冻食品",
+   "qty": 2,
+   "unit": "份",
+   "unit_price": 9.99,
+   "amount": 19.98,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "T&T Supermarket",
+  "purchased_at": "2026-07-18",
+  "currency": "CAD",
+  "subtotal": 48.94,
+  "gst": 0,
+  "pst": 0,
+  "total": 51.75,
+  "items": [
+   {
+    "name_raw": "BUBBLE TEA KIT",
+    "name_norm": "奶茶粉",
+    "category": "零食饮料",
+    "subcategory": "饮品",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 11.99,
+    "amount": 11.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "TAPIOCA PEARLS",
+    "name_norm": "木薯粉圆",
+    "category": "零食饮料",
+    "subcategory": "饮品配料",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 4.99,
+    "amount": 4.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "MILK 2L",
+    "name_norm": "牛奶",
+    "category": "乳制品蛋类",
+    "subcategory": "牛奶",
+    "qty": 1,
+    "unit": "升",
+    "unit_price": 5.49,
+    "amount": 5.49,
+    "taxable": false
+   },
+   {
+    "name_raw": "PLASTIC WRAP",
+    "name_norm": "保鲜膜",
+    "category": "日用清洁",
+    "subcategory": "厨房用品",
+    "qty": 1,
+    "unit": "卷",
+    "unit_price": 6.49,
+    "amount": 6.49,
+    "taxable": true
+   },
+   {
+    "name_raw": "DUMPLINGS PORK",
+    "name_norm": "猪肉饺子",
+    "category": "其他",
+    "subcategory": "速冻食品",
+    "qty": 2,
+    "unit": "份",
+    "unit_price": 9.99,
+    "amount": 19.98,
+    "taxable": false
+   }
+  ]
+ }
+}
