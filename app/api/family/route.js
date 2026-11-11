@@ -12,7 +12,7 @@ export const POST = wrap(async (request) => {
   if (session.familyId) return NextResponse.json({ error: '您已经在一个家庭中' }, { status: 400 });
 
   const body = await readJson(request, FORM_BODY_MAX);
-  const name = readString(body, 'name', { label: '家庭名称', required: true, max: FAMILY_NAME_MAX });
+  const name = readString(body, 'name', { label: '家庭名称', required: true, max: FAMILY_NAME_MAX, noControl: true });
   if (await dbApi.findFamilyByName(name)) {
     return NextResponse.json({ error: '该家庭名称已被使用，换一个名称，或选择"申请加入"' }, { status: 400 });
   }
@@ -34,7 +34,7 @@ export const PATCH = wrap(async (request) => {
   if (response) return response;
 
   const body = await readJson(request, FORM_BODY_MAX);
-  const name = readString(body, 'name', { label: '家庭名称', required: true, max: FAMILY_NAME_MAX });
+  const name = readString(body, 'name', { label: '家庭名称', required: true, max: FAMILY_NAME_MAX, noControl: true });
 
   const result = await dbApi.renameFamily(session.familyId, session.userId, name);
   if (result === 'forbidden') return NextResponse.json({ error: '无权限' }, { status: 403 });

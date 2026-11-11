@@ -78,12 +78,13 @@ export function parseId(raw) {
 //   label: 用在提示里的字段名；emptyMessage: required 且为空时的提示；tooLong: 超长时的提示(默认 `${label}不能超过 ${max} 个字符`)
 //   trim: 默认去首尾空格(密码传 false)；max: 最大字符数(按 Unicode 码点数，与 MySQL utf8mb4 的 VARCHAR 长度一致)；
 //   maxBytes: 最大 UTF-8 字节数(bcrypt 只看前 72 字节，更长的部分会被悄悄截掉)
-export function readString(body, key, { label = key, required = false, emptyMessage, trim = true, max, maxBytes, tooLong, tooManyBytes } = {}) {
+export function readString(body, key, { label = key, required = false, emptyMessage, trim = true, max, maxBytes, tooLong, tooManyBytes, noControl = false } = {}) {
   const raw = body[key];
   if (raw !== undefined && raw !== null && typeof raw !== 'string') throw new HttpError(400, `${label}格式错误`);
   let s = raw || '';
   if (trim) s = s.trim();
   if (required && !s) throw new HttpError(400, emptyMessage || `请填写${label}`);
+  if (noControl && /[\u0000-\u001f\u007f]/.test(s)) throw new HttpError(400, `${label}不能包含控制字符(换行、制表符等)`);
   if (max !== undefined && Array.from(s).length > max) throw new HttpError(400, tooLong || `${label}不能超过 ${max} 个字符`);
   if (maxBytes !== undefined && Buffer.byteLength(s, 'utf8') > maxBytes) {
     throw new HttpError(400, tooManyBytes || `${label}太长(最多 ${maxBytes} 个字节，一个汉字约占 3 个字节)`);

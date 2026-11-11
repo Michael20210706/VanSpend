@@ -597,6 +597,7 @@ async function setScanTier(userId, tier, audit) {
     await conn.beginTransaction();
     const [rows] = await conn.execute('SELECT username, scan_tier FROM users WHERE id = :userId FOR UPDATE', { userId });
     if (!rows.length) { await conn.rollback(); return false; }
+    if (rows[0].scan_tier === tier) { await conn.rollback(); return true; } // 没有发生写入就不写审计日志
     await conn.execute('UPDATE users SET scan_tier = :tier WHERE id = :userId', { userId, tier });
     if (tier === 'open') {
       await conn.execute(`
@@ -1264,6 +1265,9 @@ function dateFilter(from, to, scope) {
   return { where: clauses.length ? 'WHERE ' + clauses.join(' AND ') : '', params };
 }
 
+// LIKE 里的 % _ \\ 当成普通字符(MySQL 默认转义符就是反斜杠)
+const likeEscape = (s) => String(s).replace(/[\\%_]/g, '\\$&');
+
 async function listReceipts({ limit = 200, from, to, search, scope } = {}) {
   await ready;
   const lim = Math.min(Math.max(parseInt(limit, 10) || 200, 1), 2000);
@@ -1273,7 +1277,7 @@ async function listReceipts({ limit = 200, from, to, search, scope } = {}) {
     clauses.push(`(r.store LIKE :search OR EXISTS (
       SELECT 1 FROM items i2 WHERE i2.receipt_id = r.id AND (i2.name_raw LIKE :search OR i2.name_norm LIKE :search)
     ))`);
-    params.search = '%' + search + '%';
+    params.search = '%' + likeEscape(search) + '%';
   }
   const whereClause = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
   const [rows] = await pool.execute(`
@@ -1425,7 +1429,7 @@ async function statsMonthly(from, to, scope) {
 // 某品名的价格趋势 (按规范名匹配，跨时间); scope 语义同 dateFilter
 async function priceTrend(nameNorm, store, scope) {
   await ready;
-  const params = { q: '%' + nameNorm + '%' };
+  const params = { q: '%' + likeEscape(nameNorm) + '%' };
   const scopeSql = scopeClause(scope, params) || '1 = 0'; // 没有 scope 就什么都不返回(这个函数从不给管理后台用)
   let storeClause = '';
   if (store) { storeClause = ' AND r.store = :store'; params.store = store; }

@@ -19,7 +19,7 @@ const USERNAME_TAKEN = () => NextResponse.json({ error: '用户名已存在' }, 
 export const POST = wrap(async (request) => {
   const body = await readJson(request, FORM_BODY_MAX);
   // 所有字段的类型和长度都在消耗邀请码/验证码/IP 名额之前校验: 超长或非字符串直接 400，不消耗任何东西
-  const username = readString(body, 'username', { label: '用户名', max: 100 }); // users.username 列宽
+  const username = readString(body, 'username', { label: '用户名', max: 100, noControl: true }); // users.username 列宽
   const password = readString(body, 'password', { label: '密码', trim: false, maxBytes: PASSWORD_MAX_BYTES });
   const familyRole = FAMILY_ROLES.includes(body.familyRole) ? body.familyRole : null;
   const accountType = body.accountType === 'family' ? 'family' : 'individual';

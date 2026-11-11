@@ -131,8 +131,8 @@ function isWellFormed(token) {
 
 function verify(token, answer) {
   const p = parse(token);
-  if (!p) return false;
-  return safeEqual(answerMac(p.nonce, String(answer ?? '').trim()), p.mac);
+  if (!p || typeof answer !== 'string') return false; // 数字/数组形式的答案以前会被 String() 悄悄接受
+  return safeEqual(answerMac(p.nonce, answer.trim()), p.mac);
 }
 
 // 一次性使用的键: 有效 token 用它的签名(HMAC，带 nonce，每个签发的 token 唯一，且上面保证了写法唯一)；

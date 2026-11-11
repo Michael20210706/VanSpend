@@ -22,5 +22,6 @@ export const DELETE = wrap(async (request, { params }) => {
   const id = parseId((await params).id);
   if (id === null) return NextResponse.json({ error: '无效的 id' }, { status: 400 });
   const deleted = await dbApi.adminDeleteReceipt(id, { id: session.userId, username: session.username });
+  if (!deleted) return NextResponse.json({ error: '未找到' }, { status: 404 });
   return NextResponse.json({ deleted });
 });

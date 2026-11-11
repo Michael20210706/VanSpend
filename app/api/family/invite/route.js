@@ -9,7 +9,7 @@ export const POST = wrap(async (request) => {
   if (response) return response;
 
   const body = await readJson(request, FORM_BODY_MAX);
-  const username = readString(body, 'username', { label: '用户名', required: true, max: 100, emptyMessage: '请填写要邀请的用户名' });
+  const username = readString(body, 'username', { label: '用户名', required: true, max: 100, noControl: true, emptyMessage: '请填写要邀请的用户名' });
   if (username === session.username) return NextResponse.json({ error: '不能邀请自己' }, { status: 400 });
 
   const target = await dbApi.findUserByUsername(username);

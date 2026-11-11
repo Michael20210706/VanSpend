@@ -37,8 +37,13 @@ export function securityHeaders(env = process.env.NODE_ENV) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  poweredByHeader: false,
   async headers() {
-    return [{ source: '/:path*', headers: securityHeaders() }];
+    return [
+      { source: '/:path*', headers: securityHeaders() },
+      // 认证类接口(验证码、me、登录等)的响应是按人/按次变化的，明确禁止任何缓存
+      { source: '/api/auth/:path*', headers: [{ key: 'Cache-Control', value: 'private, no-store' }] },
+    ];
   },
 };
 
