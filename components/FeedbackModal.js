@@ -2,11 +2,13 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
+import useModal from '../lib/useModal';
 
 export default function FeedbackModal({ onClose }) {
   const [content, setContent] = useState('');
   const [history, setHistory] = useState([]);
   const [err, setErr] = useState('');
+  const boxRef = useModal(onClose);
 
   async function load() {
     setHistory(await api('/api/feedback'));
@@ -39,7 +41,7 @@ export default function FeedbackModal({ onClose }) {
       }}
       onClick={onClose}
     >
-      <div className="card" style={{ width: 420, maxHeight: '80vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+      <div className="card" ref={boxRef} role="dialog" aria-modal="true" style={{ width: 420, maxHeight: '80vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
         <h2>意见反馈</h2>
         <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>
           <textarea

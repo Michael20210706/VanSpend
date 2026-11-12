@@ -102,6 +102,7 @@ export default function ScanTab({ cfg }) {
         body: JSON.stringify({ receipt, items, image: currentImage, raw: lastRawRef.current }),
       });
       showToast('已保存 ✓');
+      setScanHint('');
       setEditVisible(false);
       setCurrentImage(null);
       setRows([]);
