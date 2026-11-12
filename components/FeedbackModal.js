@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
+import { formatDateTime, utcTitle } from '../lib/time';
 
 export default function FeedbackModal({ onClose }) {
   const [content, setContent] = useState('');
@@ -61,7 +62,7 @@ export default function FeedbackModal({ onClose }) {
             <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 8 }}>
               {history.map((f) => (
                 <div key={f.id} className="muted" style={{ borderTop: '1px solid var(--line)', paddingTop: 8 }}>
-                  <div style={{ fontSize: 12 }}>{f.created_at}</div>
+                  <div style={{ fontSize: 12 }} title={utcTitle(f.created_at)}>{formatDateTime(f.created_at)}</div>
                   <div>{f.content}</div>
                 </div>
               ))}

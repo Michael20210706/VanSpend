@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { api, fmt } from '../../lib/api';
 import { showToast } from '../../lib/toast';
 import { FAMILY_ROLE_LABELS } from '../../lib/familyRoles';
+import { formatDateTime, utcTitle } from '../../lib/time';
 
 export default function UsersPanel({ active }) {
   const [users, setUsers] = useState([]);
@@ -94,7 +95,7 @@ export default function UsersPanel({ active }) {
                   </>
                 )}
               </td>
-              <td>{u.created_at}</td>
+              <td title={utcTitle(u.created_at)}>{formatDateTime(u.created_at)}</td>
               <td className="num">{u.receipt_count}</td>
               <td className="num">${fmt(u.total_spend)}</td>
               <td>

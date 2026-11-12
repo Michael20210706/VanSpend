@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
+import { formatDateTime, utcTitle } from '../../lib/time';
 
 export default function FeedbackPanel({ active }) {
   const [rows, setRows] = useState([]);
@@ -24,7 +25,7 @@ export default function FeedbackPanel({ active }) {
               <tr key={f.id}>
                 <td>{f.username}</td>
                 <td style={{ whiteSpace: 'pre-wrap' }}>{f.content}</td>
-                <td>{f.created_at}</td>
+                <td title={utcTitle(f.created_at)}>{formatDateTime(f.created_at)}</td>
               </tr>
             ))}
           </tbody>

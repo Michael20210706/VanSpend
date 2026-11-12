@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
 import { FAMILY_ROLE_LABELS } from '../lib/familyRoles';
 import InviteCodes from './InviteCodes';
+import { formatDateTime, utcTitle } from '../lib/time';
 
 export default function FamilyPanel({ active, onChanged }) {
   const [data, setData] = useState(undefined); // undefined=加载中, { family: null|{...}, ... }
@@ -138,7 +139,7 @@ export default function FamilyPanel({ active, onChanged }) {
                   {data.myApplications.map((a) => (
                     <tr key={a.id}>
                       <td>{a.family_name}</td>
-                      <td>{a.created_at}</td>
+                      <td title={utcTitle(a.created_at)}>{formatDateTime(a.created_at)}</td>
                       <td><button className="danger" onClick={() => withdraw(a.id)}>撤回</button></td>
                     </tr>
                   ))}
@@ -167,7 +168,7 @@ export default function FamilyPanel({ active, onChanged }) {
                 <tr key={m.id}>
                   <td>{m.username}</td>
                   <td>{FAMILY_ROLE_LABELS[m.family_role] || '-'}</td>
-                  <td>{m.created_at}</td>
+                  <td title={utcTitle(m.family_joined_at)}>{formatDateTime(m.family_joined_at)}</td>
                   {data.isCreator ? (
                     <td>
                       {m.id === data.userId ? <span className="muted">创建者(你)</span> : (
@@ -239,7 +240,7 @@ export default function FamilyPanel({ active, onChanged }) {
                   ) : data.pendingRequests.map((r) => (
                     <tr key={r.id}>
                       <td>{r.username}</td>
-                      <td>{r.created_at}</td>
+                      <td title={utcTitle(r.created_at)}>{formatDateTime(r.created_at)}</td>
                       <td>
                         <button onClick={() => decide(r.id, 'approve')}>通过</button>
                         <button className="danger" onClick={() => decide(r.id, 'reject')}>拒绝</button>
