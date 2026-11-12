@@ -1048,7 +1048,8 @@ async function getSessionUser(id) {
 async function findImageOwner(imageFile) {
   await ready;
   const [rows] = await pool.execute(
-    'SELECT user_id, family_id FROM receipts WHERE image_file = :imageFile LIMIT 1',
+    // 库的默认排序规则不区分大小写，文件名是区分大小写的随机串；先走索引，再按字节精确比对
+    'SELECT user_id, family_id FROM receipts WHERE image_file = :imageFile AND BINARY image_file = BINARY :imageFile LIMIT 1',
     { imageFile }
   );
   return rows[0] || null;

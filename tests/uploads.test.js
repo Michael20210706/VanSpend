@@ -106,3 +106,15 @@ describe('/uploads 原图鉴权', () => {
     expect((await get('sub/' + file)).status).toBe(404);
   });
 });
+
+describe('findImageOwner 区分大小写', () => {
+  it('文件名只有大小写不同 → 找不到；完全一致 → 找得到', async () => {
+    const { default: dbApi } = await import('@/src/db.cjs');
+    const owner = await makeUser();
+    const name = 'CaseSens' + uniq('x').replace(/_/g, '') + '.jpg';
+    await makeReceipt(owner, { imageFile: name });
+    expect(await dbApi.findImageOwner(name)).toMatchObject({ user_id: owner.id });
+    expect(await dbApi.findImageOwner(name.toLowerCase())).toBeNull();
+    expect(await dbApi.findImageOwner(name.toUpperCase())).toBeNull();
+  });
+});
