@@ -167,6 +167,17 @@ function normalize(p) {
     }
   }
 
+  // 模型有时把整笔合计税填进 pst、gst 留 0(T&T 一类小票)。total 与 subtotal+pst 吻合(差不超过 2 分)、pst 不超过 subtotal 的 12%
+  // 时，把 pst 当作合计税按 5:7 重拆；gst 已有值、pst 超过 12%、没有印出 total 或 total 对不上(更像漏了小费)都不动
+  if (printedTotal > 0 && receipt.subtotal > 0 && receipt.gst === 0 && receipt.pst > 0) {
+    const mismatchCents = Math.abs(Math.round((printedTotal - receipt.subtotal - receipt.pst) * 100));
+    if (mismatchCents <= 2 && receipt.pst <= receipt.subtotal * 0.12 + 0.05) {
+      const combined = receipt.pst;
+      receipt.gst = +((combined * 5) / 12).toFixed(2);
+      receipt.pst = +(combined - receipt.gst).toFixed(2);
+    }
+  }
+
   return { receipt, items, raw: p };
 }
 

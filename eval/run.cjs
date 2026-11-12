@@ -2,17 +2,17 @@
 // 对 eval/dataset.json 的每张图调用真实的 scanReceipt(src/openrouter.cjs)，原始输出存到 eval/results/<label>/。
 // 用法(在仓库根目录): node eval/run.cjs <label> [--extra 2] [--only id1,id2]
 //   每张图跑 1 次; VARIABILITY_IDS 里的图额外再跑 --extra 次(默认 2, 共 3 次)用来看运行间波动。
-// 费用护栏: 所有"尝试"(含重试)累计写入 eval/results/calls.json, 到 HARD_CAP 就拒绝继续。已有成功结果的 (id,run) 会跳过，不重复计费。
+// 费用护栏(可用环境变量 EVAL_HARD_CAP / EVAL_CALLS_FILE 给某一轮单独的上限与计数文件): 所有"尝试"(含重试)累计写入 eval/results/calls.json, 到 HARD_CAP 就拒绝继续。已有成功结果的 (id,run) 会跳过，不重复计费。
 // 不读不打印 API key: 模块自己从 .env 加载。
 const fs = require('fs');
 const path = require('path');
 const { scanReceipt, config } = require('../src/openrouter.cjs');
 
-const HARD_CAP = 120;
+const HARD_CAP = Number(process.env.EVAL_HARD_CAP || 120);
 const CONCURRENCY = 3;
 const VARIABILITY_IDS = ['tnt-01', 'tnt-03', 'rest-01', 'disc-01', 'deg-01', 'long-01'];
 const root = __dirname;
-const callsFile = path.join(root, 'results', 'calls.json');
+const callsFile = path.join(root, 'results', process.env.EVAL_CALLS_FILE || 'calls.json');
 
 function readCalls() { return fs.existsSync(callsFile) ? JSON.parse(fs.readFileSync(callsFile, 'utf8')) : { total: 0, byLabel: {} }; }
 function bumpCalls(label) {

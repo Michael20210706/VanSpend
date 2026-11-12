@@ -1,0 +1,161 @@
+{
+ "ok": true,
+ "id": "rest-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2336,
+ "receipt": {
+  "store": "Pasta Bella",
+  "purchased_at": "2026-10-09",
+  "currency": "CAD",
+  "subtotal": 69.5,
+  "gst": 3.48,
+  "pst": 12,
+  "total": 84.98
+ },
+ "items": [
+  {
+   "name_raw": "Caesar Salad",
+   "name_norm": "凯撒沙拉",
+   "category": "餐厅外食",
+   "subcategory": "沙拉",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 11,
+   "amount": 11,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Spaghetti Carbonara",
+   "name_norm": "培根意面",
+   "category": "餐厅外食",
+   "subcategory": "意面",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 22,
+   "amount": 22,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Margherita Pizza",
+   "name_norm": "玛格丽特披萨",
+   "category": "餐厅外食",
+   "subcategory": "披萨",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 20,
+   "amount": 20,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Tiramisu",
+   "name_norm": "提拉米苏",
+   "category": "餐厅外食",
+   "subcategory": "甜点",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 10,
+   "amount": 10,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Sparkling Water",
+   "name_norm": "气泡水",
+   "category": "零食饮料",
+   "subcategory": "水",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 6.5,
+   "amount": 6.5,
+   "taxable": 1
+  },
+  {
+   "name_raw": "TIP",
+   "name_norm": "小费",
+   "category": "其他",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 12,
+   "amount": 12,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "Pasta Bella",
+  "purchased_at": "2026-10-09",
+  "currency": "CAD",
+  "subtotal": 69.5,
+  "gst": 3.48,
+  "pst": 12,
+  "total": 84.98,
+  "items": [
+   {
+    "name_raw": "Caesar Salad",
+    "name_norm": "凯撒沙拉",
+    "category": "餐厅外食",
+    "subcategory": "沙拉",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 11,
+    "amount": 11,
+    "taxable": true
+   },
+   {
+    "name_raw": "Spaghetti Carbonara",
+    "name_norm": "培根意面",
+    "category": "餐厅外食",
+    "subcategory": "意面",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 22,
+    "amount": 22,
+    "taxable": true
+   },
+   {
+    "name_raw": "Margherita Pizza",
+    "name_norm": "玛格丽特披萨",
+    "category": "餐厅外食",
+    "subcategory": "披萨",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 20,
+    "amount": 20,
+    "taxable": true
+   },
+   {
+    "name_raw": "Tiramisu",
+    "name_norm": "提拉米苏",
+    "category": "餐厅外食",
+    "subcategory": "甜点",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 10,
+    "amount": 10,
+    "taxable": true
+   },
+   {
+    "name_raw": "Sparkling Water",
+    "name_norm": "气泡水",
+    "category": "零食饮料",
+    "subcategory": "水",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 6.5,
+    "amount": 6.5,
+    "taxable": true
+   },
+   {
+    "name_raw": "TIP",
+    "name_norm": "小费",
+    "category": "其他",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 12,
+    "amount": 12,
+    "taxable": false
+   }
+  ]
+ }
+}

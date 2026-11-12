@@ -1,0 +1,161 @@
+{
+ "ok": true,
+ "id": "tnt-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2009,
+ "receipt": {
+  "store": "T&T Supermarket",
+  "purchased_at": "2026-08-21",
+  "currency": "CAD",
+  "subtotal": 52.78,
+  "gst": 1.04,
+  "pst": 1.46,
+  "total": 55.28
+ },
+ "items": [
+  {
+   "name_raw": "GREEN TEA 500ML",
+   "name_norm": "绿茶",
+   "category": "零食饮料",
+   "subcategory": "茶饮",
+   "qty": 4,
+   "unit": "瓶",
+   "unit_price": 1.99,
+   "amount": 7.96,
+   "taxable": 1
+  },
+  {
+   "name_raw": "INSTANT NOODLE 5PK",
+   "name_norm": "方便面",
+   "category": "零食饮料",
+   "subcategory": "方便食品",
+   "qty": 2,
+   "unit": "包",
+   "unit_price": 5.99,
+   "amount": 11.98,
+   "taxable": 0
+  },
+  {
+   "name_raw": "DISH SOAP",
+   "name_norm": "洗洁精",
+   "category": "日用清洁",
+   "subcategory": "清洁用品",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 4.49,
+   "amount": 4.49,
+   "taxable": 1
+  },
+  {
+   "name_raw": "SHRIMP FROZEN",
+   "name_norm": "冷冻虾",
+   "category": "海鲜",
+   "subcategory": "虾",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 14.99,
+   "amount": 14.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "COOKIES",
+   "name_norm": "饼干",
+   "category": "零食饮料",
+   "subcategory": "零食",
+   "qty": 3,
+   "unit": "包",
+   "unit_price": 2.79,
+   "amount": 8.37,
+   "taxable": 1
+  },
+  {
+   "name_raw": "EGG 12CT",
+   "name_norm": "鸡蛋",
+   "category": "乳制品蛋类",
+   "subcategory": "鸡蛋",
+   "qty": 1,
+   "unit": "盒",
+   "unit_price": 4.99,
+   "amount": 4.99,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "T&T Supermarket",
+  "purchased_at": "2026-08-21",
+  "currency": "CAD",
+  "subtotal": 52.78,
+  "gst": 0,
+  "pst": 0,
+  "total": 55.28,
+  "items": [
+   {
+    "name_raw": "GREEN TEA 500ML",
+    "name_norm": "绿茶",
+    "category": "零食饮料",
+    "subcategory": "茶饮",
+    "qty": 4,
+    "unit": "瓶",
+    "unit_price": 1.99,
+    "amount": 7.96,
+    "taxable": true
+   },
+   {
+    "name_raw": "INSTANT NOODLE 5PK",
+    "name_norm": "方便面",
+    "category": "零食饮料",
+    "subcategory": "方便食品",
+    "qty": 2,
+    "unit": "包",
+    "unit_price": 5.99,
+    "amount": 11.98,
+    "taxable": false
+   },
+   {
+    "name_raw": "DISH SOAP",
+    "name_norm": "洗洁精",
+    "category": "日用清洁",
+    "subcategory": "清洁用品",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 4.49,
+    "amount": 4.49,
+    "taxable": true
+   },
+   {
+    "name_raw": "SHRIMP FROZEN",
+    "name_norm": "冷冻虾",
+    "category": "海鲜",
+    "subcategory": "虾",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 14.99,
+    "amount": 14.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "COOKIES",
+    "name_norm": "饼干",
+    "category": "零食饮料",
+    "subcategory": "零食",
+    "qty": 3,
+    "unit": "包",
+    "unit_price": 2.79,
+    "amount": 8.37,
+    "taxable": true
+   },
+   {
+    "name_raw": "EGG 12CT",
+    "name_norm": "鸡蛋",
+    "category": "乳制品蛋类",
+    "subcategory": "鸡蛋",
+    "qty": 1,
+    "unit": "盒",
+    "unit_price": 4.99,
+    "amount": 4.99,
+    "taxable": false
+   }
+  ]
+ }
+}

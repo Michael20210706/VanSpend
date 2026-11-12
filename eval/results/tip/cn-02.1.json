@@ -1,0 +1,139 @@
+{
+ "ok": true,
+ "id": "cn-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 1707,
+ "receipt": {
+  "store": "华美海鲜酒楼",
+  "purchased_at": "2026-10-05",
+  "currency": "CAD",
+  "subtotal": 78.5,
+  "gst": 3.93,
+  "pst": 0,
+  "total": 90.43
+ },
+ "items": [
+  {
+   "name_raw": "清蒸鲈鱼",
+   "name_norm": "清蒸鲈鱼",
+   "category": "海鲜",
+   "subcategory": "鱼类",
+   "qty": 1,
+   "unit": "G",
+   "unit_price": 38,
+   "amount": 38,
+   "taxable": 0
+  },
+  {
+   "name_raw": "蒜蓉粉丝蒸扇贝",
+   "name_norm": "蒜蓉粉丝蒸扇贝",
+   "category": "海鲜",
+   "subcategory": "贝类",
+   "qty": 1,
+   "unit": "G",
+   "unit_price": 22,
+   "amount": 22,
+   "taxable": 0
+  },
+  {
+   "name_raw": "炒时蔬",
+   "name_norm": "炒时蔬",
+   "category": "蔬菜",
+   "subcategory": "炒菜",
+   "qty": 1,
+   "unit": "G",
+   "unit_price": 14,
+   "amount": 14,
+   "taxable": 0
+  },
+  {
+   "name_raw": "白饭",
+   "name_norm": "白饭",
+   "category": "主食粮油",
+   "subcategory": "米饭",
+   "qty": 3,
+   "unit": "份",
+   "unit_price": 1.5,
+   "amount": 4.5,
+   "taxable": 0
+  },
+  {
+   "name_raw": "小费",
+   "name_norm": "小费",
+   "category": "其他",
+   "subcategory": null,
+   "qty": 1,
+   "unit": null,
+   "unit_price": 8,
+   "amount": 8,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "华美海鲜酒楼",
+  "purchased_at": "2026-10-05",
+  "currency": "CAD",
+  "subtotal": 78.5,
+  "gst": 3.93,
+  "pst": 0,
+  "total": 90.43,
+  "items": [
+   {
+    "name_raw": "清蒸鲈鱼",
+    "name_norm": "清蒸鲈鱼",
+    "category": "海鲜",
+    "subcategory": "鱼类",
+    "qty": 1,
+    "unit": "G",
+    "unit_price": null,
+    "amount": 38,
+    "taxable": false
+   },
+   {
+    "name_raw": "蒜蓉粉丝蒸扇贝",
+    "name_norm": "蒜蓉粉丝蒸扇贝",
+    "category": "海鲜",
+    "subcategory": "贝类",
+    "qty": 1,
+    "unit": "G",
+    "unit_price": null,
+    "amount": 22,
+    "taxable": false
+   },
+   {
+    "name_raw": "炒时蔬",
+    "name_norm": "炒时蔬",
+    "category": "蔬菜",
+    "subcategory": "炒菜",
+    "qty": 1,
+    "unit": "G",
+    "unit_price": null,
+    "amount": 14,
+    "taxable": false
+   },
+   {
+    "name_raw": "白饭",
+    "name_norm": "白饭",
+    "category": "主食粮油",
+    "subcategory": "米饭",
+    "qty": 3,
+    "unit": "份",
+    "unit_price": 1.5,
+    "amount": 4.5,
+    "taxable": false
+   },
+   {
+    "name_raw": "小费",
+    "name_norm": "小费",
+    "category": "其他",
+    "subcategory": null,
+    "qty": 1,
+    "unit": null,
+    "unit_price": null,
+    "amount": 8,
+    "taxable": false
+   }
+  ]
+ }
+}

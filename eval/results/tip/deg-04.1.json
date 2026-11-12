@@ -1,0 +1,117 @@
+{
+ "ok": true,
+ "id": "deg-04",
+ "run": 1,
+ "attempts": 1,
+ "ms": 1786,
+ "receipt": {
+  "store": "Walmart",
+  "purchased_at": "2026-11-12",
+  "currency": "CAD",
+  "subtotal": 50.88,
+  "gst": 2.29,
+  "pst": 1.81,
+  "total": 54.98
+ },
+ "items": [
+  {
+   "name_raw": "HA WITH AN",
+   "name_norm": "未知商品",
+   "category": "其他",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 17.94,
+   "amount": 17.94,
+   "taxable": 1
+  },
+  {
+   "name_raw": "POPPING",
+   "name_norm": "爆米花",
+   "category": "零食饮料",
+   "subcategory": "零食",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 3,
+   "amount": 3,
+   "taxable": 1
+  },
+  {
+   "name_raw": "WET WIPES *IDS",
+   "name_norm": "湿巾",
+   "category": "日用清洁",
+   "subcategory": "清洁用品",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 19.97,
+   "amount": 19.97,
+   "taxable": 1
+  },
+  {
+   "name_raw": "BATTERIES",
+   "name_norm": "电池",
+   "category": "日用清洁",
+   "subcategory": "其他日用品",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 7.97,
+   "amount": 7.97,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Walmart",
+  "purchased_at": "",
+  "currency": "CAD",
+  "subtotal": 50.88,
+  "gst": 2.29,
+  "pst": 1.81,
+  "total": 54.98,
+  "items": [
+   {
+    "name_raw": "HA WITH AN",
+    "name_norm": "未知商品",
+    "category": "其他",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 17.94,
+    "amount": 17.94,
+    "taxable": true
+   },
+   {
+    "name_raw": "POPPING",
+    "name_norm": "爆米花",
+    "category": "零食饮料",
+    "subcategory": "零食",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 3,
+    "amount": 3,
+    "taxable": true
+   },
+   {
+    "name_raw": "WET WIPES *IDS",
+    "name_norm": "湿巾",
+    "category": "日用清洁",
+    "subcategory": "清洁用品",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 19.97,
+    "amount": 19.97,
+    "taxable": true
+   },
+   {
+    "name_raw": "BATTERIES",
+    "name_norm": "电池",
+    "category": "日用清洁",
+    "subcategory": "其他日用品",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 7.97,
+    "amount": 7.97,
+    "taxable": true
+   }
+  ]
+ }
+}
