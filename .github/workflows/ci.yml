@@ -62,6 +62,25 @@ jobs:
       - name: 构建(next build)
         run: npm run build
 
+      # 端到端测试(Playwright + 系统自带的 Chrome，不下载浏览器): 用上一步的 .next 构建起一个 next start(127.0.0.1:3401)，
+      # 连独立的 vanspend_e2e_test 库(每次运行重建、结束时删除)；扫描接口在测试里被拦截，不会调用 OpenRouter。
+      # 复用本 job 的 MYSQL_* 账号(root，同上)，只覆盖库名。
+      - name: 端到端测试(Playwright，系统 Chrome)
+        run: npm run test:e2e:nobuild
+        env:
+          MYSQL_DATABASE: vanspend_e2e_test
+
+      - name: 上传端到端失败现场(截图/trace/报告)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-failure
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: 校验 docker-compose.yml
         run: |
           cp .env.example .env # compose 里 env_file: .env，CI 里没有，用示例文件顶上(只校验语法)
