@@ -6,10 +6,16 @@ const origTZ = process.env.TZ;
 afterEach(() => { if (origTZ === undefined) delete process.env.TZ; else process.env.TZ = origTZ; });
 
 describe('formatDateTime', () => {
-  it('TZ=America/Vancouver: 冬令时(-8) 与夏令时(-7)', () => {
-    process.env.TZ = 'America/Vancouver';
+  it('固定偏移的时区(不依赖时区库版本): Etc/GMT+8 是 UTC-8，Etc/GMT+7 是 UTC-7', () => {
+    process.env.TZ = 'Etc/GMT+8';
     expect(formatDateTime('2026-11-10 03:15:42')).toBe('2026-11-09 19:15');
-    expect(formatDateTime('2026-07-10 03:15:42')).toBe('2026-07-09 20:15');
+    process.env.TZ = 'Etc/GMT+7';
+    expect(formatDateTime('2026-11-10 03:15:42')).toBe('2026-11-09 20:15');
+  });
+  it('有夏令时的时区: America/New_York 冬 -5、夏 -4(温哥华的夏令时规则在不同版本的时区库里不一致，所以不用它做断言)', () => {
+    process.env.TZ = 'America/New_York';
+    expect(formatDateTime('2026-01-10 03:15:42')).toBe('2026-01-09 22:15');
+    expect(formatDateTime('2026-07-10 03:15:42')).toBe('2026-07-09 23:15');
   });
   it('TZ=UTC: 原样(去掉秒)', () => {
     process.env.TZ = 'UTC';
