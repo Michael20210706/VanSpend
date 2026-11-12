@@ -2,12 +2,13 @@
 import { test, expect } from '@playwright/test';
 import crypto from 'crypto';
 import { makeUser, loginApi } from './support/helpers.js';
+import { E2E_PORT } from './support/env.js';
 
 const goFamilyTab = (page) => page.locator('.tab', { hasText: '家庭' }).click();
 const familyName = () => 'E2E家庭' + crypto.randomBytes(4).toString('hex');
 
 async function userPage(browser, user) {
-  const context = await browser.newContext({ baseURL: 'http://127.0.0.1:3401' });
+  const context = await browser.newContext({ baseURL: `http://127.0.0.1:${E2E_PORT}` });
   const page = await context.newPage();
   await loginApi(page, user);
   await page.goto('/');
