@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
+import useModal from '../lib/useModal';
 
 // forced: 管理员重置过密码、必须先改密码的账号——不能关闭、不能取消，改完才进入应用
 export default function ChangePasswordModal({ onClose, forced = false, onLogout }) {
@@ -9,6 +10,7 @@ export default function ChangePasswordModal({ onClose, forced = false, onLogout 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [err, setErr] = useState('');
+  const boxRef = useModal(onClose, !forced);
 
   async function submit() {
     if (!currentPassword || !newPassword) { setErr('请输入当前密码和新密码'); return; }
@@ -35,7 +37,7 @@ export default function ChangePasswordModal({ onClose, forced = false, onLogout 
       }}
       onClick={forced ? undefined : onClose}
     >
-      <div className="card" style={{ width: 320 }} onClick={(e) => e.stopPropagation()}>
+      <div className="card" ref={boxRef} role="dialog" aria-modal="true" style={{ width: 320 }} onClick={(e) => e.stopPropagation()}>
         <h2>{forced ? '请先修改密码' : '修改密码'}</h2>
         {forced ? <p className="muted" style={{ marginTop: 0 }}>管理员为你重置了密码。请输入临时密码作为当前密码，并设置一个新密码，之后才能继续使用。</p> : null}
         <div className="row" style={{ flexDirection: 'column', alignItems: 'stretch', gap: 10 }}>

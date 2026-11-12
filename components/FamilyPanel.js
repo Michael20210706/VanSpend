@@ -10,6 +10,8 @@ export default function FamilyPanel({ active, onChanged }) {
   const [data, setData] = useState(undefined); // undefined=加载中, { family: null|{...}, ... }
   const [createName, setCreateName] = useState('');
   const [applyName, setApplyName] = useState('');
+  const [createErr, setCreateErr] = useState('');
+  const [applyErr, setApplyErr] = useState('');
   const [inviteUsername, setInviteUsername] = useState('');
   const [newName, setNewName] = useState('');
   const [dissolveName, setDissolveName] = useState('');
@@ -64,7 +66,8 @@ export default function FamilyPanel({ active, onChanged }) {
   useEffect(() => { if (active) load(); }, [active]);
 
   async function createFamily() {
-    if (!createName.trim()) return;
+    if (!createName.trim()) { setCreateErr('请输入家庭名称'); return; }
+    setCreateErr('');
     try {
       await api('/api/family', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: createName.trim() }) });
       showToast('家庭已创建');
@@ -76,7 +79,8 @@ export default function FamilyPanel({ active, onChanged }) {
   }
 
   async function applyFamily() {
-    if (!applyName.trim()) return;
+    if (!applyName.trim()) { setApplyErr('请输入要加入的家庭名称'); return; }
+    setApplyErr('');
     try {
       await api('/api/family/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: applyName.trim() }) });
       showToast('已提交申请，等待创建者审核');
@@ -117,16 +121,18 @@ export default function FamilyPanel({ active, onChanged }) {
           <h2>创建新家庭</h2>
           <p className="muted">家庭名称需在全站唯一；创建后你就是该家庭的创建者，可以邀请成员、审核加入申请。</p>
           <div className="row">
-            <input placeholder="家庭名称" maxLength={100} value={createName} onChange={(e) => setCreateName(e.target.value)} />
+            <input placeholder="家庭名称" maxLength={100} value={createName} onChange={(e) => { setCreateName(e.target.value); setCreateErr(''); }} />
             <button onClick={createFamily}>创建</button>
+            <span style={{ color: 'var(--bad)', fontSize: 13 }}>{createErr}</span>
           </div>
         </div>
         <div className="card">
           <h2>申请加入已有家庭</h2>
           <p className="muted">提交后需等待该家庭的创建者审核通过才会生效。</p>
           <div className="row">
-            <input placeholder="要加入的家庭名称" maxLength={100} value={applyName} onChange={(e) => setApplyName(e.target.value)} />
+            <input placeholder="要加入的家庭名称" maxLength={100} value={applyName} onChange={(e) => { setApplyName(e.target.value); setApplyErr(''); }} />
             <button onClick={applyFamily}>申请加入</button>
+            <span style={{ color: 'var(--bad)', fontSize: 13 }}>{applyErr}</span>
           </div>
         </div>
         {data.myApplications && data.myApplications.length > 0 && (
