@@ -1,5 +1,5 @@
 'use client';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { COPY } from './copy';
 import { useReveal } from './useReveal';
 import { Nav, Hero, Steps, Tax, Insights, Family, DataSection, Faq, FinalCta, Footer } from './sections';
@@ -38,6 +38,14 @@ export default function Landing() {
 
   const t = COPY[lang];
 
+  // <html lang> 由 layout.js 固定为 zh-CN；落地页切到英文时让它跟着变，离开落地页(登录后)时还原
+  useEffect(() => {
+    const el = document.documentElement;
+    const prev = el.lang;
+    el.lang = lang === 'en' ? 'en' : 'zh-CN';
+    return () => { el.lang = prev; };
+  }, [lang]);
+
   function toggleLang() {
     const next = lang === 'zh' ? 'en' : 'zh';
     setLang(next);
@@ -45,7 +53,7 @@ export default function Landing() {
   }
 
   return (
-    // lang 挂在这里而不是 <html>(layout.js 固定 zh-CN)：只有落地页是双语的
+    // 容器上也标 lang；<html> 上的由上面的 effect 同步
     <div className="lp" lang={lang === 'en' ? 'en' : 'zh-CN'} ref={rootRef}>
       <Nav t={t} lang={lang} onToggleLang={toggleLang} />
 
