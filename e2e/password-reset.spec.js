@@ -3,6 +3,7 @@
 import { test, expect } from '@playwright/test';
 import { makeUser, adminUser, apiContextFor, loginApi, trackErrors, PASSWORD } from './support/helpers.js';
 import crypto from 'crypto';
+import { BASE_URL } from './support/env.js';
 
 async function openAppThenAdminResets(page) {
   const user = await makeUser({ prefix: 'reset' });
@@ -58,7 +59,7 @@ test.describe('管理员重置密码后，用户页面已经打开着', () => {
     await expect(page.getByText('暂无记录')).toBeVisible(); // 接口不再 403，列表能加载
 
     const fresh = await page.context().browser().newContext();
-    const login = (pw) => fresh.request.post('http://127.0.0.1:3401/api/auth/login', { data: { username: user.username, password: pw } });
+    const login = (pw) => fresh.request.post(`${BASE_URL}/api/auth/login`, { data: { username: user.username, password: pw } });
     expect((await login(temporaryPassword)).status()).toBe(401);
     expect((await login(newPassword)).status()).toBe(200);
     await fresh.close();
