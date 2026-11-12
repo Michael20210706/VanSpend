@@ -19,3 +19,7 @@ docs
 vitest.config.js
 .github
 docker-compose*.yml
+e2e
+playwright.config.js
+test-results
+playwright-report

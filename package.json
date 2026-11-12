@@ -9,7 +9,9 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:e2e": "next build && playwright test",
+    "test:e2e:nobuild": "playwright test"
   },
   "engines": {
     "node": ">=22.0.0"
@@ -25,6 +27,7 @@
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "vitest": "^3.2.4"
   }
 }
