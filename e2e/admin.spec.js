@@ -24,7 +24,8 @@ for (const width of [375, 768, 1440]) {
       await page.locator('.tab', { hasText: tab.name }).click();
       await expect(page.getByRole('heading', { name: tab.heading }).first()).toBeVisible();
       if (tab.name === '票据管理') {
-        await expect(page.locator('select option', { hasText: longName })).toHaveCount(1); // 长用户名确实在下拉里
+        // 统计面板常驻挂载(隐藏)，也有同样的用户下拉，它先于票据管理的下拉装好；只看当前可见的那个，等它真的装好，才是 #32 要检查的那个下拉
+        await expect(page.locator('select:visible option', { hasText: longName })).toHaveCount(1);
       }
       expect(await horizontalOverflow(page), `tab ${tab.name} @${width}px`).toBeLessThanOrEqual(0);
     }
