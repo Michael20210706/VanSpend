@@ -50,6 +50,12 @@ describe('落地页: 1b 已删除，只剩一个版式', () => {
 });
 
 describe('落地页文案与实际行为一致', () => {
+  it('不写死模型名: 实际模型来自 config 并可被 OPENROUTER_MODEL 覆盖，落地页只能泛称', () => {
+    for (const lang of ['zh', 'en']) {
+      expect(flatText(COPY[lang]), lang).not.toMatch(/gemini|gpt|claude|llama/i);
+    }
+  });
+
   it('注册文案: 邀请码或开放注册两条路，额度数字取自 config.scanQuota；不再写"免费"', () => {
     const zh = flatText(COPY.zh);
     const en = flatText(COPY.en);

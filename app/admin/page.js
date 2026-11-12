@@ -67,7 +67,7 @@ export default function AdminPage() {
           <StatsPanel active={tab === 'stats'} cfg={cfg} />
         </section>
         <section className={'grid' + (tab !== 'users' ? ' hide' : '')}>
-          <UsersPanel active={tab === 'users'} />
+          <UsersPanel active={tab === 'users'} currentUserId={user.id} />
         </section>
         <section className={'grid' + (tab !== 'receipts' ? ' hide' : '')}>
           <ReceiptsPanel active={tab === 'receipts'} />

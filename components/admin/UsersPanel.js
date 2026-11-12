@@ -5,7 +5,7 @@ import { showToast } from '../../lib/toast';
 import { FAMILY_ROLE_LABELS } from '../../lib/familyRoles';
 import { formatDateTime, utcTitle } from '../../lib/time';
 
-export default function UsersPanel({ active }) {
+export default function UsersPanel({ active, currentUserId }) {
   const [users, setUsers] = useState([]);
   const [resetResult, setResetResult] = useState(null); // { username, password }: 临时密码只在这里显示一次
 
@@ -41,8 +41,9 @@ export default function UsersPanel({ active }) {
     }
   }
 
-  async function del(id, username) {
-    if (!confirm(`确认删除账号「${username}」？其名下所有小票和明细会一并删除，且不可恢复。`)) return;
+  async function del(id, username, isFamilyCreator, familyName) {
+    const dissolve = isFamilyCreator ? `他是家庭「${familyName}」的创建者，删除后该家庭会解散，其他成员变回个人账号。` : '';
+    if (!confirm(`确认删除账号「${username}」？${dissolve}其名下所有小票和明细会一并删除，且不可恢复。`)) return;
     try {
       await api('/api/admin/users/' + id, { method: 'DELETE' });
       showToast('已删除');
@@ -100,7 +101,7 @@ export default function UsersPanel({ active }) {
               <td className="num">${fmt(u.total_spend)}</td>
               <td>
                 {u.is_admin ? null : <button onClick={() => resetPassword(u.id, u.username)}>重置密码</button>}{' '}
-                <button className="danger" onClick={() => del(u.id, u.username)}>删除</button>
+                {u.id === currentUserId ? null : <button className="danger" onClick={() => del(u.id, u.username, !!u.is_family_creator, u.family_name)}>删除</button>}
               </td>
             </tr>
           ))}

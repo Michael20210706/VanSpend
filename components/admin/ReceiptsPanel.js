@@ -62,7 +62,7 @@ export default function ReceiptsPanel({ active }) {
   return (
     <>
       <div className="card">
-        <h2>票据管理(全部用户)</h2>
+        <h2>票据管理({users.find((u) => String(u.id) === String(userId))?.username || '全部用户'})</h2>
         <div className="row" style={{ marginBottom: 10 }}>
           <label>从 <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} /></label>
           <label>到 <input type="date" value={to} onChange={(e) => setTo(e.target.value)} /></label>

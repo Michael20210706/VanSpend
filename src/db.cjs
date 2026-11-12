@@ -1497,7 +1497,7 @@ async function overview(from, to, scope) {
 async function listUsers() {
   await ready;
   const [rows] = await pool.execute(`
-    SELECT u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name AS family_name, u.created_at,
+    SELECT u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name AS family_name, (f.creator_id = u.id) AS is_family_creator, u.created_at,
            u.signup_source, u.scan_tier, inv.username AS inviter_username,
            COUNT(r.id) AS receipt_count,
            ROUND(COALESCE(SUM(r.total), 0), 2) AS total_spend
@@ -1505,7 +1505,7 @@ async function listUsers() {
     LEFT JOIN receipts r ON r.user_id = u.id
     LEFT JOIN families f ON f.id = u.family_id
     LEFT JOIN users inv ON inv.id = u.invited_by
-    GROUP BY u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name, u.created_at,
+    GROUP BY u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name, f.creator_id, u.created_at,
              u.signup_source, u.scan_tier, inv.username
     ORDER BY u.created_at
   `);
