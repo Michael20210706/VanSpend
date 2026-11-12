@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   is_admin      TINYINT(1)    NOT NULL DEFAULT 0,   -- 管理后台权限；只能通过 ADMIN_USERNAME/ADMIN_PASSWORD 启动时初始化
   family_id     INT UNSIGNED,                       -- 所属家庭；NULL = 个人账号或尚未加入家庭
   family_role   ENUM('dad','mom','child','other'),  -- 家庭角色标签，个人/家庭账号都可选填
+  family_joined_at TIMESTAMP NULL DEFAULT NULL,     -- 加入当前家庭的时间(UTC)；离开/被移除/解散清空；升级前的老成员为 NULL
   account_type  ENUM('individual','family') NOT NULL DEFAULT 'individual',
   signup_source ENUM('invite','open') NOT NULL DEFAULT 'invite',  -- 注册来源；老账号一律按 invite 处理
   scan_tier     ENUM('open','normal') NOT NULL DEFAULT 'normal',  -- 每日扫描额度档位(见 config.json scanQuota)；开放注册的新账号是 open，管理员可升级

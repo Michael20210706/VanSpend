@@ -67,3 +67,31 @@ describe('users.must_change_password 的升级迁移', () => {
     expect(u).toMatchObject({ username: old.username, must_change_password: 0 });
   });
 });
+
+// issue #36: users.family_joined_at 的升级迁移——只加列，老成员保持 NULL(不拿注册时间回填)
+describe('users.family_joined_at 的升级迁移', () => {
+  it('旧结构(没有这一列)→ 迁移后补齐，老成员为 NULL、家庭归属和注册时间不动；重复执行是空操作', async () => {
+    const creator = await makeUser();
+    const member = await makeUser();
+    const familyId = await dbApi.createFamily(`fam_${creator.id}_${Date.now()}`, creator.id);
+    await dbApi.inviteMember(familyId, member.username);
+    const [[before]] = await dbApi.pool.query('SELECT created_at, family_id FROM users WHERE id = ?', [member.id]);
+    await dbApi.pool.query('ALTER TABLE users DROP COLUMN family_joined_at');
+    expect(await cols()).not.toContain('family_joined_at');
+    const conn = await dbApi.pool.getConnection();
+    try {
+      await dbApi.migrateUsersFamilyJoinedAt(conn);
+      await dbApi.migrateUsersFamilyJoinedAt(conn);
+    } finally {
+      conn.release();
+    }
+    expect(await cols()).toContain('family_joined_at');
+    const [[after]] = await dbApi.pool.query('SELECT created_at, family_id, family_joined_at FROM users WHERE id = ?', [member.id]);
+    expect(after).toEqual({ ...before, family_joined_at: null });
+    // 迁移后再加入家庭，正常写值
+    const late = await makeUser();
+    await dbApi.inviteMember(familyId, late.username);
+    const [[l]] = await dbApi.pool.query('SELECT family_joined_at FROM users WHERE id = ?', [late.id]);
+    expect(l.family_joined_at).not.toBeNull();
+  });
+});
