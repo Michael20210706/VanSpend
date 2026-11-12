@@ -52,7 +52,7 @@ export default function ItemsEditor({ rows, setRows, categories }) {
                 <td><input value={r.name_raw} onChange={(e) => updateRow(r._id, { name_raw: e.target.value })} /></td>
                 <td><input value={r.name_norm} onChange={(e) => updateRow(r._id, { name_norm: e.target.value })} /></td>
                 <td>
-                  <select value={r.category} onChange={(e) => updateRow(r._id, { category: e.target.value })}>
+                  <select className="cat-select" value={r.category} onChange={(e) => updateRow(r._id, { category: e.target.value })}>
                     {categories.map((c) => <option key={c}>{c}</option>)}
                   </select>
                 </td>
