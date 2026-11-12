@@ -1,0 +1,139 @@
+{
+ "ok": true,
+ "id": "mix-01",
+ "run": 1,
+ "attempts": 1,
+ "ms": 1922,
+ "receipt": {
+  "store": "Shoppers Drug Mart",
+  "purchased_at": "2026-08-30",
+  "currency": "CAD",
+  "subtotal": 54.45,
+  "gst": 2.3,
+  "pst": 0.63,
+  "total": 57.38
+ },
+ "items": [
+  {
+   "name_raw": "VITAMIN C 500MG",
+   "name_norm": "维生素C",
+   "category": "个护健康",
+   "subcategory": "维生素",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 14.99,
+   "amount": 14.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "MULTIVITAMIN",
+   "name_norm": "多种维生素",
+   "category": "个护健康",
+   "subcategory": "维生素",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 21.99,
+   "amount": 21.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "SHAMPOO 400ML",
+   "name_norm": "洗发水",
+   "category": "个护健康",
+   "subcategory": "洗护用品",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 8.99,
+   "amount": 8.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "MILK 2%",
+   "name_norm": "牛奶",
+   "category": "乳制品蛋类",
+   "subcategory": "牛奶",
+   "qty": 1,
+   "unit": "升",
+   "unit_price": 4.99,
+   "amount": 4.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "BREAD",
+   "name_norm": "面包",
+   "category": "主食粮油",
+   "subcategory": "烘焙食品",
+   "qty": 1,
+   "unit": "条",
+   "unit_price": 3.49,
+   "amount": 3.49,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "Shoppers Drug Mart",
+  "purchased_at": "2026-08-30",
+  "currency": "CAD",
+  "subtotal": 54.45,
+  "gst": 2.3,
+  "pst": 0.63,
+  "total": 57.38,
+  "items": [
+   {
+    "name_raw": "VITAMIN C 500MG",
+    "name_norm": "维生素C",
+    "category": "个护健康",
+    "subcategory": "维生素",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 14.99,
+    "amount": 14.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "MULTIVITAMIN",
+    "name_norm": "多种维生素",
+    "category": "个护健康",
+    "subcategory": "维生素",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 21.99,
+    "amount": 21.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "SHAMPOO 400ML",
+    "name_norm": "洗发水",
+    "category": "个护健康",
+    "subcategory": "洗护用品",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 8.99,
+    "amount": 8.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "MILK 2%",
+    "name_norm": "牛奶",
+    "category": "乳制品蛋类",
+    "subcategory": "牛奶",
+    "qty": 1,
+    "unit": "升",
+    "unit_price": 4.99,
+    "amount": 4.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "BREAD",
+    "name_norm": "面包",
+    "category": "主食粮油",
+    "subcategory": "烘焙食品",
+    "qty": 1,
+    "unit": "条",
+    "unit_price": 3.49,
+    "amount": 3.49,
+    "taxable": false
+   }
+  ]
+ }
+}

@@ -1,0 +1,139 @@
+{
+ "ok": true,
+ "id": "disc-03",
+ "run": 1,
+ "attempts": 1,
+ "ms": 1882,
+ "receipt": {
+  "store": "Walmart",
+  "purchased_at": "2026-05-11",
+  "currency": "CAD",
+  "subtotal": 41.41,
+  "gst": 1.8,
+  "pst": 1.4,
+  "total": 44.61
+ },
+ "items": [
+  {
+   "name_raw": "KIDS T-SHIRT",
+   "name_norm": "儿童T恤",
+   "category": "日用清洁",
+   "subcategory": "服装",
+   "qty": 2,
+   "unit": "件",
+   "unit_price": 8,
+   "amount": 16,
+   "taxable": 1
+  },
+  {
+   "name_raw": "LUNCH BOX",
+   "name_norm": "午餐盒",
+   "category": "日用清洁",
+   "subcategory": "家居用品",
+   "qty": 1,
+   "unit": "个",
+   "unit_price": 14.97,
+   "amount": 14.97,
+   "taxable": 1
+  },
+  {
+   "name_raw": "ROLLBACK LUNCH BOX",
+   "name_norm": "午餐盒",
+   "category": "日用清洁",
+   "subcategory": "家居用品",
+   "qty": 1,
+   "unit": "个",
+   "unit_price": 2,
+   "amount": 2,
+   "taxable": 1
+  },
+  {
+   "name_raw": "CEREAL",
+   "name_norm": "麦片",
+   "category": "主食粮油",
+   "subcategory": "谷物",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 5.47,
+   "amount": 5.47,
+   "taxable": 0
+  },
+  {
+   "name_raw": "NOTEBOOK 3PK",
+   "name_norm": "笔记本",
+   "category": "日用清洁",
+   "subcategory": "文具",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 6.97,
+   "amount": 6.97,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Walmart",
+  "purchased_at": "2026-05-11",
+  "currency": "CAD",
+  "subtotal": 41.41,
+  "gst": 1.8,
+  "pst": 1.4,
+  "total": 44.61,
+  "items": [
+   {
+    "name_raw": "KIDS T-SHIRT",
+    "name_norm": "儿童T恤",
+    "category": "日用清洁",
+    "subcategory": "服装",
+    "qty": 2,
+    "unit": "件",
+    "unit_price": 8,
+    "amount": 16,
+    "taxable": true
+   },
+   {
+    "name_raw": "LUNCH BOX",
+    "name_norm": "午餐盒",
+    "category": "日用清洁",
+    "subcategory": "家居用品",
+    "qty": 1,
+    "unit": "个",
+    "unit_price": 14.97,
+    "amount": 14.97,
+    "taxable": true
+   },
+   {
+    "name_raw": "ROLLBACK LUNCH BOX",
+    "name_norm": "午餐盒",
+    "category": "日用清洁",
+    "subcategory": "家居用品",
+    "qty": 1,
+    "unit": "个",
+    "unit_price": 2,
+    "amount": 2,
+    "taxable": true
+   },
+   {
+    "name_raw": "CEREAL",
+    "name_norm": "麦片",
+    "category": "主食粮油",
+    "subcategory": "谷物",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 5.47,
+    "amount": 5.47,
+    "taxable": false
+   },
+   {
+    "name_raw": "NOTEBOOK 3PK",
+    "name_norm": "笔记本",
+    "category": "日用清洁",
+    "subcategory": "文具",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 6.97,
+    "amount": 6.97,
+    "taxable": true
+   }
+  ]
+ }
+}

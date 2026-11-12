@@ -1,0 +1,183 @@
+{
+ "ok": true,
+ "id": "costco-01",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2836,
+ "receipt": {
+  "store": "Costco",
+  "purchased_at": "2026-10-14",
+  "currency": "CAD",
+  "subtotal": 120.42,
+  "gst": 3.92,
+  "pst": 4.37,
+  "total": 128.71
+ },
+ "items": [
+  {
+   "name_raw": "KS EGGS 24CT",
+   "name_norm": "鸡蛋",
+   "category": "乳制品蛋类",
+   "subcategory": "蛋类",
+   "qty": 1,
+   "unit": "盒",
+   "unit_price": 11.99,
+   "amount": 11.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "KS SALTED BUTTER 2 @ 13.49",
+   "name_norm": "黄油",
+   "category": "乳制品蛋类",
+   "subcategory": "奶制品",
+   "qty": 2,
+   "unit": "块",
+   "unit_price": 13.49,
+   "amount": 26.98,
+   "taxable": 0
+  },
+  {
+   "name_raw": "ORG BANANAS",
+   "name_norm": "香蕉",
+   "category": "水果",
+   "subcategory": "水果",
+   "qty": 1,
+   "unit": "磅",
+   "unit_price": 2.99,
+   "amount": 2.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "SOFTSOAP 6PK",
+   "name_norm": "洗手液",
+   "category": "日用清洁",
+   "subcategory": "清洁用品",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 17.99,
+   "amount": 17.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "LAUNDRY PODS",
+   "name_norm": "洗衣凝珠",
+   "category": "日用清洁",
+   "subcategory": "清洁用品",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 24.99,
+   "amount": 24.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "VITAMIN D 600",
+   "name_norm": "维生素D",
+   "category": "个护健康",
+   "subcategory": "保健品",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 15.99,
+   "amount": 15.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "COKE 35PK",
+   "name_norm": "可乐",
+   "category": "零食饮料",
+   "subcategory": "饮料",
+   "qty": 1,
+   "unit": "箱",
+   "unit_price": 19.49,
+   "amount": 19.49,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Costco",
+  "purchased_at": "2026-10-14",
+  "currency": "CAD",
+  "subtotal": 120.42,
+  "gst": 3.92,
+  "pst": 4.37,
+  "total": 128.71,
+  "items": [
+   {
+    "name_raw": "KS EGGS 24CT",
+    "name_norm": "鸡蛋",
+    "category": "乳制品蛋类",
+    "subcategory": "蛋类",
+    "qty": 1,
+    "unit": "盒",
+    "unit_price": 11.99,
+    "amount": 11.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "KS SALTED BUTTER 2 @ 13.49",
+    "name_norm": "黄油",
+    "category": "乳制品蛋类",
+    "subcategory": "奶制品",
+    "qty": 2,
+    "unit": "块",
+    "unit_price": 13.49,
+    "amount": 26.98,
+    "taxable": false
+   },
+   {
+    "name_raw": "ORG BANANAS",
+    "name_norm": "香蕉",
+    "category": "水果",
+    "subcategory": "水果",
+    "qty": 1,
+    "unit": "磅",
+    "unit_price": 2.99,
+    "amount": 2.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "SOFTSOAP 6PK",
+    "name_norm": "洗手液",
+    "category": "日用清洁",
+    "subcategory": "清洁用品",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 17.99,
+    "amount": 17.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "LAUNDRY PODS",
+    "name_norm": "洗衣凝珠",
+    "category": "日用清洁",
+    "subcategory": "清洁用品",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 24.99,
+    "amount": 24.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "VITAMIN D 600",
+    "name_norm": "维生素D",
+    "category": "个护健康",
+    "subcategory": "保健品",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 15.99,
+    "amount": 15.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "COKE 35PK",
+    "name_norm": "可乐",
+    "category": "零食饮料",
+    "subcategory": "饮料",
+    "qty": 1,
+    "unit": "箱",
+    "unit_price": 19.49,
+    "amount": 19.49,
+    "taxable": true
+   }
+  ]
+ }
+}

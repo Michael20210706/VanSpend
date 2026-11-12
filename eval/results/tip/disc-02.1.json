@@ -1,0 +1,161 @@
+{
+ "ok": true,
+ "id": "disc-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2239,
+ "receipt": {
+  "store": "Save-On-Foods",
+  "purchased_at": "2026-09-11",
+  "currency": "CAD",
+  "subtotal": 37.08,
+  "gst": 0.67,
+  "pst": 0.94,
+  "total": 38.69
+ },
+ "items": [
+  {
+   "name_raw": "SALMON FILLET",
+   "name_norm": "三文鱼",
+   "category": "海鲜",
+   "subcategory": "三文鱼",
+   "qty": 0.612,
+   "unit": "kg",
+   "unit_price": 24.99,
+   "amount": 15.29,
+   "taxable": 0
+  },
+  {
+   "name_raw": "GRAPES RED",
+   "name_norm": "红葡萄",
+   "category": "水果",
+   "subcategory": "葡萄",
+   "qty": 0.734,
+   "unit": "kg",
+   "unit_price": 5.5,
+   "amount": 4.04,
+   "taxable": 0
+  },
+  {
+   "name_raw": "POTATO CHIPS",
+   "name_norm": "薯片",
+   "category": "零食饮料",
+   "subcategory": "零食",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 5.99,
+   "amount": 5.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "SALE DISCOUNT",
+   "name_norm": "销售折扣",
+   "category": "其他",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "份",
+   "unit_price": -1.5,
+   "amount": -1.5,
+   "taxable": 0
+  },
+  {
+   "name_raw": "BREAD",
+   "name_norm": "面包",
+   "category": "主食粮油",
+   "subcategory": "烘焙食品",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 4.29,
+   "amount": 4.29,
+   "taxable": 0
+  },
+  {
+   "name_raw": "SPARKLING JUICE",
+   "name_norm": "气泡果汁",
+   "category": "零食饮料",
+   "subcategory": "饮料",
+   "qty": 3,
+   "unit": "瓶",
+   "unit_price": 2.99,
+   "amount": 8.97,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Save-On-Foods",
+  "purchased_at": "2026-09-11",
+  "currency": "CAD",
+  "subtotal": 37.08,
+  "gst": 0.67,
+  "pst": 0.94,
+  "total": 38.69,
+  "items": [
+   {
+    "name_raw": "SALMON FILLET",
+    "name_norm": "三文鱼",
+    "category": "海鲜",
+    "subcategory": "三文鱼",
+    "qty": 0.612,
+    "unit": "kg",
+    "unit_price": 24.99,
+    "amount": 15.29,
+    "taxable": false
+   },
+   {
+    "name_raw": "GRAPES RED",
+    "name_norm": "红葡萄",
+    "category": "水果",
+    "subcategory": "葡萄",
+    "qty": 0.734,
+    "unit": "kg",
+    "unit_price": 5.5,
+    "amount": 4.04,
+    "taxable": false
+   },
+   {
+    "name_raw": "POTATO CHIPS",
+    "name_norm": "薯片",
+    "category": "零食饮料",
+    "subcategory": "零食",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 5.99,
+    "amount": 5.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "SALE DISCOUNT",
+    "name_norm": "销售折扣",
+    "category": "其他",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": -1.5,
+    "amount": -1.5,
+    "taxable": false
+   },
+   {
+    "name_raw": "BREAD",
+    "name_norm": "面包",
+    "category": "主食粮油",
+    "subcategory": "烘焙食品",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 4.29,
+    "amount": 4.29,
+    "taxable": false
+   },
+   {
+    "name_raw": "SPARKLING JUICE",
+    "name_norm": "气泡果汁",
+    "category": "零食饮料",
+    "subcategory": "饮料",
+    "qty": 3,
+    "unit": "瓶",
+    "unit_price": 2.99,
+    "amount": 8.97,
+    "taxable": true
+   }
+  ]
+ }
+}

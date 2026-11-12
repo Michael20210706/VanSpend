@@ -1,0 +1,161 @@
+{
+ "ok": true,
+ "id": "mix-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2061,
+ "receipt": {
+  "store": "Safeway",
+  "purchased_at": "2026-10-25",
+  "currency": "CAD",
+  "subtotal": 41.45,
+  "gst": 1.37,
+  "pst": 0.91,
+  "total": 43.73
+ },
+ "items": [
+  {
+   "name_raw": "KIDS SOCKS 5PK",
+   "name_norm": "袜子",
+   "category": "日用清洁",
+   "subcategory": "服装配饰",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 9.99,
+   "amount": 9.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "APPLES GALA",
+   "name_norm": "苹果",
+   "category": "水果",
+   "subcategory": "水果",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 5.49,
+   "amount": 5.49,
+   "taxable": 0
+  },
+  {
+   "name_raw": "COOKIES CHOC",
+   "name_norm": "巧克力饼干",
+   "category": "零食饮料",
+   "subcategory": "饼干",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 4.99,
+   "amount": 4.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "CHEESE CHEDDAR",
+   "name_norm": "切达奶酪",
+   "category": "乳制品蛋类",
+   "subcategory": "奶酪",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 8.49,
+   "amount": 8.49,
+   "taxable": 0
+  },
+  {
+   "name_raw": "GREETING CARD",
+   "name_norm": "贺卡",
+   "category": "其他",
+   "subcategory": "文具",
+   "qty": 1,
+   "unit": "张",
+   "unit_price": 4.5,
+   "amount": 4.5,
+   "taxable": 1
+  },
+  {
+   "name_raw": "SODA 12PK",
+   "name_norm": "苏打水",
+   "category": "零食饮料",
+   "subcategory": "饮料",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 7.99,
+   "amount": 7.99,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Safeway",
+  "purchased_at": "2026-10-25",
+  "currency": "CAD",
+  "subtotal": 41.45,
+  "gst": 1.37,
+  "pst": 0.91,
+  "total": 43.73,
+  "items": [
+   {
+    "name_raw": "KIDS SOCKS 5PK",
+    "name_norm": "袜子",
+    "category": "日用清洁",
+    "subcategory": "服装配饰",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 9.99,
+    "amount": 9.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "APPLES GALA",
+    "name_norm": "苹果",
+    "category": "水果",
+    "subcategory": "水果",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 5.49,
+    "amount": 5.49,
+    "taxable": false
+   },
+   {
+    "name_raw": "COOKIES CHOC",
+    "name_norm": "巧克力饼干",
+    "category": "零食饮料",
+    "subcategory": "饼干",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 4.99,
+    "amount": 4.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "CHEESE CHEDDAR",
+    "name_norm": "切达奶酪",
+    "category": "乳制品蛋类",
+    "subcategory": "奶酪",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 8.49,
+    "amount": 8.49,
+    "taxable": false
+   },
+   {
+    "name_raw": "GREETING CARD",
+    "name_norm": "贺卡",
+    "category": "其他",
+    "subcategory": "文具",
+    "qty": 1,
+    "unit": "张",
+    "unit_price": 4.5,
+    "amount": 4.5,
+    "taxable": true
+   },
+   {
+    "name_raw": "SODA 12PK",
+    "name_norm": "苏打水",
+    "category": "零食饮料",
+    "subcategory": "饮料",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 7.99,
+    "amount": 7.99,
+    "taxable": true
+   }
+  ]
+ }
+}

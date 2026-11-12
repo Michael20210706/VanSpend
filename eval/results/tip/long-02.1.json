@@ -1,0 +1,381 @@
+{
+ "ok": true,
+ "id": "long-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 4422,
+ "receipt": {
+  "store": "Costco",
+  "purchased_at": "2026-11-02",
+  "currency": "CAD",
+  "subtotal": 241.35,
+  "gst": 3.9,
+  "pst": 5.46,
+  "total": 250.71
+ },
+ "items": [
+  {
+   "name_raw": "KS CHICKEN BREAST",
+   "name_norm": "鸡胸肉",
+   "category": "肉类",
+   "subcategory": "鸡肉",
+   "qty": 1,
+   "unit": "kg",
+   "unit_price": 18.99,
+   "amount": 18.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "KS BACON",
+   "name_norm": "培根",
+   "category": "肉类",
+   "subcategory": "猪肉",
+   "qty": 1,
+   "unit": "kg",
+   "unit_price": 12.99,
+   "amount": 12.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "SALMON FILLET",
+   "name_norm": "三文鱼柳",
+   "category": "海鲜",
+   "subcategory": "三文鱼",
+   "qty": 1,
+   "unit": "kg",
+   "unit_price": 22.5,
+   "amount": 22.5,
+   "taxable": 0
+  },
+  {
+   "name_raw": "KS TORTILLAS",
+   "name_norm": "玉米饼",
+   "category": "主食粮油",
+   "subcategory": "烘焙食品",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 6.99,
+   "amount": 6.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "ROMAINE 6CT",
+   "name_norm": "罗马生菜",
+   "category": "蔬菜",
+   "subcategory": "绿叶蔬菜",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 5.99,
+   "amount": 5.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "KS BUTTER",
+   "name_norm": "黄油",
+   "category": "乳制品蛋类",
+   "subcategory": "黄油",
+   "qty": 1,
+   "unit": "kg",
+   "unit_price": 13.49,
+   "amount": 13.49,
+   "taxable": 0
+  },
+  {
+   "name_raw": "CHEESE BLOCK",
+   "name_norm": "奶酪块",
+   "category": "乳制品蛋类",
+   "subcategory": "奶酪",
+   "qty": 1,
+   "unit": "kg",
+   "unit_price": 12.99,
+   "amount": 12.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "KS COFFEE",
+   "name_norm": "咖啡",
+   "category": "零食饮料",
+   "subcategory": "咖啡茶饮",
+   "qty": 1,
+   "unit": "kg",
+   "unit_price": 24.99,
+   "amount": 24.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "GREEK YOGURT",
+   "name_norm": "希腊酸奶",
+   "category": "乳制品蛋类",
+   "subcategory": "酸奶",
+   "qty": 1,
+   "unit": "kg",
+   "unit_price": 9.99,
+   "amount": 9.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "STRAWBERRIES",
+   "name_norm": "草莓",
+   "category": "水果",
+   "subcategory": "浆果",
+   "qty": 1,
+   "unit": "kg",
+   "unit_price": 7.99,
+   "amount": 7.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "BLUEBERRIES",
+   "name_norm": "蓝莓",
+   "category": "水果",
+   "subcategory": "浆果",
+   "qty": 1,
+   "unit": "kg",
+   "unit_price": 8.49,
+   "amount": 8.49,
+   "taxable": 0
+  },
+  {
+   "name_raw": "KS OLIVE OIL",
+   "name_norm": "橄榄油",
+   "category": "调味品",
+   "subcategory": "食用油",
+   "qty": 1,
+   "unit": "kg",
+   "unit_price": 17.99,
+   "amount": 17.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "PAPER TOWEL",
+   "name_norm": "厨房纸巾",
+   "category": "日用清洁",
+   "subcategory": "纸制品",
+   "qty": 1,
+   "unit": "卷",
+   "unit_price": 26.99,
+   "amount": 26.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "LAUNDRY SOAP",
+   "name_norm": "洗衣皂",
+   "category": "日用清洁",
+   "subcategory": "洗衣用品",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 22.99,
+   "amount": 22.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "SNACK BARS",
+   "name_norm": "零食棒",
+   "category": "零食饮料",
+   "subcategory": "能量棒",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 15.99,
+   "amount": 15.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "SPARKLING WATER",
+   "name_norm": "气泡水",
+   "category": "零食饮料",
+   "subcategory": "水",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 11.99,
+   "amount": 11.99,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Costco",
+  "purchased_at": "2026-11-02",
+  "currency": "CAD",
+  "subtotal": 241.35,
+  "gst": 3.9,
+  "pst": 5.46,
+  "total": 250.71,
+  "items": [
+   {
+    "name_raw": "KS CHICKEN BREAST",
+    "name_norm": "鸡胸肉",
+    "category": "肉类",
+    "subcategory": "鸡肉",
+    "qty": 1,
+    "unit": "kg",
+    "unit_price": null,
+    "amount": 18.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "KS BACON",
+    "name_norm": "培根",
+    "category": "肉类",
+    "subcategory": "猪肉",
+    "qty": 1,
+    "unit": "kg",
+    "unit_price": null,
+    "amount": 12.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "SALMON FILLET",
+    "name_norm": "三文鱼柳",
+    "category": "海鲜",
+    "subcategory": "三文鱼",
+    "qty": 1,
+    "unit": "kg",
+    "unit_price": null,
+    "amount": 22.5,
+    "taxable": false
+   },
+   {
+    "name_raw": "KS TORTILLAS",
+    "name_norm": "玉米饼",
+    "category": "主食粮油",
+    "subcategory": "烘焙食品",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": null,
+    "amount": 6.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "ROMAINE 6CT",
+    "name_norm": "罗马生菜",
+    "category": "蔬菜",
+    "subcategory": "绿叶蔬菜",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": null,
+    "amount": 5.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "KS BUTTER",
+    "name_norm": "黄油",
+    "category": "乳制品蛋类",
+    "subcategory": "黄油",
+    "qty": 1,
+    "unit": "kg",
+    "unit_price": null,
+    "amount": 13.49,
+    "taxable": false
+   },
+   {
+    "name_raw": "CHEESE BLOCK",
+    "name_norm": "奶酪块",
+    "category": "乳制品蛋类",
+    "subcategory": "奶酪",
+    "qty": 1,
+    "unit": "kg",
+    "unit_price": null,
+    "amount": 12.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "KS COFFEE",
+    "name_norm": "咖啡",
+    "category": "零食饮料",
+    "subcategory": "咖啡茶饮",
+    "qty": 1,
+    "unit": "kg",
+    "unit_price": null,
+    "amount": 24.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "GREEK YOGURT",
+    "name_norm": "希腊酸奶",
+    "category": "乳制品蛋类",
+    "subcategory": "酸奶",
+    "qty": 1,
+    "unit": "kg",
+    "unit_price": null,
+    "amount": 9.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "STRAWBERRIES",
+    "name_norm": "草莓",
+    "category": "水果",
+    "subcategory": "浆果",
+    "qty": 1,
+    "unit": "kg",
+    "unit_price": null,
+    "amount": 7.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "BLUEBERRIES",
+    "name_norm": "蓝莓",
+    "category": "水果",
+    "subcategory": "浆果",
+    "qty": 1,
+    "unit": "kg",
+    "unit_price": null,
+    "amount": 8.49,
+    "taxable": false
+   },
+   {
+    "name_raw": "KS OLIVE OIL",
+    "name_norm": "橄榄油",
+    "category": "调味品",
+    "subcategory": "食用油",
+    "qty": 1,
+    "unit": "kg",
+    "unit_price": null,
+    "amount": 17.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "PAPER TOWEL",
+    "name_norm": "厨房纸巾",
+    "category": "日用清洁",
+    "subcategory": "纸制品",
+    "qty": 1,
+    "unit": "卷",
+    "unit_price": null,
+    "amount": 26.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "LAUNDRY SOAP",
+    "name_norm": "洗衣皂",
+    "category": "日用清洁",
+    "subcategory": "洗衣用品",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": null,
+    "amount": 22.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "SNACK BARS",
+    "name_norm": "零食棒",
+    "category": "零食饮料",
+    "subcategory": "能量棒",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": null,
+    "amount": 15.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "SPARKLING WATER",
+    "name_norm": "气泡水",
+    "category": "零食饮料",
+    "subcategory": "水",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": null,
+    "amount": 11.99,
+    "taxable": true
+   }
+  ]
+ }
+}
