@@ -5,7 +5,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
-export const E2E_PORT = 3401;
+export const E2E_PORT = Number(process.env.E2E_PORT || 3401); // 多个检出并行跑 E2E 时各自指定端口
 // 一律用 127.0.0.1: 应用会拒绝 Origin 主机和 Host 不一致的写请求，localhost 与 127.0.0.1 混用会被当成跨站
 export const BASE_URL = `http://127.0.0.1:${E2E_PORT}`;
 

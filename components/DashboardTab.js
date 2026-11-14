@@ -10,13 +10,14 @@ import {
   LinearScale,
   Tooltip,
   Legend,
+  Filler,
 } from 'chart.js';
 import { Doughnut, Bar, Line } from 'react-chartjs-2';
 import { api, fmt } from '../lib/api';
 import { showToast } from '../lib/toast';
 import { computePresetRange, PRESETS } from '../lib/dateRange';
 
-ChartJS.register(ArcElement, BarElement, LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend);
+ChartJS.register(ArcElement, BarElement, LineElement, PointElement, CategoryScale, LinearScale, Tooltip, Legend, Filler);
 
 // 分类色板: 8 个已校验(CVD/对比度)色相，按固定顺序分配，不做无依据的新色生成；
 // 超过 8 个系列时复用色相但降低不透明度，弱化"长尾"分类而不是伪造新颜色
@@ -88,11 +89,13 @@ export default function DashboardTab({ cfg, active }) {
     setTrendData(d);
   }
 
+  const noData = kpis !== null && !kpis.receipts;
+  const money = (v) => '$' + fmt(v ?? 0);
   const kpiItems = kpis ? [
-    ['实付总额', '$' + fmt(kpis.total)],
-    ['税额合计', '$' + fmt(kpis.tax)],
-    ['GST', '$' + fmt(kpis.gst)],
-    ['PST', '$' + fmt(kpis.pst)],
+    ['实付总额', money(kpis.total)],
+    ['税额合计', money(kpis.tax)],
+    ['GST', money(kpis.gst)],
+    ['PST', money(kpis.pst)],
     ['小票数', kpis.receipts || 0],
     ['商品条目', kpis.lines || 0],
   ] : [];
@@ -110,6 +113,8 @@ export default function DashboardTab({ cfg, active }) {
           {PRESETS.map((p) => <button key={p.key} className="ghost" onClick={() => applyPreset(p.key)}>{p.label}</button>)}
         </div>
       </div>
+
+      {noData && <div className="card empty-state">暂无数据：所选时间范围内没有小票</div>}
 
       <div className="cards4">
         {kpiItems.map(([l, v]) => (

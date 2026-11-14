@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../lib/api';
 import { showToast } from '../../lib/toast';
+import { formatDateTime, utcTitle } from '../../lib/time';
 
 const ACTION_LABELS = {
   delete_user: '删除用户',
@@ -30,7 +31,7 @@ export default function AuditPanel({ active }) {
               <tr><td colSpan={5} className="empty">暂无记录</td></tr>
             ) : rows.map((r) => (
               <tr key={r.id}>
-                <td>{r.created_at}</td>
+                <td title={utcTitle(r.created_at)}>{formatDateTime(r.created_at)}</td>
                 <td>{r.admin_username}</td>
                 <td>{ACTION_LABELS[r.action] || r.action}</td>
                 <td>{r.target_type === 'user' ? '用户' : '小票'} #{r.target_id} · {r.target_label}</td>

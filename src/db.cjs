@@ -34,7 +34,13 @@ const pool = globalThis.__vanspendPool || mysql.createPool({
   namedPlaceholders: true,
   dateStrings: true,     // purchased_at/created_at 以 'YYYY-MM-DD ...' 字符串返回，兼容既有前端逻辑
   decimalNumbers: true,  // DECIMAL 列以 JS number 返回，兼容既有前端逻辑
+  timezone: 'Z',         // 写入的 Date 参数按 UTC 序列化(不依赖机器时区)
 });
+// 每条新连接显式把会话时区设为 UTC: NOW()/CURRENT_TIMESTAMP 写入与 TIMESTAMP 读出(dateStrings 返回的字符串)都是 UTC，
+// 前端 lib/time.js 据此按 UTC 解析再转本地时间。TIMESTAMP 内部存的就是 UTC 瞬间，所以不改变任何已存数据的含义。
+if (!globalThis.__vanspendPool) {
+  pool.on('connection', (c) => { c.query("SET time_zone = '+00:00'"); });
+}
 if (process.env.NODE_ENV !== 'production') globalThis.__vanspendPool = pool;
 
 // 与 sql/schema.sql 保持一致；应用启动时尝试自动建表，若数据库账号无 DDL 权限则忽略，
@@ -49,6 +55,7 @@ const SCHEMA_STATEMENTS = [
     is_admin      TINYINT(1)    NOT NULL DEFAULT 0,
     family_id     INT UNSIGNED,
     family_role   ENUM('dad','mom','child','other'),
+    family_joined_at TIMESTAMP NULL DEFAULT NULL,
     account_type  ENUM('individual','family') NOT NULL DEFAULT 'individual',
     signup_source ENUM('invite','open') NOT NULL DEFAULT 'invite',
     scan_tier     ENUM('open','normal') NOT NULL DEFAULT 'normal',
@@ -315,6 +322,13 @@ async function migrateUsersPasswordFlag(conn) {
   }
 }
 
+// 加入家庭的时间(转让创建者不改它；离开/被移除/解散清空)。老库没有这一列，老成员保持 NULL(不拿注册时间回填)
+async function migrateUsersFamilyJoinedAt(conn) {
+  if (!(await columnExists(conn, 'users', 'family_joined_at'))) {
+    await conn.query('ALTER TABLE users ADD COLUMN family_joined_at TIMESTAMP NULL DEFAULT NULL AFTER family_role');
+  }
+}
+
 // 初始化管理员账号: 只在 ADMIN_USERNAME/ADMIN_PASSWORD 都配置了、且该用户名还不存在时创建一次；
 // 已存在的账号(不管是不是管理员)不会被覆盖密码/角色
 async function seedAdmin() {
@@ -355,6 +369,7 @@ async function initSchema() {
       await migrateReceiptsImageIndex(conn);
       await migrateUsersInviteColumns(conn);
       await migrateUsersPasswordFlag(conn);
+      await migrateUsersFamilyJoinedAt(conn);
     } finally {
       conn.release();
     }
@@ -531,8 +546,8 @@ async function registerWithInvite(code, username, passwordHash, { familyRole } =
         continue;
       }
       const [info] = await conn.execute(`
-        INSERT INTO users (username, password_hash, family_role, signup_source, scan_tier, invited_by, family_id, account_type)
-        VALUES (:username, :password_hash, :family_role, 'invite', 'normal', :invited_by, :family_id, :account_type)
+        INSERT INTO users (username, password_hash, family_role, signup_source, scan_tier, invited_by, family_id, family_joined_at, account_type)
+        VALUES (:username, :password_hash, :family_role, 'invite', 'normal', :invited_by, :family_id, IF(:family_id IS NULL, NULL, NOW()), :account_type)
       `, {
         username, password_hash: passwordHash, family_role: familyRole || null, invited_by: c.created_by,
         family_id: c.family_id || null, account_type: c.family_id ? 'family' : 'individual',
@@ -712,7 +727,7 @@ async function createFamily(name, creatorId) {
     const [info] = await conn.execute('INSERT INTO families (name, creator_id) VALUES (:name, :creator_id)', { name, creator_id: creatorId });
     const familyId = info.insertId;
     const [upd] = await conn.execute(
-      `UPDATE users SET family_id = :familyId, account_type = 'family' WHERE id = :creatorId AND family_id IS NULL`,
+      `UPDATE users SET family_id = :familyId, family_joined_at = NOW(), account_type = 'family' WHERE id = :creatorId AND family_id IS NULL`,
       { familyId, creatorId }
     );
     if (upd.affectedRows === 0) { await conn.rollback(); return null; }
@@ -736,7 +751,7 @@ async function inviteMember(familyId, username) {
     const [f] = await conn.execute('SELECT id FROM families WHERE id = :familyId FOR SHARE', { familyId });
     if (!f.length) { await conn.rollback(); return false; }
     const [result] = await conn.execute(
-      `UPDATE users SET family_id = :familyId, account_type = 'family' WHERE username = :username AND family_id IS NULL`,
+      `UPDATE users SET family_id = :familyId, family_joined_at = NOW(), account_type = 'family' WHERE username = :username AND family_id IS NULL`,
       { familyId, username }
     );
     await conn.commit();
@@ -780,7 +795,7 @@ async function detachUser(conn, userId) {
     SET i.family_id = NULL, i.family_name = NULL, i.account_type = 'individual'
     WHERE r.user_id = :userId AND i.family_id IS NOT NULL
   `, { userId });
-  await conn.execute(`UPDATE users SET family_id = NULL, account_type = 'individual' WHERE id = :userId`, { userId });
+  await conn.execute(`UPDATE users SET family_id = NULL, family_joined_at = NULL, account_type = 'individual' WHERE id = :userId`, { userId });
 }
 
 // 解散: 所有成员变回个人、全部小票/明细摘掉家庭归属，然后删家庭(待审申请和家庭邀请码由外键级联一并删除)
@@ -789,7 +804,7 @@ async function dissolveInTx(conn, familyId) {
     `UPDATE receipts SET family_id = NULL, family_name = NULL, account_type = 'individual' WHERE family_id = :familyId`, { familyId });
   await conn.execute(
     `UPDATE items SET family_id = NULL, family_name = NULL, account_type = 'individual' WHERE family_id = :familyId`, { familyId });
-  await conn.execute(`UPDATE users SET family_id = NULL, account_type = 'individual' WHERE family_id = :familyId`, { familyId });
+  await conn.execute(`UPDATE users SET family_id = NULL, family_joined_at = NULL, account_type = 'individual' WHERE family_id = :familyId`, { familyId });
   await conn.execute('DELETE FROM families WHERE id = :familyId', { familyId });
 }
 
@@ -953,7 +968,7 @@ async function listMyApplications(userId) {
 async function listFamilyMembers(familyId) {
   await ready;
   const [rows] = await pool.execute(
-    'SELECT id, username, family_role, created_at FROM users WHERE family_id = :familyId ORDER BY created_at',
+    'SELECT id, username, family_role, family_joined_at, created_at FROM users WHERE family_id = :familyId ORDER BY created_at',
     { familyId }
   );
   return rows;
@@ -995,7 +1010,7 @@ async function decideRequest(requestId, familyId, approve, callerId) {
     let status = approve ? 'approved' : 'rejected';
     if (approve) {
       const [upd] = await conn.execute(
-        `UPDATE users SET family_id = :familyId, account_type = 'family' WHERE id = :userId AND family_id IS NULL`,
+        `UPDATE users SET family_id = :familyId, family_joined_at = NOW(), account_type = 'family' WHERE id = :userId AND family_id IS NULL`,
         { familyId, userId: reqRow.user_id }
       );
       if (upd.affectedRows === 0) { status = 'rejected'; result = 'applicant_in_family'; }
@@ -1048,7 +1063,8 @@ async function getSessionUser(id) {
 async function findImageOwner(imageFile) {
   await ready;
   const [rows] = await pool.execute(
-    'SELECT user_id, family_id FROM receipts WHERE image_file = :imageFile LIMIT 1',
+    // 库的默认排序规则不区分大小写，文件名是区分大小写的随机串；先走索引，再按字节精确比对
+    'SELECT user_id, family_id FROM receipts WHERE image_file = :imageFile AND BINARY image_file = BINARY :imageFile LIMIT 1',
     { imageFile }
   );
   return rows[0] || null;
@@ -1481,7 +1497,7 @@ async function overview(from, to, scope) {
 async function listUsers() {
   await ready;
   const [rows] = await pool.execute(`
-    SELECT u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name AS family_name, u.created_at,
+    SELECT u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name AS family_name, (f.creator_id = u.id) AS is_family_creator, u.created_at,
            u.signup_source, u.scan_tier, inv.username AS inviter_username,
            COUNT(r.id) AS receipt_count,
            ROUND(COALESCE(SUM(r.total), 0), 2) AS total_spend
@@ -1489,7 +1505,7 @@ async function listUsers() {
     LEFT JOIN receipts r ON r.user_id = u.id
     LEFT JOIN families f ON f.id = u.family_id
     LEFT JOIN users inv ON inv.id = u.invited_by
-    GROUP BY u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name, u.created_at,
+    GROUP BY u.id, u.username, u.is_admin, u.account_type, u.family_role, f.name, f.creator_id, u.created_at,
              u.signup_source, u.scan_tier, inv.username
     ORDER BY u.created_at
   `);
@@ -1619,7 +1635,7 @@ const api = {
   updatePassword, getSessionUser, findImageOwner,
   createInviteCode, listInviteCodes, revokeInviteCode, peekInviteCode, registerWithInvite,
   reserveScan, finishScan, setScanTier,
-  migrateUsersInviteColumns, migrateUsersPasswordFlag, // 导出仅供测试(升级路径)
+  migrateUsersInviteColumns, migrateUsersPasswordFlag, migrateUsersFamilyJoinedAt, // 导出仅供测试(升级路径)
   countRecentLoginFailures, isLoginLocked, recordLoginFailure, deleteLoginAttempt, clearLoginFailures,
   isPasswordLocked, recordPasswordFailure, countPasswordFailures, deletePasswordFailure, clearPasswordFailures,
   consumeCaptcha, reserveOpenSignup, listUsers, deleteUser, deleteUserFull, deleteOwnAccount, resetUserPassword, adminDeleteReceipt, listAuditLog, statsByUser,

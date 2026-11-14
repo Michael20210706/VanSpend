@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, fmt } from '../lib/api';
 import { computePresetRange, PRESETS } from '../lib/dateRange';
+import { showToast } from '../lib/toast';
 import ReceiptEditor from './ReceiptEditor';
 
 function query(from, to, search) {
@@ -46,6 +47,7 @@ export default function ReceiptsTab({ active, showOwner, userId, cfg }) {
   async function delRec(id) {
     if (!confirm('确认删除这张小票？')) return;
     await api('/api/receipts/' + id, { method: 'DELETE' });
+    showToast('已删除 ✓');
     load();
     setDetail(null);
   }
@@ -116,9 +118,7 @@ export default function ReceiptsTab({ active, showOwner, userId, cfg }) {
             税前 ${fmt(detail.subtotal)} ｜ GST ${fmt(detail.gst)} ｜ PST ${fmt(detail.pst)} ｜ 实付 ${fmt(detail.total)}
             {showOwner ? <> ｜ 所属成员: {detail.owner_username}</> : null}
           </p>
-          {detail.image_file && (
-            <img src={'/uploads/' + detail.image_file} className="receipt-image" alt="" />
-          )}
+          <div className="receipt-body">
           <div className="table-scroll">
           <table>
             <thead><tr><th>品名</th><th>分类</th><th>细分</th><th className="num">数量</th><th className="num">单价</th><th className="num">金额</th><th>税</th></tr></thead>
@@ -133,6 +133,10 @@ export default function ReceiptsTab({ active, showOwner, userId, cfg }) {
               ))}
             </tbody>
           </table>
+          </div>
+          {detail.image_file && (
+            <img src={'/uploads/' + detail.image_file} className="receipt-image" alt="" />
+          )}
           </div>
         </div>
       )}

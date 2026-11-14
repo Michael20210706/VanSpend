@@ -1,0 +1,205 @@
+{
+ "ok": true,
+ "id": "costco-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 3051,
+ "receipt": {
+  "store": "Costco",
+  "purchased_at": "2026-03-09",
+  "currency": "CAD",
+  "subtotal": 181.68,
+  "gst": 2.87,
+  "pst": 4.02,
+  "total": 188.57
+ },
+ "items": [
+  {
+   "name_raw": "100000 KS BEEF RIBEYE\n1.842 kg @ 21.98/kg",
+   "name_norm": "牛肉西冷",
+   "category": "肉类",
+   "subcategory": "牛肉",
+   "qty": 1.842,
+   "unit": "kg",
+   "unit_price": 21.98,
+   "amount": 40.49,
+   "taxable": 0
+  },
+  {
+   "name_raw": "115838 CHICKEN BRST",
+   "name_norm": "鸡胸肉",
+   "category": "肉类",
+   "subcategory": "鸡肉",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 17.88,
+   "amount": 17.88,
+   "taxable": 0
+  },
+  {
+   "name_raw": "123757 SOCKEYE FILLET",
+   "name_norm": "红鲑鱼柳",
+   "category": "海鲜",
+   "subcategory": "三文鱼",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 29.96,
+   "amount": 29.96,
+   "taxable": 0
+  },
+  {
+   "name_raw": "B 131676 PAPER TOWEL 12",
+   "name_norm": "纸巾",
+   "category": "日用清洁",
+   "subcategory": "纸巾",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 26.99,
+   "amount": 26.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "B 139595 TOOTHPASTE 4PK",
+   "name_norm": "牙膏",
+   "category": "个护健康",
+   "subcategory": "口腔护理",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 14.99,
+   "amount": 14.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "147514 MILK 4L",
+   "name_norm": "牛奶",
+   "category": "乳制品蛋类",
+   "subcategory": "牛奶",
+   "qty": 1,
+   "unit": "盒",
+   "unit_price": 6.89,
+   "amount": 6.89,
+   "taxable": 0
+  },
+  {
+   "name_raw": "155433 RICE 20LB",
+   "name_norm": "大米",
+   "category": "主食粮油",
+   "subcategory": "大米",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 28.99,
+   "amount": 28.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "B 163352 CHIPS VARIETY",
+   "name_norm": "薯片",
+   "category": "零食饮料",
+   "subcategory": "薯片",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 15.49,
+   "amount": 15.49,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Costco",
+  "purchased_at": "2026-03-09",
+  "currency": "CAD",
+  "subtotal": 181.68,
+  "gst": 2.87,
+  "pst": 4.02,
+  "total": 188.57,
+  "items": [
+   {
+    "name_raw": "100000 KS BEEF RIBEYE\n1.842 kg @ 21.98/kg",
+    "name_norm": "牛肉西冷",
+    "category": "肉类",
+    "subcategory": "牛肉",
+    "qty": 1.842,
+    "unit": "kg",
+    "unit_price": 21.98,
+    "amount": 40.49,
+    "taxable": false
+   },
+   {
+    "name_raw": "115838 CHICKEN BRST",
+    "name_norm": "鸡胸肉",
+    "category": "肉类",
+    "subcategory": "鸡肉",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 17.88,
+    "amount": 17.88,
+    "taxable": false
+   },
+   {
+    "name_raw": "123757 SOCKEYE FILLET",
+    "name_norm": "红鲑鱼柳",
+    "category": "海鲜",
+    "subcategory": "三文鱼",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 29.96,
+    "amount": 29.96,
+    "taxable": false
+   },
+   {
+    "name_raw": "B 131676 PAPER TOWEL 12",
+    "name_norm": "纸巾",
+    "category": "日用清洁",
+    "subcategory": "纸巾",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 26.99,
+    "amount": 26.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "B 139595 TOOTHPASTE 4PK",
+    "name_norm": "牙膏",
+    "category": "个护健康",
+    "subcategory": "口腔护理",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 14.99,
+    "amount": 14.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "147514 MILK 4L",
+    "name_norm": "牛奶",
+    "category": "乳制品蛋类",
+    "subcategory": "牛奶",
+    "qty": 1,
+    "unit": "盒",
+    "unit_price": 6.89,
+    "amount": 6.89,
+    "taxable": false
+   },
+   {
+    "name_raw": "155433 RICE 20LB",
+    "name_norm": "大米",
+    "category": "主食粮油",
+    "subcategory": "大米",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 28.99,
+    "amount": 28.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "B 163352 CHIPS VARIETY",
+    "name_norm": "薯片",
+    "category": "零食饮料",
+    "subcategory": "薯片",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 15.49,
+    "amount": 15.49,
+    "taxable": true
+   }
+  ]
+ }
+}

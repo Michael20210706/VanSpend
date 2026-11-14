@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
+import { formatDateTime, utcTitle } from '../lib/time';
 
 const STATUS_LABEL = { unused: '未使用', used: '已使用', revoked: '已作废', expired: '已过期' };
 
@@ -81,7 +82,7 @@ export default function InviteCodes({ kind = 'personal' }) {
                   {STATUS_LABEL[c.status]}
                   {c.status === 'used' && c.used_by_username ? <span className="muted"> · {c.used_by_username}</span> : null}
                 </td>
-                <td>{c.expires_at}</td>
+                <td title={utcTitle(c.expires_at)}>{formatDateTime(c.expires_at)}</td>
                 <td>
                   {c.status === 'unused' ? (
                     <>
