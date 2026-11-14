@@ -16,6 +16,7 @@ export default function ScanTab({ cfg }) {
   const [store, setStore] = useState('');
   const [date, setDate] = useState('');
   const [dateGuessed, setDateGuessed] = useState(false);
+  const [residualAdded, setResidualAdded] = useState(false);
   const [subtotal, setSubtotal] = useState(0);
   const [gst, setGst] = useState(0);
   const [pst, setPst] = useState(0);
@@ -62,6 +63,7 @@ export default function ScanTab({ cfg }) {
       setStore(receipt.store || '');
       setDate(receipt.purchased_at || '');
       setDateGuessed(!!receipt.date_guessed);
+      setResidualAdded(!!receipt.residual_added);
       setSubtotal(receipt.subtotal || 0);
       setGst(receipt.gst || 0);
       setPst(receipt.pst || 0);
@@ -157,6 +159,7 @@ export default function ScanTab({ cfg }) {
           <label>实付 <input type="number" step="0.01" className="num" style={{ width: 90 }} value={total} onChange={(e) => setTotal(e.target.value)} /></label>
         </div>
         <ItemsEditor rows={rows} setRows={setRows} categories={cfg.categories} />
+        {residualAdded ? <div className="muted" style={{ marginTop: 8 }}>有一条未识别差额，请核对</div> : null}
         <div className="row" style={{ marginTop: 14 }}>
           <button onClick={save}>保存到账本</button>
         </div>
