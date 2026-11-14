@@ -1,0 +1,4 @@
+ts	phase	decision	why	evidence	result
+2026-11-14T02:14:18Z	start	开始整晚的证据驱动优化轮	用户授权整晚自主运行，开放问题由代理决定	本会话；docs/qa/2026-11-14-optimization-round.md	open
+2026-11-14T02:14:18Z	frame	写下退出条件、证据清单、7 个开放问题的决定、8 个候选的排序、6 条假设与验收规则，全部在动手之前	没有假设和验收规则，事后无法判断改动是否该上线	docs/qa/2026-11-14-optimization-round.md 第 0 到 3 节	written
+2026-11-14T02:14:18Z	frame	本轮基于现有测量；真实使用证据为 0(users 1, receipts 1, scan_log 0, feedback 0)	整晚不会产生真实使用；但要把事件记录建好让下一轮有证据	线上库只读查询，2026-11-14 02:0x UTC	decided
