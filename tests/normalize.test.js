@@ -41,6 +41,65 @@ describe('normalize(): 模型没给出合法日期时仍填今天，但标 date_
   });
 });
 
+describe('normalize(): 印出的 total 比 subtotal+gst+pst 多出超过 0.02 时加一条"未识别差额(请核对)"明细(H-R1)', () => {
+  const dish = { name_raw: 'Dish', category: '餐厅外食', qty: 1, unit_price: 55, amount: 55, taxable: true };
+  const base = { store: 'R', purchased_at: '2026-05-10', currency: 'CAD', items: [dish] };
+  const run = (over) => openrouterLib.normalize({ ...base, ...over });
+
+  it('餐厅小费形状: subtotal 55、gst 2.75、total 67.25 → 加 9.50 的差额行，subtotal 跟着明细变 64.50，total 不变', () => {
+    const { receipt, items } = run({ subtotal: 55, gst: 2.75, pst: 0, total: 67.25 });
+    expect(items).toHaveLength(2);
+    expect(items[1]).toEqual({
+      name_raw: '未识别差额(请核对)', name_norm: null, category: '其他', subcategory: null,
+      qty: 1, unit: null, unit_price: 9.5, amount: 9.5, taxable: 0,
+    });
+    expect(receipt).toMatchObject({ residual_added: true, subtotal: 64.5, gst: 2.75, pst: 0, total: 67.25 });
+    expect(+(receipt.subtotal + receipt.gst + receipt.pst).toFixed(2)).toBe(67.25);
+  });
+  it('差额正好 0.02(舍入) → 不加', () => {
+    const { receipt, items } = run({ subtotal: 55, gst: 2.75, pst: 0, total: 57.77 });
+    expect(items).toHaveLength(1);
+    expect(receipt).toMatchObject({ residual_added: false, subtotal: 55 });
+  });
+  it('差额 0.03 → 加', () => {
+    const { receipt, items } = run({ subtotal: 55, gst: 2.75, pst: 0, total: 57.78 });
+    expect(items).toHaveLength(2);
+    expect(items[1].amount).toBe(0.03);
+    expect(receipt).toMatchObject({ residual_added: true, subtotal: 55.03 });
+  });
+  it('total 比 subtotal+gst+pst 少(负差额) → 不加、不动', () => {
+    const { receipt, items } = run({ subtotal: 55, gst: 2.75, pst: 0, total: 50 });
+    expect(items).toHaveLength(1);
+    expect(receipt).toMatchObject({ residual_added: false, subtotal: 55, total: 50 });
+  });
+  it('total 没印出(靠 subtotal+gst+pst 兜底) → 不加', () => {
+    const { receipt, items } = run({ subtotal: 55, gst: 2.75, pst: 0, total: 0 });
+    expect(items).toHaveLength(1);
+    expect(receipt).toMatchObject({ residual_added: false, total: 57.75 });
+  });
+  it('已经自洽的小票 → 不加', () => {
+    const { receipt, items } = run({ subtotal: 55, gst: 2.75, pst: 3.85, total: 61.6 });
+    expect(items).toHaveLength(1);
+    expect(receipt.residual_added).toBe(false);
+  });
+  it('合计税规则先跑: gst=pst=0、差额在 12% 内先拆成 5:7，不会被当成差额行', () => {
+    const { receipt, items } = run({ subtotal: 100, gst: 0, pst: 0, total: 112 });
+    expect(items).toHaveLength(1);
+    expect(receipt).toMatchObject({ residual_added: false, gst: 5, pst: 7 });
+  });
+  it('gst=pst=0 且差额超过 12%(税规则不拆) → 整个差额成为差额行', () => {
+    const { receipt, items } = run({ subtotal: 100, gst: 0, pst: 0, total: 120 });
+    expect(items).toHaveLength(2);
+    expect(items[1].amount).toBe(20);
+    expect(receipt).toMatchObject({ residual_added: true, gst: 0, pst: 0, subtotal: 120, total: 120 });
+  });
+  it('没有任何明细(非小票图) → 不加', () => {
+    const { receipt, items } = run({ items: [], subtotal: 0, gst: 0, pst: 0, total: 10 });
+    expect(items).toHaveLength(0);
+    expect(receipt.residual_added).toBe(false);
+  });
+});
+
 describe('normalize(): 只印一行合计税时按 5:7 拆分(issue #28)', () => {
   const base = { store: 'T&T', purchased_at: '2026-05-10', currency: 'CAD', items: [{ name_raw: 'X', category: '其他', amount: 100, taxable: true }] };
   const run = (over) => openrouterLib.normalize({ ...base, ...over }).receipt;
