@@ -23,6 +23,24 @@ describe('normalize()', () => {
   });
 });
 
+describe('normalize(): 模型没给出合法日期时仍填今天，但标 date_guessed(H-R2)', () => {
+  const base = { store: 'X', currency: 'CAD', subtotal: 10, gst: 0, pst: 0, total: 10, items: [{ name_raw: 'A', category: '其他', amount: 10, taxable: false }] };
+  const run = (over) => openrouterLib.normalize({ ...base, ...over }).receipt;
+  const today = new Date().toISOString().slice(0, 10);
+
+  it('合法日期 → 原样保留，date_guessed 为 false', () => {
+    expect(run({ purchased_at: '2026-05-10' })).toMatchObject({ purchased_at: '2026-05-10', date_guessed: false });
+  });
+  it('空字符串 → 填今天，date_guessed 为 true', () => {
+    expect(run({ purchased_at: '' })).toMatchObject({ purchased_at: today, date_guessed: true });
+  });
+  it('缺失或不是 YYYY-MM-DD → 填今天，date_guessed 为 true', () => {
+    expect(run({})).toMatchObject({ purchased_at: today, date_guessed: true });
+    expect(run({ purchased_at: '10/05/2026' })).toMatchObject({ purchased_at: today, date_guessed: true });
+    expect(run({ purchased_at: null })).toMatchObject({ purchased_at: today, date_guessed: true });
+  });
+});
+
 describe('normalize(): 只印一行合计税时按 5:7 拆分(issue #28)', () => {
   const base = { store: 'T&T', purchased_at: '2026-05-10', currency: 'CAD', items: [{ name_raw: 'X', category: '其他', amount: 100, taxable: true }] };
   const run = (over) => openrouterLib.normalize({ ...base, ...over }).receipt;

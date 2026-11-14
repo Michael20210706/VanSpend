@@ -61,6 +61,9 @@ function validate(body, mode, currency) {
     subtotal: 0, gst: cents(r.gst), pst: cents(r.pst), total: 0,
     items: items.map((it) => ({ ...it, amount: cents(it.amount) })),
   });
+  // 识别阶段的提示标记只给核对界面用，不是小票的字段，不入库
+  delete n.receipt.date_guessed;
+  delete n.receipt.residual_added;
   // normalize() 在单价缺失时按 金额/数量 回推，回推值可能超出 DECIMAL(10,4)，这里挡成 400 而不是让数据库报 500
   if (n.items.some((it) => it.unit_price != null && Math.abs(it.unit_price) > MAX_DERIVED_UNIT_PRICE)) return { error: '单价超出范围(请核对数量和金额)' };
   if (mode === 'save') {

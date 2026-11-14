@@ -138,9 +138,12 @@ function normalize(p) {
     }
   }
 
+  // 日期读不到时填今天，但要标出来(date_guessed)让核对界面提示，否则用户看到的是一个看似合法的错日期
+  const dateRead = /^\d{4}-\d{2}-\d{2}$/.test(p.purchased_at);
   const receipt = {
     store: (p.store || '未知').toString().trim() || '未知',
-    purchased_at: /^\d{4}-\d{2}-\d{2}$/.test(p.purchased_at) ? p.purchased_at : today,
+    purchased_at: dateRead ? p.purchased_at : today,
+    date_guessed: !dateRead,
     currency: (p.currency || config.currency).toString().trim() || config.currency,
     subtotal: num(p.subtotal),
     gst: num(p.gst),
