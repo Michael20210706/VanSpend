@@ -27,10 +27,13 @@ export const POST = wrap(async (request) => {
   if (response) return response;
 
   const body = await readJson(request, IMAGE_BODY_MAX);
-  const { receipt, items, image, raw } = body;
+  const { receipt, items, image, raw, meta } = body;
   // 先校验全部字段(与编辑接口共用规则)，通过后才写图片: 非法输入一律 400，不落盘、不入库
   const v = receiptInput.validateSave({ receipt, items }, openrouterLib.config.currency);
   if (v.error) return NextResponse.json({ error: v.error }, { status: 400 });
+  // 可选的保存事件 meta(改了哪些字段名等，只用于统计): 不带就和以前完全一样；带了但形状不对同样 400
+  const m = receiptInput.validateSaveMeta(meta);
+  if (m.error) return NextResponse.json({ error: m.error }, { status: 400 });
   if (image) {
     const bad = uploadsLib.checkImage(image);
     if (bad) return NextResponse.json({ error: bad.error }, { status: bad.status });
@@ -56,6 +59,11 @@ export const POST = wrap(async (request) => {
     // 请求处理期间账号被删(注销/管理员删除): 外键找不到用户。按"未登录"处理，而不是 500
     if (e && e.code === 'ER_NO_REFERENCED_ROW_2') return NextResponse.json({ error: '账号不存在或已注销' }, { status: 401 });
     throw e;
+  }
+  // 事件行只是统计数据: 小票已经存好，事件写不进去(库异常、账号恰好被删)只记日志，不能让这次保存报错
+  if (m.meta) {
+    await dbApi.recordSaveEvent({ userId: session.userId, receiptId: id, itemsSaved: v.items.length, ...m.meta })
+      .catch((e) => console.error('[receipts] 保存事件写入失败', e));
   }
   return NextResponse.json({ id });
 });

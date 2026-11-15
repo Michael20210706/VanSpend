@@ -181,7 +181,27 @@ CREATE TABLE IF NOT EXISTS scan_log (
   user_id       INT UNSIGNED  NOT NULL,
   model         VARCHAR(100),
   success       TINYINT(1),
+  duration_ms   INT,
   created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_scan_user_time (user_id, created_at),
   CONSTRAINT fk_scan_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 保存事件(给"识别在哪里让人改"做统计用): 每次带 meta 的保存一行。edited_fields 是字段**名**的 JSON 数组
+-- (receipt.store、item[2].amount、item[+]/item[-])；这张表绝不存任何值、品名、金额或图片。90 天前的行在写入时清掉。
+-- 小票或扫描记录被删时事件留下(对应的 id 置空)，账号被删时连带删除
+CREATE TABLE IF NOT EXISTS save_events (
+  id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_id         INT UNSIGNED    NOT NULL,
+  receipt_id      INT UNSIGNED,
+  scan_log_id     BIGINT UNSIGNED,
+  edited_fields   TEXT            NOT NULL,
+  items_ai        INT,
+  items_saved     INT             NOT NULL,
+  scan_to_save_ms INT,
+  created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_save_events_time (created_at),
+  CONSTRAINT fk_save_events_user    FOREIGN KEY (user_id)     REFERENCES users(id)    ON DELETE CASCADE,
+  CONSTRAINT fk_save_events_receipt FOREIGN KEY (receipt_id)  REFERENCES receipts(id) ON DELETE SET NULL,
+  CONSTRAINT fk_save_events_scan    FOREIGN KEY (scan_log_id) REFERENCES scan_log(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

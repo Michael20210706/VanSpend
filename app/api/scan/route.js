@@ -30,13 +30,17 @@ export const POST = wrap(async (request) => {
   if (!slot.ok) {
     return NextResponse.json({ error: `今日识别次数已用完(24 小时内最多 ${limit} 次)，如需更多额度请联系管理员` }, { status: 429 });
   }
+  // 识别调用本身的耗时(毫秒)，成功失败都记进 scan_log.duration_ms
+  const startedAt = performance.now();
+  const elapsedMs = () => Math.round(performance.now() - startedAt);
   try {
     const result = await openrouterLib.scanReceipt(image);
-    await dbApi.finishScan(slot.id, true);
-    return NextResponse.json(result);
+    await dbApi.finishScan(slot.id, true, elapsedMs());
+    // scanId: 前端保存时原样带回(meta.scanId)，用来把保存事件对应到这次识别
+    return NextResponse.json({ ...result, scanId: slot.id });
   } catch (e) {
     // 记失败本身出错不能盖掉 OpenRouter 的原始错误
-    await dbApi.finishScan(slot.id, false).catch((err) => console.error('[scan] finishScan 失败', err));
+    await dbApi.finishScan(slot.id, false, elapsedMs()).catch((err) => console.error('[scan] finishScan 失败', err));
     // 上游错误原文(状态码、响应体)只写服务端日志，不透给用户
     console.error('[scan] 识别失败', e);
     throw new HttpError(502, '识别服务暂时不可用，请稍后重试');
