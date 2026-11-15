@@ -30,3 +30,5 @@ ts	phase	decision	why	evidence	result
 2026-11-15T10:15:44Z	audit	补记: 整合后用合并后的 normalize 重新给模型对比打分，保留集整张全对由 flash 4/12 对 lite 3/12 变为 7/12 对 5/12，差 +2 仍不满足 +3，费用比不变，结论不变	差额行让两边带小费的小票都变对；第 19 行的数字是整合前的	node eval/models.cjs 在本轮分支上的输出；docs/qa/2026-11-14-optimization-round.md 第 5 节	verdict unchanged
 2026-11-15T10:15:44Z	audit	补记: 清理 4 个 worker 的 worktree 与临时库 vanspend_w1..w4_test，清理前确认各分支 HEAD 都是本轮分支的祖先且无未提交改动	避免残留；先核对再删	git merge-base --is-ancestor 四次均通过；SHOW DATABASES 只剩 vanspend 与 vanspend_test	done
 2026-11-15T10:15:44Z	audit	补记: w2 的接手 worker 运行在 Opus 5.5 上(当时会话被切到该模型)，其余接手 worker 在 Fable 5.2 上；提交尾注因此不一致，未改写历史	如实记录是谁做的	w2 提交 5ec36e9 e6ba53f 的尾注	noted
+2026-11-15T10:21:22Z	review	跨模型审查(Opus)交回 13 条标记，其中 1 条高: 差额行在'小费已被提成明细且小计照抄'和'小计读短'两种形状下重复计入；我离线复现属实	独立审查发现了验收规则没检验到的缺陷；H-R1 的验收第一条按构造必然成立	审查报告(本会话)；node -e normalize 形状 A/B 的输出；eval/results/baseline/deg-04.1.json	H-R1 as built is defective
+2026-11-15T10:21:22Z	H-R1b	不合并现有的差额行实现；先写 H-R1b 的假设与验收规则(差额改为对明细之和计算，加实时对不上提示)，提交后再改代码；任一条不满足就撤掉差额行只留日期标记	修正的方向来自不变量(total=明细之和+税)，不是对数据调参；保留集已看过结果，只作回归检查	docs/qa/2026-11-14-optimization-round.md 第 3b 节	pre-registered
