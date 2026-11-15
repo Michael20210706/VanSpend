@@ -77,4 +77,26 @@ function validate(body, mode, currency) {
 const validateEdit = (body, currency) => validate(body, 'edit', currency);
 const validateSave = (body, currency) => validate(body, 'save', currency);
 
-module.exports = { validateEdit, validateSave, realDate };
+// ---- 保存事件的 meta(POST /api/receipts 的可选字段，只用于统计，见 db.cjs recordSaveEvent) ----
+// editedFields 只能是下面这几种字段**名**: receipt.<列>、item[<AI 结果里的下标>].<列>、item[+](加了一行)、item[-](删了一行)。
+// 整串匹配、下标最多 3 位数字(一个名字最长 21 个字符)，所以名字里装不下任何自由文本(值、品名、金额)。与 lib/editDiff.js 产出的名字是同一套
+const MAX_EDITED_FIELDS = 1000;
+const MAX_INT = 2147483647; // INT 列上限
+const EDITED_FIELD = /^(?:receipt\.(?:store|purchased_at|subtotal|gst|pst|total)|item\[\d{1,3}\]\.(?:name_raw|name_norm|category|subcategory|qty|unit|unit_price|amount|taxable)|item\[[+-]\])$/;
+const optInt = (v, min, max) => v == null || (Number.isInteger(v) && v >= min && v <= max);
+
+// 返回 { error }、{ meta: null }(请求里没有 meta) 或 { meta: { scanId, editedFields, itemsAi, scanToSaveMs } }(缺省项为 null)。
+// meta 里不认识的键不读也不存
+function validateSaveMeta(meta) {
+  if (meta == null) return { meta: null };
+  if (typeof meta !== 'object' || Array.isArray(meta)) return { error: 'meta 格式错误' };
+  const { scanId, editedFields, itemsAi, scanToSaveMs } = meta;
+  if (!optInt(scanId, 1, Number.MAX_SAFE_INTEGER)) return { error: 'meta.scanId 格式错误' };
+  if (!Array.isArray(editedFields) || editedFields.length > MAX_EDITED_FIELDS
+    || !editedFields.every((f) => typeof f === 'string' && EDITED_FIELD.test(f))) return { error: 'meta.editedFields 格式错误' };
+  if (!optInt(itemsAi, 0, MAX_INT)) return { error: 'meta.itemsAi 格式错误' };
+  if (!optInt(scanToSaveMs, 0, MAX_INT)) return { error: 'meta.scanToSaveMs 格式错误' };
+  return { meta: { scanId: scanId ?? null, editedFields, itemsAi: itemsAi ?? null, scanToSaveMs: scanToSaveMs ?? null } };
+}
+
+module.exports = { validateEdit, validateSave, validateSaveMeta, MAX_EDITED_FIELDS, realDate };
