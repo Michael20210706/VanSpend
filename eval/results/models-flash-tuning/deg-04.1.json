@@ -1,0 +1,145 @@
+{
+ "ok": true,
+ "id": "deg-04",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2431,
+ "apiMs": 2431,
+ "dataset": "dataset.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 428,
+  "total_tokens": 1326,
+  "cost": 0.001326006,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0013394,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.00107
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "Walmart",
+  "purchased_at": "2026-11-15",
+  "currency": "CAD",
+  "subtotal": 38.88,
+  "gst": 2.29,
+  "pst": 1.81,
+  "total": 44.98
+ },
+ "items": [
+  {
+   "name_raw": "HA WITH ANY",
+   "name_norm": "洗发水",
+   "category": "个护健康",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "个",
+   "unit_price": 17.94,
+   "amount": 17.94,
+   "taxable": 1
+  },
+  {
+   "name_raw": "COFFEE",
+   "name_norm": "咖啡",
+   "category": "零食饮料",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 5,
+   "amount": 5,
+   "taxable": 0
+  },
+  {
+   "name_raw": "VITAMINS",
+   "name_norm": "维生素",
+   "category": "个护健康",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 19.97,
+   "amount": 19.97,
+   "taxable": 1
+  },
+  {
+   "name_raw": "BATTERIES",
+   "name_norm": "电池",
+   "category": "其他",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 7.97,
+   "amount": 7.97,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Walmart",
+  "purchased_at": "",
+  "currency": "CAD",
+  "subtotal": 38.88,
+  "gst": 2.29,
+  "pst": 1.81,
+  "total": 44.98,
+  "items": [
+   {
+    "name_raw": "HA WITH ANY",
+    "name_norm": "洗发水",
+    "category": "个护健康",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "个",
+    "unit_price": null,
+    "amount": 17.94,
+    "taxable": true
+   },
+   {
+    "name_raw": "COFFEE",
+    "name_norm": "咖啡",
+    "category": "零食饮料",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": null,
+    "amount": 5,
+    "taxable": false
+   },
+   {
+    "name_raw": "VITAMINS",
+    "name_norm": "维生素",
+    "category": "个护健康",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": null,
+    "amount": 19.97,
+    "taxable": true
+   },
+   {
+    "name_raw": "BATTERIES",
+    "name_norm": "电池",
+    "category": "其他",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": null,
+    "amount": 7.97,
+    "taxable": true
+   }
+  ]
+ }
+}

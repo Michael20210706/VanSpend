@@ -1,0 +1,453 @@
+{
+ "ok": true,
+ "id": "long-01",
+ "run": 1,
+ "attempts": 1,
+ "ms": 7359,
+ "apiMs": 7358,
+ "dataset": "dataset.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 1778,
+  "total_tokens": 2676,
+  "cost": 0.004667256,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0047144,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.004445
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "Superstore",
+  "purchased_at": "2026-10-18",
+  "currency": "CAD",
+  "subtotal": 136.98,
+  "gst": 2.77,
+  "pst": 3.04,
+  "total": 142.79
+ },
+ "items": [
+  {
+   "name_raw": "BANANAS",
+   "name_norm": "香蕉",
+   "category": "水果",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 1.99,
+   "amount": 1.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "AVOCADO 4CT",
+   "name_norm": "牛油果",
+   "category": "水果",
+   "subcategory": null,
+   "qty": 4,
+   "unit": "个",
+   "unit_price": 1.5,
+   "amount": 5.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "SPINACH",
+   "name_norm": "菠菜",
+   "category": "蔬菜",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 3.99,
+   "amount": 3.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "CHICKEN BREAST",
+   "name_norm": "鸡胸肉",
+   "category": "肉类",
+   "subcategory": "鸡肉",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 12.5,
+   "amount": 12.5,
+   "taxable": 0
+  },
+  {
+   "name_raw": "GROUND BEEF",
+   "name_norm": "牛肉馅",
+   "category": "肉类",
+   "subcategory": "牛肉",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 9.49,
+   "amount": 9.49,
+   "taxable": 0
+  },
+  {
+   "name_raw": "MILK 4L",
+   "name_norm": "牛奶",
+   "category": "乳制品蛋类",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "L",
+   "unit_price": 6.19,
+   "amount": 6.19,
+   "taxable": 0
+  },
+  {
+   "name_raw": "EGGS 12",
+   "name_norm": "鸡蛋",
+   "category": "乳制品蛋类",
+   "subcategory": null,
+   "qty": 12,
+   "unit": "个",
+   "unit_price": 0.4,
+   "amount": 4.79,
+   "taxable": 0
+  },
+  {
+   "name_raw": "YOGURT",
+   "name_norm": "酸奶",
+   "category": "乳制品蛋类",
+   "subcategory": null,
+   "qty": 2,
+   "unit": "份",
+   "unit_price": 3.49,
+   "amount": 6.98,
+   "taxable": 0
+  },
+  {
+   "name_raw": "CEREAL",
+   "name_norm": "麦片",
+   "category": "主食粮油",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 5.99,
+   "amount": 5.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "PASTA",
+   "name_norm": "意大利面",
+   "category": "主食粮油",
+   "subcategory": null,
+   "qty": 3,
+   "unit": "包",
+   "unit_price": 1.89,
+   "amount": 5.67,
+   "taxable": 0
+  },
+  {
+   "name_raw": "PASTA SAUCE",
+   "name_norm": "意大利面酱",
+   "category": "调味品",
+   "subcategory": null,
+   "qty": 2,
+   "unit": "瓶",
+   "unit_price": 2.99,
+   "amount": 5.98,
+   "taxable": 0
+  },
+  {
+   "name_raw": "COFFEE",
+   "name_norm": "咖啡",
+   "category": "零食饮料",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 11.99,
+   "amount": 11.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "POTATO CHIPS",
+   "name_norm": "薯片",
+   "category": "零食饮料",
+   "subcategory": null,
+   "qty": 2,
+   "unit": "包",
+   "unit_price": 4.49,
+   "amount": 8.98,
+   "taxable": 1
+  },
+  {
+   "name_raw": "COLA 12PK",
+   "name_norm": "可乐",
+   "category": "零食饮料",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 8.99,
+   "amount": 8.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "TOILET PAPER",
+   "name_norm": "卫生纸",
+   "category": "日用清洁",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 13.99,
+   "amount": 13.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "DISH SOAP",
+   "name_norm": "洗碗液",
+   "category": "日用清洁",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 3.99,
+   "amount": 3.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "SHAMPOO",
+   "name_norm": "洗发水",
+   "category": "个护健康",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 7.49,
+   "amount": 7.49,
+   "taxable": 1
+  },
+  {
+   "name_raw": "VITAMIN D",
+   "name_norm": "维生素D",
+   "category": "个护健康",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 11.99,
+   "amount": 11.99,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Superstore",
+  "purchased_at": "2026-10-18",
+  "currency": "CAD",
+  "subtotal": 136.98,
+  "gst": 2.77,
+  "pst": 3.04,
+  "total": 142.79,
+  "items": [
+   {
+    "name_raw": "BANANAS",
+    "name_norm": "香蕉",
+    "category": "水果",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 1.99,
+    "amount": 1.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "AVOCADO 4CT",
+    "name_norm": "牛油果",
+    "category": "水果",
+    "subcategory": null,
+    "qty": 4,
+    "unit": "个",
+    "unit_price": 1.5,
+    "amount": 5.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "SPINACH",
+    "name_norm": "菠菜",
+    "category": "蔬菜",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 3.99,
+    "amount": 3.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "CHICKEN BREAST",
+    "name_norm": "鸡胸肉",
+    "category": "肉类",
+    "subcategory": "鸡肉",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 12.5,
+    "amount": 12.5,
+    "taxable": false
+   },
+   {
+    "name_raw": "GROUND BEEF",
+    "name_norm": "牛肉馅",
+    "category": "肉类",
+    "subcategory": "牛肉",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 9.49,
+    "amount": 9.49,
+    "taxable": false
+   },
+   {
+    "name_raw": "MILK 4L",
+    "name_norm": "牛奶",
+    "category": "乳制品蛋类",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "L",
+    "unit_price": 6.19,
+    "amount": 6.19,
+    "taxable": false
+   },
+   {
+    "name_raw": "EGGS 12",
+    "name_norm": "鸡蛋",
+    "category": "乳制品蛋类",
+    "subcategory": null,
+    "qty": 12,
+    "unit": "个",
+    "unit_price": 0.4,
+    "amount": 4.79,
+    "taxable": false
+   },
+   {
+    "name_raw": "YOGURT",
+    "name_norm": "酸奶",
+    "category": "乳制品蛋类",
+    "subcategory": null,
+    "qty": 2,
+    "unit": "份",
+    "unit_price": 3.49,
+    "amount": 6.98,
+    "taxable": false
+   },
+   {
+    "name_raw": "CEREAL",
+    "name_norm": "麦片",
+    "category": "主食粮油",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 5.99,
+    "amount": 5.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "PASTA",
+    "name_norm": "意大利面",
+    "category": "主食粮油",
+    "subcategory": null,
+    "qty": 3,
+    "unit": "包",
+    "unit_price": 1.89,
+    "amount": 5.67,
+    "taxable": false
+   },
+   {
+    "name_raw": "PASTA SAUCE",
+    "name_norm": "意大利面酱",
+    "category": "调味品",
+    "subcategory": null,
+    "qty": 2,
+    "unit": "瓶",
+    "unit_price": 2.99,
+    "amount": 5.98,
+    "taxable": false
+   },
+   {
+    "name_raw": "COFFEE",
+    "name_norm": "咖啡",
+    "category": "零食饮料",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 11.99,
+    "amount": 11.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "POTATO CHIPS",
+    "name_norm": "薯片",
+    "category": "零食饮料",
+    "subcategory": null,
+    "qty": 2,
+    "unit": "包",
+    "unit_price": 4.49,
+    "amount": 8.98,
+    "taxable": true
+   },
+   {
+    "name_raw": "COLA 12PK",
+    "name_norm": "可乐",
+    "category": "零食饮料",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 8.99,
+    "amount": 8.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "TOILET PAPER",
+    "name_norm": "卫生纸",
+    "category": "日用清洁",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 13.99,
+    "amount": 13.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "DISH SOAP",
+    "name_norm": "洗碗液",
+    "category": "日用清洁",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 3.99,
+    "amount": 3.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "SHAMPOO",
+    "name_norm": "洗发水",
+    "category": "个护健康",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 7.49,
+    "amount": 7.49,
+    "taxable": true
+   },
+   {
+    "name_raw": "VITAMIN D",
+    "name_norm": "维生素D",
+    "category": "个护健康",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 11.99,
+    "amount": 11.99,
+    "taxable": true
+   }
+  ]
+ }
+}

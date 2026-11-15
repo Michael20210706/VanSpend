@@ -1,0 +1,211 @@
+{
+ "ok": true,
+ "id": "tnt-03",
+ "run": 1,
+ "attempts": 1,
+ "ms": 4022,
+ "apiMs": 4022,
+ "dataset": "dataset.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 782,
+  "total_tokens": 1680,
+  "cost": 0.002202156,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0022244,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.001955
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "T&T Supermarket",
+  "purchased_at": "2026-01-11",
+  "currency": "CAD",
+  "subtotal": 73.44,
+  "gst": 1.65,
+  "pst": 2.24,
+  "total": 77.33
+ },
+ "items": [
+  {
+   "name_raw": "BEEF SHORT RIB",
+   "name_norm": "牛小排",
+   "category": "肉类",
+   "subcategory": "牛肉",
+   "qty": 2.31,
+   "unit": "lb",
+   "unit_price": 12.99,
+   "amount": 30.01,
+   "taxable": 0
+  },
+  {
+   "name_raw": "SPARKLING WATER 12PK",
+   "name_norm": "苏打水 12包装",
+   "category": "零食饮料",
+   "subcategory": "饮料",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 7.99,
+   "amount": 7.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "SHAMPOO",
+   "name_norm": "洗发水",
+   "category": "个护健康",
+   "subcategory": "洗护用品",
+   "qty": 1,
+   "unit": "个",
+   "unit_price": 9.99,
+   "amount": 9.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "MANDARIN ORANGE",
+   "name_norm": "柑橘",
+   "category": "水果",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 6.99,
+   "amount": 6.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "SNACK MIX",
+   "name_norm": "混合零食",
+   "category": "零食饮料",
+   "subcategory": "零食",
+   "qty": 2,
+   "unit": "包",
+   "unit_price": 4.49,
+   "amount": 8.98,
+   "taxable": 1
+  },
+  {
+   "name_raw": "BREAD SLICED",
+   "name_norm": "切片面包",
+   "category": "主食粮油",
+   "subcategory": "面包",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 3.99,
+   "amount": 3.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "CANDY ASSORTED",
+   "name_norm": "什锦糖果",
+   "category": "零食饮料",
+   "subcategory": "糖果",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 5.49,
+   "amount": 5.49,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "T&T Supermarket",
+  "purchased_at": "2026-01-11",
+  "currency": "CAD",
+  "subtotal": 73.44,
+  "gst": 1.65,
+  "pst": 2.24,
+  "total": 77.33,
+  "items": [
+   {
+    "name_raw": "BEEF SHORT RIB",
+    "name_norm": "牛小排",
+    "category": "肉类",
+    "subcategory": "牛肉",
+    "qty": 2.31,
+    "unit": "lb",
+    "unit_price": 12.99,
+    "amount": 30.01,
+    "taxable": false
+   },
+   {
+    "name_raw": "SPARKLING WATER 12PK",
+    "name_norm": "苏打水 12包装",
+    "category": "零食饮料",
+    "subcategory": "饮料",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 7.99,
+    "amount": 7.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "SHAMPOO",
+    "name_norm": "洗发水",
+    "category": "个护健康",
+    "subcategory": "洗护用品",
+    "qty": 1,
+    "unit": "个",
+    "unit_price": 9.99,
+    "amount": 9.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "MANDARIN ORANGE",
+    "name_norm": "柑橘",
+    "category": "水果",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 6.99,
+    "amount": 6.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "SNACK MIX",
+    "name_norm": "混合零食",
+    "category": "零食饮料",
+    "subcategory": "零食",
+    "qty": 2,
+    "unit": "包",
+    "unit_price": 4.49,
+    "amount": 8.98,
+    "taxable": true
+   },
+   {
+    "name_raw": "BREAD SLICED",
+    "name_norm": "切片面包",
+    "category": "主食粮油",
+    "subcategory": "面包",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 3.99,
+    "amount": 3.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "CANDY ASSORTED",
+    "name_norm": "什锦糖果",
+    "category": "零食饮料",
+    "subcategory": "糖果",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 5.49,
+    "amount": 5.49,
+    "taxable": true
+   }
+  ]
+ }
+}

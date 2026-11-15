@@ -1,0 +1,145 @@
+{
+ "ok": true,
+ "id": "cn-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2484,
+ "apiMs": 2483,
+ "dataset": "dataset.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 485,
+  "total_tokens": 1383,
+  "cost": 0.001467081,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0014819,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.0012125
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "华美海鲜酒楼",
+  "purchased_at": "2026-10-05",
+  "currency": "CAD",
+  "subtotal": 78.5,
+  "gst": 3.93,
+  "pst": 0,
+  "total": 90.43
+ },
+ "items": [
+  {
+   "name_raw": "清蒸鲈鱼",
+   "name_norm": "清蒸鲈鱼",
+   "category": "餐厅外食",
+   "subcategory": "鱼类",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 38,
+   "amount": 38,
+   "taxable": 1
+  },
+  {
+   "name_raw": "蒜蓉粉丝蒸扇贝",
+   "name_norm": "蒜蓉粉丝蒸扇贝",
+   "category": "餐厅外食",
+   "subcategory": "贝类",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 22,
+   "amount": 22,
+   "taxable": 1
+  },
+  {
+   "name_raw": "炒时蔬",
+   "name_norm": "炒时蔬",
+   "category": "餐厅外食",
+   "subcategory": "蔬菜",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 14,
+   "amount": 14,
+   "taxable": 1
+  },
+  {
+   "name_raw": "白饭",
+   "name_norm": "白饭",
+   "category": "餐厅外食",
+   "subcategory": "主食",
+   "qty": 3,
+   "unit": "份",
+   "unit_price": 1.5,
+   "amount": 4.5,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "华美海鲜酒楼",
+  "purchased_at": "2026-10-05",
+  "currency": "CAD",
+  "subtotal": 78.5,
+  "gst": 3.93,
+  "pst": 0,
+  "total": 90.43,
+  "items": [
+   {
+    "name_raw": "清蒸鲈鱼",
+    "name_norm": "清蒸鲈鱼",
+    "category": "餐厅外食",
+    "subcategory": "鱼类",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 38,
+    "amount": 38,
+    "taxable": true
+   },
+   {
+    "name_raw": "蒜蓉粉丝蒸扇贝",
+    "name_norm": "蒜蓉粉丝蒸扇贝",
+    "category": "餐厅外食",
+    "subcategory": "贝类",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 22,
+    "amount": 22,
+    "taxable": true
+   },
+   {
+    "name_raw": "炒时蔬",
+    "name_norm": "炒时蔬",
+    "category": "餐厅外食",
+    "subcategory": "蔬菜",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 14,
+    "amount": 14,
+    "taxable": true
+   },
+   {
+    "name_raw": "白饭",
+    "name_norm": "白饭",
+    "category": "餐厅外食",
+    "subcategory": "主食",
+    "qty": 3,
+    "unit": "份",
+    "unit_price": 1.5,
+    "amount": 4.5,
+    "taxable": true
+   }
+  ]
+ }
+}
