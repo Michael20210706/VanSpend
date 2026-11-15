@@ -1296,8 +1296,11 @@ async function listReceipts({ limit = 200, from, to, search, scope } = {}) {
     params.search = '%' + likeEscape(search) + '%';
   }
   const whereClause = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
+  // 只取列表界面(ReceiptsTab、admin/ReceiptsPanel)用到的列。raw_json 等其余列只在详情(getReceipt)里返回:
+  // 带上它时 200 行的响应约 370 KB，其中九成是界面从不显示的 raw_json
   const [rows] = await pool.execute(`
-    SELECT r.*, u.username AS owner_username, (SELECT COUNT(*) FROM items i WHERE i.receipt_id = r.id) AS item_count
+    SELECT r.id, r.user_id, r.store, r.purchased_at, r.subtotal, r.gst, r.pst, r.total,
+           u.username AS owner_username, (SELECT COUNT(*) FROM items i WHERE i.receipt_id = r.id) AS item_count
     FROM receipts r LEFT JOIN users u ON u.id = r.user_id
     ${whereClause} ORDER BY r.purchased_at DESC, r.id DESC LIMIT ${lim}
   `, params);
