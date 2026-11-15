@@ -18,3 +18,8 @@ ts	phase	decision	why	evidence	result
 2026-11-15T04:59:06Z	workers	w3(性能)在 w1 完成后恢复，交由它处理自己留下的 3433 孤儿进程	压测需要机器安静；只停属于该 worktree 的进程	pid 42021 cwd=VanSpend-wt-w3	resumed
 2026-11-15T05:01:22Z	H-M	模型对比完成: 真实调用 49 次(上限 120)，合计 0.0776 美元；保留集整张全对 flash 4/12 对 flash-lite 3/12(差 +1，要求 +3)，每次费用 5.45 倍(要求 ≤2 倍)；两条都不满足，建议保持 flash-lite，线上模型不变	按事先提交的验收规则(2dbdc3b 早于第一批结果 9cddec1)	w4 分支 65ca3a8；eval/results/calls-models.json；docs/qa/2026-11-14-model-comparison.md；我重跑 node eval/models.cjs 一致	keep flash-lite
 2026-11-15T05:01:22Z	H-M	评测代码给 scanReceipt 加了应用不传的可选 onMeta 钩子，返回结构不变，纳入整合	记录 token 与费用需要 API 的 usage 字段；有单元测试守着返回结构	w4 提交 89b8400；tests/openrouter-meta.test.js	accepted
+2026-11-15T09:52:28Z	integrate	把 w2(识别)、w1(事件记录)、w4(模型对比)合并进本轮分支；CLAUDE.md 用词级三方合并，评估文档两侧都是追加，按顺序都保留；测试推迟到性能 worker 结束后跑	合并不占 CPU；测试和端到端会干扰性能 worker 的压测	本轮分支 git log；scratchpad/wordmerge.py	merged, untested
+2026-11-15T09:52:28Z	workers	第四次额度中断；恢复 w3(性能)，此时只有它一个 worker	H-P1 已提交 11d5d9b 且五组前后压测数据在盘上；H-P2 未做	scratchpad/w3/s1-base-*.jsonl s1-new-*.jsonl	resumed
+2026-11-15T10:06:56Z	H-P1	H-P1 列表去掉 raw_json 通过验收: 响应体 371,904→33,838 字节，S1 c=50 吞吐 948→1,605/s(×1.69)，p50 51.3→30.3 ms(-41%)，5 对交替运行，0 错误	两条数字门槛都满足；限制资源前后都是 Node 主线程，JSON 序列化从热点里消失	w3 提交 11d5d9b 298503a；docs/qa/2026-11-11-stress-test.md 第 8 节；scratchpad/w3/s1-*.jsonl	accepted
+2026-11-15T10:06:56Z	H-P2	H-P2 统计索引放弃: 个人范围已走 idx_receipts_user，家庭范围走 index merge；试加复合索引在默认视图无可测变化	事先的规则写明: 若已走索引则放弃。时间主要花在连接明细表而不是查 receipts	w3 提交 90ed3af；docs/qa/2026-11-11-stress-test.md 第 9 节	discarded
+2026-11-15T10:06:56Z	H-P2	记录但不做: items(receipt_id, category, amount) 覆盖索引在试验里让分类统计快约 40%	这是事后发现的新假设，没有事先的验收规则，写入代价没测；留给下一轮	worker 报告的超出范围发现 1	deferred
