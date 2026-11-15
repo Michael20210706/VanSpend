@@ -25,3 +25,8 @@ ts	phase	decision	why	evidence	result
 2026-11-15T10:06:56Z	H-P2	记录但不做: items(receipt_id, category, amount) 覆盖索引在试验里让分类统计快约 40%	这是事后发现的新假设，没有事先的验收规则，写入代价没测；留给下一轮	worker 报告的超出范围发现 1	deferred
 2026-11-15T10:11:24Z	integrate	四个分支全部并入本轮分支；npm test 43 文件 649 条、评测 33 条、默认构建、端到端 82 条(两次)全部通过	整合后必须在合并结果上重新验证，不采信各分支单独的结果	本轮分支；E2E_PORT=3461 两次 82 passed	green locally
 2026-11-15T10:11:24Z	H-R1	在设计时没见过的保留集上验证差额行: 餐厅组自洽 0/2→2/2，tipFound 0/3→2/3，整张全对 3/12→5/12，无回归，其余各组 0 条差额行	保留集的模型输出来自 H-M 的真实调用，生成于规则写成之后且未参与设计	node eval/replay.cjs --old-ref main models-lite-holdout	confirmed on held-out
+2026-11-15T10:15:07Z	ship	PR #51 的 CI 通过(单元 649、构建、端到端 82 都真实执行)；合并被权限分类器拒绝，不绕过，交给用户决定	PR 是代理自己开的，用户没有点名合并；分类器的拒绝代表权限边界	PR 51；Actions run 43702900504	blocked on user
+2026-11-15T10:15:44Z	audit	更正中断编号: 用量上限共打断 5 次(第 7、8、9、15、22 行)；第 15 行写的'第三次'实为第四次，第 22 行写的'第四次'实为第五次	审计日志时发现编号与实际不符；只追加更正，不改旧行	本文件第 7 8 9 15 22 行；任务通知里的 5 次 429	supersedes numbering in rows 15 and 22
+2026-11-15T10:15:44Z	audit	补记: 整合后用合并后的 normalize 重新给模型对比打分，保留集整张全对由 flash 4/12 对 lite 3/12 变为 7/12 对 5/12，差 +2 仍不满足 +3，费用比不变，结论不变	差额行让两边带小费的小票都变对；第 19 行的数字是整合前的	node eval/models.cjs 在本轮分支上的输出；docs/qa/2026-11-14-optimization-round.md 第 5 节	verdict unchanged
+2026-11-15T10:15:44Z	audit	补记: 清理 4 个 worker 的 worktree 与临时库 vanspend_w1..w4_test，清理前确认各分支 HEAD 都是本轮分支的祖先且无未提交改动	避免残留；先核对再删	git merge-base --is-ancestor 四次均通过；SHOW DATABASES 只剩 vanspend 与 vanspend_test	done
+2026-11-15T10:15:44Z	audit	补记: w2 的接手 worker 运行在 Opus 5.5 上(当时会话被切到该模型)，其余接手 worker 在 Fable 5.2 上；提交尾注因此不一致，未改写历史	如实记录是谁做的	w2 提交 5ec36e9 e6ba53f 的尾注	noted
