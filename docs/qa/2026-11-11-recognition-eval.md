@@ -271,3 +271,62 @@ node eval/run.cjs tip --extra 0                          # 需要先把上面的
 node eval/experiment.cjs baseline tip                    # 验收对比(零调用)
 node eval/replay.cjs baseline after                      # 离线重放 normalize()
 ```
+
+## 第三轮(2026-11-14): 日期标记(H-R2)与差额行(H-R1)，离线重放，零 API 调用
+
+假设与验收规则事先写在 `docs/qa/2026-11-14-optimization-round.md` 第 3 节。两条都只改 `normalize()`(`src/openrouter.cjs`)及核对界面，不改提示词、不改线上模型。
+
+测量工具: `node eval/replay.cjs --old-ref main baseline after`。本轮给 replay 加了 `--old-ref`(把"旧"列换成该 git 引用下的 `normalize()`，在内存里编译，不写文件)、分组表里的 tipFound 与"差额行 N/组内张数"、`date_guessed`/`residual_added` 两个名单；`eval/score.cjs` 的口径没动。不带 `--old-ref` 时"旧"列仍是结果保存时的输出(比 main 少两条税规则)，所以验收一律用 `--old-ref main`(`eb3f470`)。
+
+验收批次是 `baseline`: 它是现行提示词(线上在用)的原始输出。`after` 是第一轮没上线的提示词那一批，只作旁证。每张 1 次、temperature=0；上一轮已测得同图重复输出逐字段一致，所以没有运行间波动可报，限制在**图的数量**(24 张合成小票，非小票图不计入)。
+
+### H-R2 日期标记 [测量]
+
+`normalize()` 读不到 `YYYY-MM-DD` 时仍填今天，但 `receipt.date_guessed = true`；`ScanTab` 的日期框旁显示"日期未识别，已填今天，请核对"，用户改日期后消失。保存/编辑接口在 `validate()` 里删掉 `date_guessed`/`residual_added`，返回的小票对象里没有这两个字段；入库本来就按列名写，标记也到不了库(`tests/recognition-flags.test.js`)。
+
+| 验收 | 结果 |
+|---|---|
+| 重放里 deg-04 被标记，其余 23 张首轮结果不被标记 | 满足: baseline 与 after 两批都是 `date_guessed 的小票(1): deg-04(degraded)` |
+| 端到端: 无日期时提示出现，有日期时不出现 | 满足: `e2e/recognition-hints.spec.js` 前 2 个用例 |
+| 保存接口忽略该字段(不入库) | 满足: POST 带两个标记返回 200，`receipts` 行没有这两列，`raw_json` 不含，详情接口不返回 |
+| 护栏: 任何数值指标不变 | 满足: `b285295`(只有 H-R2)的 `normalize()` 与 main 在 baseline+after 共 50 份原始输出上逐张比较，打分、明细、除 `date_guessed` 外的 receipt 字段 0 处不同 |
+
+**结论: 上线。**
+
+### H-R1 差额行 [测量]
+
+规则: 税规则之后，印出的 `total` > 0、有明细、且 `total − (subtotal+gst+pst)` 取整到分后 > 0.02，加一条明细 `未识别差额(请核对)`(金额 = 差额，qty 1，category 其他，taxable 0)，`subtotal` 加上差额(= 明细之和)，`total` 不动，`receipt.residual_added = true`。差额为负、`total` 未印出、非小票(无明细)都不动。核对表下方提示"有一条未识别差额，请核对"。保存走 `validateSave`，它以 `total: 0` 调 `normalize()`，所以保存时不会再加一次。
+
+| 验收(baseline 批，24 张首轮) | main | 本分支 | 结果 |
+|---|---|---|---|
+| `consistent` 餐厅组 0/3 → ≥2/3 | 0/3 | **3/3** | 满足 |
+| `tipFound` 0/4 → ≥3/4(按金额匹配) | 0/4 | **3/4** | 满足。cn-02 没中: 模型把 8.00 小费填进了 pst，总额已自洽，规则不触发 |
+| 基线里全对的小票没有一张变错 | 8/24 全对 | 11/24 全对，`回归(旧对、新错): 无` | 满足(rest-01/02/03 从不对变全对) |
+| costco、tnt、mix、disc 组没有新增差额行 | | 差额行 costco 0/2、tnt-combined 0/4、mixed-tax 0/3、discount-weighed 0/3 | 满足 |
+| 全量测试绿 | | `npm test` 562/562，端到端 79/79 两遍 | 满足 |
+
+其他变化(baseline 批): `consistent` 20/24 → 24/24，`subtotalOk` 19/24 → 23/24，gst/pst/total/taxSum 不变。差额行一共 4 条: rest-01/02/03 和 deg-04。deg-04(小尺寸重噪点图，模型的 subtotal 少读了 12.00)得到一条 12.00 的差额行；它的品名本来就乱码，整张仍不对。long、chinese 两组也没有差额行。
+
+**护栏与验收的冲突(需要负责人裁定)。** 护栏写的是"`subtotal`、`total` 不改"。`consistent` 的定义是 `subtotal+gst+pst` 与 `total` 差不超过 0.02(`eval/score.cjs`)。差额行规则不动 gst/pst；若 subtotal 和 total 也都不动，`consistent` 不可能变化，验收第一条无法成立。实测字面版本(删掉 `receipt.subtotal = ...` 那一行，其余不变): 餐厅组 `consistent` 0/3 → **0/3**，整张全对 8/24 → 8/24，tipFound 仍是 3/4，无回归。也就是说按字面护栏，H-R1 不满足第一条验收，应放弃。本分支的实现是让 subtotal 只随新增的明细同步，理由有三: 数据集答案里餐厅小票的 subtotal 本来就是含小费的明细之和(subtotalOk 0/3 → 3/3 说明了这一点)；保存接口按用户确认过的 subtotal 原样入库，不同步会存下"明细之和 64.50、税前 55.00"；编辑规则在第一次编辑时也会把它重算成明细之和。`total` 没有动。若负责人坚持字面护栏，`git revert` 实现提交 `e0a40d0` 即可(测试提交 `5b69d4f` 一起回退)。
+
+已知风险 [测量，after 批]: 若模型已经把小费提取成一条明细、但 subtotal 仍抄印出的小计(第一轮没上线的提示词就是这种形状)，差额行会与小费行重复: after 批的 rest-01/02/03、cn-02 各多出一条与小费同金额的差额行(整张全对不变 5/24，consistent 20/24 → 24/24，subtotalOk 20/24 → 24/24，无回归，但这 4 张的条数多了 1)。现行提示词下(baseline 批)没有这种形状；真实小票上模型是否会同时做这两件事未测。
+
+### 修复前失败的证据 [测量]
+
+- H-R1: 把 `e0a40d0` 对 `src/openrouter.cjs` 的改动反向应用后跑 `tests/normalize.test.js`: `30 tests | 9 failed`，9 条全是差额行用例(如 `expected [ { name_raw: 'Dish', …(8) } ] to have a length of 2 but got 1`)。
+- H-R2: 再把 `b285295` 对 `src/openrouter.cjs`/`src/receiptInput.cjs` 的改动反向应用: `30 tests | 12 failed`(另外 3 条是日期标记用例)。只反向 `receiptInput.cjs` 的两行删除: `tests/recognition-flags.test.js` 第 1 条失败；入库那条照样通过，因为入库按列名写，标记本来就到不了库。
+- 端到端: 把 `components/ScanTab.js` 恢复成 main 的版本后跑 `e2e/recognition-hints.spec.js`: `2 failed, 1 passed`(两条提示 `element(s) not found`；"有日期时没有提示"那条本来就该通过)。
+
+### 局限
+- 同一批 24 张合成图、每张 1 次；餐厅组只有 3 张、带小费 4 张，"3/3"和"3/4"只是"发生过"的证据。差额行规则是看过 rest-01/02/03 的失败样本后写的，对没见过的小票会偏乐观。
+- 规则把任何正向差额(漏读的一行、模型算错的 subtotal、小费)都变成同一条"未识别差额"，由人改名或删除；没有区分来源。
+- 非小票图(nonreceipt-01)的 `purchased_at` 是空字符串，所以也带 `date_guessed`；它没有明细，保存接口要求至少一条明细，不影响入库。不在验收范围内。
+- 日期只按 `YYYY-MM-DD` 形状判断: `2026-02-30` 这类形状对但不存在的日期不会被标记，保存时由 `validateSave` 挡成 400。本轮没改。
+- 真实 OpenRouter 调用 **0 次**；没有访问线上库、线上容器或公网域名。
+
+### 怎么重跑本轮
+```bash
+node eval/replay.cjs --old-ref main baseline after   # 零调用；看"分组"表(含差额行计数)、"回归"行和两个标记名单
+npx vitest run tests/normalize.test.js tests/recognition-flags.test.js
+E2E_PORT=<端口> MYSQL_DATABASE=<库名>_e2e_test npm run test:e2e -- e2e/recognition-hints.spec.js
+```

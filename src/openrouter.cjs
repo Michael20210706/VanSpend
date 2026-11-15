@@ -138,9 +138,13 @@ function normalize(p) {
     }
   }
 
+  // 日期读不到时填今天，但要标出来(date_guessed)让核对界面提示，否则用户看到的是一个看似合法的错日期
+  const dateRead = /^\d{4}-\d{2}-\d{2}$/.test(p.purchased_at);
   const receipt = {
     store: (p.store || '未知').toString().trim() || '未知',
-    purchased_at: /^\d{4}-\d{2}-\d{2}$/.test(p.purchased_at) ? p.purchased_at : today,
+    purchased_at: dateRead ? p.purchased_at : today,
+    date_guessed: !dateRead,
+    residual_added: false,
     currency: (p.currency || config.currency).toString().trim() || config.currency,
     subtotal: num(p.subtotal),
     gst: num(p.gst),
@@ -175,6 +179,17 @@ function normalize(p) {
       const combined = receipt.pst;
       receipt.gst = +((combined * 5) / 12).toFixed(2);
       receipt.pst = +(combined - receipt.gst).toFixed(2);
+    }
+  }
+
+  // 税规则之后印出的 total 仍比 subtotal+gst+pst 多出超过 2 分(餐厅小费、漏读的一行): 加一条"未识别差额"明细让人在核对表里改名或删除，
+  // subtotal 跟着明细之和走(与编辑规则一致)，印出的 total 不动；差额为负(多读了一行)不动
+  if (printedTotal > 0 && items.length) {
+    const residual = +(printedTotal - receipt.subtotal - receipt.gst - receipt.pst).toFixed(2);
+    if (residual > 0.02) {
+      items.push({ name_raw: '未识别差额(请核对)', name_norm: null, category: '其他', subcategory: null, qty: 1, unit: null, unit_price: residual, amount: residual, taxable: 0 });
+      receipt.subtotal = +(receipt.subtotal + residual).toFixed(2);
+      receipt.residual_added = true;
     }
   }
 

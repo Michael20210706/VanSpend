@@ -15,6 +15,8 @@ export default function ScanTab({ cfg }) {
   const [editVisible, setEditVisible] = useState(false);
   const [store, setStore] = useState('');
   const [date, setDate] = useState('');
+  const [dateGuessed, setDateGuessed] = useState(false);
+  const [residualAdded, setResidualAdded] = useState(false);
   const [subtotal, setSubtotal] = useState(0);
   const [gst, setGst] = useState(0);
   const [pst, setPst] = useState(0);
@@ -60,6 +62,8 @@ export default function ScanTab({ cfg }) {
       setEditVisible(true);
       setStore(receipt.store || '');
       setDate(receipt.purchased_at || '');
+      setDateGuessed(!!receipt.date_guessed);
+      setResidualAdded(!!receipt.residual_added);
       setSubtotal(receipt.subtotal || 0);
       setGst(receipt.gst || 0);
       setPst(receipt.pst || 0);
@@ -147,13 +151,15 @@ export default function ScanTab({ cfg }) {
         <h2>2 · 核对并保存</h2>
         <div className="row" style={{ marginBottom: 12 }}>
           <label>商家 <input style={{ width: 140 }} value={store} onChange={(e) => setStore(e.target.value)} /></label>
-          <label>日期 <input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
+          <label>日期 <input type="date" value={date} onChange={(e) => { setDate(e.target.value); setDateGuessed(false); }} /></label>
+          {dateGuessed ? <span className="muted">日期未识别，已填今天，请核对</span> : null}
           <label>税前 <input type="number" step="0.01" className="num" style={{ width: 90 }} value={subtotal} onChange={(e) => setSubtotal(e.target.value)} /></label>
           <label>GST <input type="number" step="0.01" className="num" style={{ width: 80 }} value={gst} onChange={(e) => setGst(e.target.value)} /></label>
           <label>PST <input type="number" step="0.01" className="num" style={{ width: 80 }} value={pst} onChange={(e) => setPst(e.target.value)} /></label>
           <label>实付 <input type="number" step="0.01" className="num" style={{ width: 90 }} value={total} onChange={(e) => setTotal(e.target.value)} /></label>
         </div>
         <ItemsEditor rows={rows} setRows={setRows} categories={cfg.categories} />
+        {residualAdded ? <div className="muted" style={{ marginTop: 8 }}>有一条未识别差额，请核对</div> : null}
         <div className="row" style={{ marginTop: 14 }}>
           <button onClick={save}>保存到账本</button>
         </div>
