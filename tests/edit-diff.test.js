@@ -77,6 +77,15 @@ describe('diffEdits', () => {
     expect(lastOnly).toContain('item[299].subcategory');
     expect(receiptInput.validateSaveMeta({ editedFields: lastOnly }).error).toBeUndefined();
   });
+
+  it('AI 结果超过 1000 行时，下标 ≥ 1000 的行不报字段改动(服务端只认 3 位下标)，产出的名字仍全部合法', () => {
+    const rows = Array.from({ length: 1002 }, (_, i) => row(i + 1));
+    const after = { receipt: receipt(), rows: rows.slice(999).map((r) => ({ ...r, amount: 5 })) };
+    const out = diffEdits({ receipt: receipt(), rows }, after);
+    expect(out.filter((n) => n !== 'item[-]')).toEqual(['item[999].amount']);
+    expect(out.filter((n) => n === 'item[-]')).toHaveLength(999);
+    expect(receiptInput.validateSaveMeta({ editedFields: out }).error).toBeUndefined();
+  });
 });
 
 describe('buildSaveMeta', () => {
