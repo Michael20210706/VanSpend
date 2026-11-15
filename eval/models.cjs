@@ -92,6 +92,10 @@ function whyWrong(s) {
   return out.join('; ');
 }
 
+function splitBlind(s) {
+  return !s.failed && s.storeOk && s.dateOk && s.tp === s.truthItems && s.predItems === s.truthItems && s.qtyOk === s.tp && s.taxableOk === s.tp && s.subtotalOk && s.taxSumOk && s.totalOk;
+}
+
 function pearson(xs, ys) {
   const n = xs.length;
   if (n < 3) return null;
@@ -117,13 +121,17 @@ function main() {
   line('调用失败(计为错)', (r) => String(r.rows.filter((x) => !x.ok).length));
   line('整张完全正确', (r) => cell(agg.get(r).fullyCorrect));
   for (const [n, k] of [['subtotal ±0.01', 'subtotalOk'], ['gst ±0.01', 'gstOk'], ['pst ±0.01', 'pstOk'], ['total ±0.01', 'totalOk'], ['subtotal+gst+pst = total', 'consistent'], ['日期完全一致', 'dateOk'], ['商家名匹配', 'storeOk']]) line(n, (r) => cell(agg.get(r)[k]));
-  line('日期(写法无歧义的小票)', (r) => { const u = receiptRows(r).filter((x) => !x.rec.dateAmbiguous); return `${u.filter((x) => x.score.dateOk).length}/${u.length}`; });
+  const dateBy = (amb) => (r) => { const u = receiptRows(r).filter((x) => Boolean(x.rec.dateAmbiguous) === amb); return `${u.filter((x) => x.score.dateOk).length}/${u.length}`; };
+  line('日期(写法无歧义的小票)', dateBy(false));
+  line('日期(MM/DD 写法有歧义的小票)', dateBy(true));
   line('明细精确率(行)', (r) => cell(agg.get(r).items.precision));
   line('明细召回率(行)', (r) => cell(agg.get(r).items.recall));
   line('明细 F1', (r) => agg.get(r).items.f1.toFixed(3));
   line('已匹配行 taxable 正确', (r) => cell(agg.get(r).taxableOnMatched));
   line('小费行被提取', (r) => cell(agg.get(r).tipFound));
   line('非小票图返回空明细', (r) => `${agg.get(r).nonReceipt.emptyOk}/${agg.get(r).nonReceipt.n}`);
+  // 看过结果后加的敏感性指标，不参与验收: 现行 normalize() 的合计税规则是照 flash-lite 的输出形状写的，这一行把"税拆错但 gst+pst 之和对"也算对
+  line('整张全对(税只看 gst+pst 之和; 事后指标)', (r) => { const u = receiptRows(r); return `${u.filter((x) => splitBlind(x.score)).length}/${u.length}`; });
 
   console.log('\n### 耗时、token 与费用(每次调用; 中位数 [最小–最大])\n');
   console.log(head('指标'));
