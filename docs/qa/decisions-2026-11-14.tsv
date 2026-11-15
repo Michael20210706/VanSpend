@@ -23,3 +23,5 @@ ts	phase	decision	why	evidence	result
 2026-11-15T10:06:56Z	H-P1	H-P1 列表去掉 raw_json 通过验收: 响应体 371,904→33,838 字节，S1 c=50 吞吐 948→1,605/s(×1.69)，p50 51.3→30.3 ms(-41%)，5 对交替运行，0 错误	两条数字门槛都满足；限制资源前后都是 Node 主线程，JSON 序列化从热点里消失	w3 提交 11d5d9b 298503a；docs/qa/2026-11-11-stress-test.md 第 8 节；scratchpad/w3/s1-*.jsonl	accepted
 2026-11-15T10:06:56Z	H-P2	H-P2 统计索引放弃: 个人范围已走 idx_receipts_user，家庭范围走 index merge；试加复合索引在默认视图无可测变化	事先的规则写明: 若已走索引则放弃。时间主要花在连接明细表而不是查 receipts	w3 提交 90ed3af；docs/qa/2026-11-11-stress-test.md 第 9 节	discarded
 2026-11-15T10:06:56Z	H-P2	记录但不做: items(receipt_id, category, amount) 覆盖索引在试验里让分类统计快约 40%	这是事后发现的新假设，没有事先的验收规则，写入代价没测；留给下一轮	worker 报告的超出范围发现 1	deferred
+2026-11-15T10:11:24Z	integrate	四个分支全部并入本轮分支；npm test 43 文件 649 条、评测 33 条、默认构建、端到端 82 条(两次)全部通过	整合后必须在合并结果上重新验证，不采信各分支单独的结果	本轮分支；E2E_PORT=3461 两次 82 passed	green locally
+2026-11-15T10:11:24Z	H-R1	在设计时没见过的保留集上验证差额行: 餐厅组自洽 0/2→2/2，tipFound 0/3→2/3，整张全对 3/12→5/12，无回归，其余各组 0 条差额行	保留集的模型输出来自 H-M 的真实调用，生成于规则写成之后且未参与设计	node eval/replay.cjs --old-ref main models-lite-holdout	confirmed on held-out
