@@ -1,6 +1,7 @@
 {
- "total": 12,
+ "total": 24,
  "byLabel": {
-  "models-lite-holdout": 12
+  "models-lite-holdout": 12,
+  "models-flash-holdout": 12
  }
 }
