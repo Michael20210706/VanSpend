@@ -66,9 +66,12 @@ function extractJson(text) {
 }
 
 // dataUrl: "data:image/jpeg;base64,...."
-async function scanReceipt(dataUrl) {
+// opts.onMeta(评测用，App 不传): 收到 { id, model, provider, usage, ms }，model 是 API 回报的实际模型，usage 是 OpenRouter 返回的 token 计数(带钩子时请求会要求附上费用)。返回值结构不变。
+async function scanReceipt(dataUrl, opts = {}) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('未设置 OPENROUTER_API_KEY（请在 .env 中填写）');
+  const onMeta = typeof opts.onMeta === 'function' ? opts.onMeta : null;
+  const t0 = Date.now();
 
   const body = {
     model: config.model,
@@ -83,6 +86,7 @@ async function scanReceipt(dataUrl) {
       }
     ]
   };
+  if (onMeta) body.usage = { include: true };
 
   const resp = await fetch(`${config.openrouterBaseUrl}/chat/completions`, {
     method: 'POST',
@@ -101,6 +105,7 @@ async function scanReceipt(dataUrl) {
   }
 
   const json = await resp.json();
+  if (onMeta) onMeta({ id: json.id ?? null, model: json.model ?? null, provider: json.provider ?? null, usage: json.usage ?? null, ms: Date.now() - t0 });
   const content = json.choices?.[0]?.message?.content;
   const parsed = extractJson(typeof content === 'string' ? content : JSON.stringify(content));
   return normalize(parsed);

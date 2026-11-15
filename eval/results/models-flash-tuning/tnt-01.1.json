@@ -1,0 +1,189 @@
+{
+ "ok": true,
+ "id": "tnt-01",
+ "run": 1,
+ "attempts": 1,
+ "ms": 3534,
+ "apiMs": 3532,
+ "dataset": "dataset.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 675,
+  "total_tokens": 1573,
+  "cost": 0.001937331,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0019569,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.0016875
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "T&T Supermarket",
+  "purchased_at": "2026-10-02",
+  "currency": "CAD",
+  "subtotal": 41.25,
+  "gst": 1.4,
+  "pst": 1.53,
+  "total": 44.18
+ },
+ "items": [
+  {
+   "name_raw": "PORK BELLY SLICED",
+   "name_norm": "五花肉片",
+   "category": "肉类",
+   "subcategory": "猪肉",
+   "qty": 1.12,
+   "unit": "lb",
+   "unit_price": 8.99,
+   "amount": 10.07,
+   "taxable": 0
+  },
+  {
+   "name_raw": "BOK CHOY",
+   "name_norm": "上海青",
+   "category": "蔬菜",
+   "subcategory": null,
+   "qty": 0.86,
+   "unit": "lb",
+   "unit_price": 2.49,
+   "amount": 2.14,
+   "taxable": 0
+  },
+  {
+   "name_raw": "LAY'S CHIPS",
+   "name_norm": "乐事薯片",
+   "category": "零食饮料",
+   "subcategory": null,
+   "qty": 2,
+   "unit": "包",
+   "unit_price": 3.99,
+   "amount": 7.98,
+   "taxable": 1
+  },
+  {
+   "name_raw": "SOY MILK",
+   "name_norm": "豆奶",
+   "category": "乳制品蛋类",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 3.49,
+   "amount": 3.49,
+   "taxable": 1
+  },
+  {
+   "name_raw": "TISSUE 12RL",
+   "name_norm": "卷纸",
+   "category": "日用清洁",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 12.99,
+   "amount": 12.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "TOFU FIRM",
+   "name_norm": "硬豆腐",
+   "category": "主食粮油",
+   "subcategory": null,
+   "qty": 2,
+   "unit": "份",
+   "unit_price": 2.29,
+   "amount": 4.58,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "T&T Supermarket",
+  "purchased_at": "2026-10-02",
+  "currency": "CAD",
+  "subtotal": 41.25,
+  "gst": 1.4,
+  "pst": 1.53,
+  "total": 44.18,
+  "items": [
+   {
+    "name_raw": "PORK BELLY SLICED",
+    "name_norm": "五花肉片",
+    "category": "肉类",
+    "subcategory": "猪肉",
+    "qty": 1.12,
+    "unit": "lb",
+    "unit_price": 8.99,
+    "amount": 10.07,
+    "taxable": false
+   },
+   {
+    "name_raw": "BOK CHOY",
+    "name_norm": "上海青",
+    "category": "蔬菜",
+    "subcategory": "",
+    "qty": 0.86,
+    "unit": "lb",
+    "unit_price": 2.49,
+    "amount": 2.14,
+    "taxable": false
+   },
+   {
+    "name_raw": "LAY'S CHIPS",
+    "name_norm": "乐事薯片",
+    "category": "零食饮料",
+    "subcategory": "",
+    "qty": 2,
+    "unit": "包",
+    "unit_price": 3.99,
+    "amount": 7.98,
+    "taxable": true
+   },
+   {
+    "name_raw": "SOY MILK",
+    "name_norm": "豆奶",
+    "category": "乳制品蛋类",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 3.49,
+    "amount": 3.49,
+    "taxable": true
+   },
+   {
+    "name_raw": "TISSUE 12RL",
+    "name_norm": "卷纸",
+    "category": "日用清洁",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 12.99,
+    "amount": 12.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "TOFU FIRM",
+    "name_norm": "硬豆腐",
+    "category": "主食粮油",
+    "subcategory": "",
+    "qty": 2,
+    "unit": "份",
+    "unit_price": 2.29,
+    "amount": 4.58,
+    "taxable": false
+   }
+  ]
+ }
+}

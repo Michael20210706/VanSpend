@@ -1,0 +1,55 @@
+{
+ "ok": true,
+ "id": "nonreceipt-01",
+ "run": 1,
+ "attempts": 1,
+ "ms": 1276,
+ "apiMs": 1275,
+ "dataset": "dataset.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 66,
+  "total_tokens": 964,
+  "cost": 0.000430056,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0004344,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.000165
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "未知",
+  "purchased_at": "2026-11-15",
+  "currency": "CAD",
+  "subtotal": 0,
+  "gst": 0,
+  "pst": 0,
+  "total": 0
+ },
+ "items": [],
+ "raw": {
+  "store": null,
+  "purchased_at": "",
+  "currency": "CAD",
+  "subtotal": 0,
+  "gst": 0,
+  "pst": 0,
+  "total": 0,
+  "items": []
+ }
+}

@@ -1,0 +1,189 @@
+{
+ "ok": true,
+ "id": "holdout-tnt-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 3693,
+ "apiMs": 3692,
+ "dataset": "dataset-holdout.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 688,
+  "total_tokens": 1586,
+  "cost": 0.001969506,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0019894,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.00172
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "T&T Supermarket",
+  "purchased_at": "2026-06-19",
+  "currency": "CAD",
+  "subtotal": 114.57,
+  "gst": 5.14,
+  "pst": 0,
+  "total": 119.71
+ },
+ "items": [
+  {
+   "name_raw": "GREEN TEA 500ML",
+   "name_norm": "绿茶",
+   "category": "零食饮料",
+   "subcategory": "饮料",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 2.09,
+   "amount": 2.09,
+   "taxable": 1
+  },
+  {
+   "name_raw": "DISH SOAP",
+   "name_norm": "洗碗液",
+   "category": "日用清洁",
+   "subcategory": "清洁剂",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 4.47,
+   "amount": 4.47,
+   "taxable": 1
+  },
+  {
+   "name_raw": "INSTANT NOODLE 5PK",
+   "name_norm": "方便面",
+   "category": "主食粮油",
+   "subcategory": "面食",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 5.23,
+   "amount": 5.23,
+   "taxable": 0
+  },
+  {
+   "name_raw": "SHRIMP FROZEN",
+   "name_norm": "冷冻虾",
+   "category": "海鲜",
+   "subcategory": "虾",
+   "qty": 4,
+   "unit": "包",
+   "unit_price": 14.44,
+   "amount": 57.76,
+   "taxable": 0
+  },
+  {
+   "name_raw": "TISSUE 12RL",
+   "name_norm": "卷纸",
+   "category": "日用清洁",
+   "subcategory": "纸品",
+   "qty": 3,
+   "unit": "包",
+   "unit_price": 12.08,
+   "amount": 36.24,
+   "taxable": 1
+  },
+  {
+   "name_raw": "BEEF SHORT RIB",
+   "name_norm": "牛小排",
+   "category": "肉类",
+   "subcategory": "牛肉",
+   "qty": 0.647,
+   "unit": "lb",
+   "unit_price": 13.57,
+   "amount": 8.78,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "T&T Supermarket",
+  "purchased_at": "2026-06-19",
+  "currency": "CAD",
+  "subtotal": 114.57,
+  "gst": 5.14,
+  "pst": 0,
+  "total": 119.71,
+  "items": [
+   {
+    "name_raw": "GREEN TEA 500ML",
+    "name_norm": "绿茶",
+    "category": "零食饮料",
+    "subcategory": "饮料",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 2.09,
+    "amount": 2.09,
+    "taxable": true
+   },
+   {
+    "name_raw": "DISH SOAP",
+    "name_norm": "洗碗液",
+    "category": "日用清洁",
+    "subcategory": "清洁剂",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 4.47,
+    "amount": 4.47,
+    "taxable": true
+   },
+   {
+    "name_raw": "INSTANT NOODLE 5PK",
+    "name_norm": "方便面",
+    "category": "主食粮油",
+    "subcategory": "面食",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 5.23,
+    "amount": 5.23,
+    "taxable": false
+   },
+   {
+    "name_raw": "SHRIMP FROZEN",
+    "name_norm": "冷冻虾",
+    "category": "海鲜",
+    "subcategory": "虾",
+    "qty": 4,
+    "unit": "包",
+    "unit_price": 14.44,
+    "amount": 57.76,
+    "taxable": false
+   },
+   {
+    "name_raw": "TISSUE 12RL",
+    "name_norm": "卷纸",
+    "category": "日用清洁",
+    "subcategory": "纸品",
+    "qty": 3,
+    "unit": "包",
+    "unit_price": 12.08,
+    "amount": 36.24,
+    "taxable": true
+   },
+   {
+    "name_raw": "BEEF SHORT RIB",
+    "name_norm": "牛小排",
+    "category": "肉类",
+    "subcategory": "牛肉",
+    "qty": 0.647,
+    "unit": "lb",
+    "unit_price": 13.57,
+    "amount": 8.78,
+    "taxable": false
+   }
+  ]
+ }
+}

@@ -5,8 +5,12 @@ const path = require('path');
 const { scoreReceipt, aggregate } = require('./score.cjs');
 const { config } = require('../src/openrouter.cjs');
 
-const ds = JSON.parse(fs.readFileSync(path.join(__dirname, 'dataset.json'), 'utf8'));
-const byId = Object.fromEntries(ds.receipts.map((r) => [r.id, r]));
+// 两个数据集的 id 不撞名(保留集都以 holdout- 开头，tests/eval-holdout.test.js 有断言)，合在一张表里，replay/report/compare 对两种 label 都能用
+const DATASETS = { tuning: 'dataset.json', holdout: 'dataset-holdout.json' };
+const byId = {};
+for (const [set, file] of Object.entries(DATASETS)) {
+  for (const r of JSON.parse(fs.readFileSync(path.join(__dirname, file), 'utf8')).receipts) byId[r.id] = { ...r, set };
+}
 
 function load(label) {
   const dir = path.join(__dirname, 'results', label);
@@ -39,4 +43,4 @@ if (require.main === module) {
     console.log('categoryValid', pct(agg.categoryValid), 'tipFound', pct(agg.tipFound), 'nonReceipt', JSON.stringify(agg.nonReceipt));
   }
 }
-module.exports = { load, summarize, pct, byId };
+module.exports = { load, summarize, pct, byId, DATASETS };

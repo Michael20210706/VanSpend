@@ -1,0 +1,189 @@
+{
+ "ok": true,
+ "id": "holdout-disc-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 3304,
+ "apiMs": 3304,
+ "dataset": "dataset-holdout.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 673,
+  "total_tokens": 1571,
+  "cost": 0.001932381,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0019519,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.0016825
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "Walmart",
+  "purchased_at": "2026-08-10",
+  "currency": "CAD",
+  "subtotal": 46.15,
+  "gst": 1.61,
+  "pst": 0.26,
+  "total": 48.02
+ },
+ "items": [
+  {
+   "name_raw": "GRAPES RED",
+   "name_norm": "红葡萄",
+   "category": "水果",
+   "subcategory": null,
+   "qty": 0.778,
+   "unit": "kg",
+   "unit_price": 5.96,
+   "amount": 4.64,
+   "taxable": 0
+  },
+  {
+   "name_raw": "CHEESE CHEDDAR",
+   "name_norm": "切达奶酪",
+   "category": "乳制品蛋类",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 9.28,
+   "amount": 9.28,
+   "taxable": 0
+  },
+  {
+   "name_raw": "CHILD BOOK",
+   "name_norm": "儿童书籍",
+   "category": "其他",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "个",
+   "unit_price": 13.95,
+   "amount": 13.95,
+   "taxable": 1
+  },
+  {
+   "name_raw": "VITAMIN C 500MG",
+   "name_norm": "维生素C 500毫克",
+   "category": "个护健康",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 14.59,
+   "amount": 14.59,
+   "taxable": 1
+  },
+  {
+   "name_raw": "PAPER PLATES",
+   "name_norm": "纸盘",
+   "category": "日用清洁",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 4.51,
+   "amount": 4.51,
+   "taxable": 1
+  },
+  {
+   "name_raw": "ROLLBACK PAPER PLATES",
+   "name_norm": "纸盘折扣",
+   "category": "日用清洁",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": -0.82,
+   "amount": -0.82,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Walmart",
+  "purchased_at": "2026-08-10",
+  "currency": "CAD",
+  "subtotal": 46.15,
+  "gst": 1.61,
+  "pst": 0.26,
+  "total": 48.02,
+  "items": [
+   {
+    "name_raw": "GRAPES RED",
+    "name_norm": "红葡萄",
+    "category": "水果",
+    "subcategory": null,
+    "qty": 0.778,
+    "unit": "kg",
+    "unit_price": 5.96,
+    "amount": 4.64,
+    "taxable": false
+   },
+   {
+    "name_raw": "CHEESE CHEDDAR",
+    "name_norm": "切达奶酪",
+    "category": "乳制品蛋类",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 9.28,
+    "amount": 9.28,
+    "taxable": false
+   },
+   {
+    "name_raw": "CHILD BOOK",
+    "name_norm": "儿童书籍",
+    "category": "其他",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "个",
+    "unit_price": 13.95,
+    "amount": 13.95,
+    "taxable": true
+   },
+   {
+    "name_raw": "VITAMIN C 500MG",
+    "name_norm": "维生素C 500毫克",
+    "category": "个护健康",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 14.59,
+    "amount": 14.59,
+    "taxable": true
+   },
+   {
+    "name_raw": "PAPER PLATES",
+    "name_norm": "纸盘",
+    "category": "日用清洁",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 4.51,
+    "amount": 4.51,
+    "taxable": true
+   },
+   {
+    "name_raw": "ROLLBACK PAPER PLATES",
+    "name_norm": "纸盘折扣",
+    "category": "日用清洁",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "包",
+    "unit_price": -0.82,
+    "amount": -0.82,
+    "taxable": true
+   }
+  ]
+ }
+}

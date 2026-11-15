@@ -1,0 +1,167 @@
+{
+ "ok": true,
+ "id": "holdout-rest-01",
+ "run": 1,
+ "attempts": 1,
+ "ms": 3100,
+ "apiMs": 3098,
+ "dataset": "dataset-holdout.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 585,
+  "total_tokens": 1483,
+  "cost": 0.001714581,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0017319,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.0014625
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "Golden Palace Restaurant",
+  "purchased_at": "2026-08-15",
+  "currency": "CAD",
+  "subtotal": 76.92,
+  "gst": 3.85,
+  "pst": 0,
+  "total": 94.53
+ },
+ "items": [
+  {
+   "name_raw": "Dragon Roll",
+   "name_norm": "龙卷",
+   "category": "餐厅外食",
+   "subcategory": "寿司",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 15.76,
+   "amount": 15.76,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Green Curry",
+   "name_norm": "绿咖喱",
+   "category": "餐厅外食",
+   "subcategory": "咖喱",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 17.86,
+   "amount": 17.86,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Kung Pao Chicken",
+   "name_norm": "宫保鸡丁",
+   "category": "餐厅外食",
+   "subcategory": "中餐",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 17.18,
+   "amount": 17.18,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Salmon Sashimi",
+   "name_norm": "三文鱼刺身",
+   "category": "餐厅外食",
+   "subcategory": "日料",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 15.62,
+   "amount": 15.62,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Garlic Naan",
+   "name_norm": "蒜蓉烤饼",
+   "category": "餐厅外食",
+   "subcategory": "印度菜",
+   "qty": 3,
+   "unit": "个",
+   "unit_price": 3.5,
+   "amount": 10.5,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Golden Palace Restaurant",
+  "purchased_at": "2026-08-15",
+  "currency": "CAD",
+  "subtotal": 76.92,
+  "gst": 3.85,
+  "pst": 0,
+  "total": 94.53,
+  "items": [
+   {
+    "name_raw": "Dragon Roll",
+    "name_norm": "龙卷",
+    "category": "餐厅外食",
+    "subcategory": "寿司",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 15.76,
+    "amount": 15.76,
+    "taxable": true
+   },
+   {
+    "name_raw": "Green Curry",
+    "name_norm": "绿咖喱",
+    "category": "餐厅外食",
+    "subcategory": "咖喱",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 17.86,
+    "amount": 17.86,
+    "taxable": true
+   },
+   {
+    "name_raw": "Kung Pao Chicken",
+    "name_norm": "宫保鸡丁",
+    "category": "餐厅外食",
+    "subcategory": "中餐",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 17.18,
+    "amount": 17.18,
+    "taxable": true
+   },
+   {
+    "name_raw": "Salmon Sashimi",
+    "name_norm": "三文鱼刺身",
+    "category": "餐厅外食",
+    "subcategory": "日料",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 15.62,
+    "amount": 15.62,
+    "taxable": true
+   },
+   {
+    "name_raw": "Garlic Naan",
+    "name_norm": "蒜蓉烤饼",
+    "category": "餐厅外食",
+    "subcategory": "印度菜",
+    "qty": 3,
+    "unit": "个",
+    "unit_price": 3.5,
+    "amount": 10.5,
+    "taxable": true
+   }
+  ]
+ }
+}

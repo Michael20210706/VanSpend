@@ -330,3 +330,7 @@ node eval/replay.cjs --old-ref main baseline after   # 零调用；看"分组"�
 npx vitest run tests/normalize.test.js tests/recognition-flags.test.js
 E2E_PORT=<端口> MYSQL_DATABASE=<库名>_e2e_test npm run test:e2e -- e2e/recognition-hints.spec.js
 ```
+
+## 后续: 模型对比(2026-11-14)
+
+`gemini-2.5-flash` 与线上的 `gemini-2.5-flash-lite` 在 12 张保留集和本文的 25 张上的对比(准确率、token、费用、耗时、验收结论)见 [2026-11-14-model-comparison.md](2026-11-14-model-comparison.md)。结论是保持 flash-lite。

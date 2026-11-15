@@ -1,0 +1,211 @@
+{
+ "ok": true,
+ "id": "holdout-costco-01",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2932,
+ "apiMs": 2930,
+ "dataset": "dataset-holdout.json",
+ "requestedModel": "google/gemini-2.5-flash-lite",
+ "model": "google/gemini-2.5-flash-lite",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 784,
+  "total_tokens": 1682,
+  "cost": 0.000399366,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0004034,
+   "upstream_inference_prompt_cost": 0.0000898,
+   "upstream_inference_completions_cost": 0.0003136
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "Costco",
+  "purchased_at": "2026-07-07",
+  "currency": "CAD",
+  "subtotal": 121.95,
+  "gst": 4.05,
+  "pst": 4.59,
+  "total": 130.59
+ },
+ "items": [
+  {
+   "name_raw": "KS ALMONDS",
+   "name_norm": "杏仁",
+   "category": "零食饮料",
+   "subcategory": "坚果",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 19.06,
+   "amount": 19.06,
+   "taxable": 0
+  },
+  {
+   "name_raw": "KS EGGS 24CT",
+   "name_norm": "鸡蛋",
+   "category": "乳制品蛋类",
+   "subcategory": "鸡蛋",
+   "qty": 1,
+   "unit": "盒",
+   "unit_price": 10.9,
+   "amount": 10.9,
+   "taxable": 0
+  },
+  {
+   "name_raw": "ORG BANANAS",
+   "name_norm": "有机香蕉",
+   "category": "水果",
+   "subcategory": "香蕉",
+   "qty": 1,
+   "unit": "磅",
+   "unit_price": 3.02,
+   "amount": 3.02,
+   "taxable": 0
+  },
+  {
+   "name_raw": "ROTISSERIE CHKN",
+   "name_norm": "烤鸡",
+   "category": "餐厅外食",
+   "subcategory": "熟食",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 7.99,
+   "amount": 7.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "PAPER TOWEL 12",
+   "name_norm": "厨房纸巾",
+   "category": "日用清洁",
+   "subcategory": "纸巾",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 26.35,
+   "amount": 26.35,
+   "taxable": 1
+  },
+  {
+   "name_raw": "TRASH BAGS",
+   "name_norm": "垃圾袋",
+   "category": "日用清洁",
+   "subcategory": "垃圾袋",
+   "qty": 1,
+   "unit": "卷",
+   "unit_price": 39.26,
+   "amount": 39.26,
+   "taxable": 1
+  },
+  {
+   "name_raw": "VITAMIN D 600",
+   "name_norm": "维生素D",
+   "category": "个护健康",
+   "subcategory": "维生素",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 15.37,
+   "amount": 15.37,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Costco",
+  "purchased_at": "2026-07-07",
+  "currency": "CAD",
+  "subtotal": 121.95,
+  "gst": 4.05,
+  "pst": 4.59,
+  "total": 130.59,
+  "items": [
+   {
+    "name_raw": "KS ALMONDS",
+    "name_norm": "杏仁",
+    "category": "零食饮料",
+    "subcategory": "坚果",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 19.06,
+    "amount": 19.06,
+    "taxable": false
+   },
+   {
+    "name_raw": "KS EGGS 24CT",
+    "name_norm": "鸡蛋",
+    "category": "乳制品蛋类",
+    "subcategory": "鸡蛋",
+    "qty": 1,
+    "unit": "盒",
+    "unit_price": 10.9,
+    "amount": 10.9,
+    "taxable": false
+   },
+   {
+    "name_raw": "ORG BANANAS",
+    "name_norm": "有机香蕉",
+    "category": "水果",
+    "subcategory": "香蕉",
+    "qty": 1,
+    "unit": "磅",
+    "unit_price": 3.02,
+    "amount": 3.02,
+    "taxable": false
+   },
+   {
+    "name_raw": "ROTISSERIE CHKN",
+    "name_norm": "烤鸡",
+    "category": "餐厅外食",
+    "subcategory": "熟食",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 7.99,
+    "amount": 7.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "PAPER TOWEL 12",
+    "name_norm": "厨房纸巾",
+    "category": "日用清洁",
+    "subcategory": "纸巾",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 26.35,
+    "amount": 26.35,
+    "taxable": true
+   },
+   {
+    "name_raw": "TRASH BAGS",
+    "name_norm": "垃圾袋",
+    "category": "日用清洁",
+    "subcategory": "垃圾袋",
+    "qty": 1,
+    "unit": "卷",
+    "unit_price": 39.26,
+    "amount": 39.26,
+    "taxable": true
+   },
+   {
+    "name_raw": "VITAMIN D 600",
+    "name_norm": "维生素D",
+    "category": "个护健康",
+    "subcategory": "维生素",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 15.37,
+    "amount": 15.37,
+    "taxable": true
+   }
+  ]
+ }
+}

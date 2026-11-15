@@ -1,0 +1,167 @@
+{
+ "ok": true,
+ "id": "deg-01",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2931,
+ "apiMs": 2930,
+ "dataset": "dataset.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 548,
+  "total_tokens": 1446,
+  "cost": 0.001623006,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0016394,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.00137
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "Safeway",
+  "purchased_at": "2026-12-10",
+  "currency": "CAD",
+  "subtotal": 23.76,
+  "gst": 0.41,
+  "pst": 0.58,
+  "total": 24.75
+ },
+ "items": [
+  {
+   "name_raw": "CHICKEN WINGS",
+   "name_norm": "鸡翅",
+   "category": "肉类",
+   "subcategory": "鸡肉",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 9.99,
+   "amount": 9.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "TORTILLA CHIPS",
+   "name_norm": "玉米片",
+   "category": "零食饮料",
+   "subcategory": "零食",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 4.49,
+   "amount": 4.49,
+   "taxable": 1
+  },
+  {
+   "name_raw": "SALSA",
+   "name_norm": "莎莎酱",
+   "category": "调味品",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "罐",
+   "unit_price": 3.99,
+   "amount": 3.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "LIME 3CT",
+   "name_norm": "青柠",
+   "category": "水果",
+   "subcategory": null,
+   "qty": 3,
+   "unit": "个",
+   "unit_price": 0.5,
+   "amount": 1.5,
+   "taxable": 0
+  },
+  {
+   "name_raw": "DISH SOAP",
+   "name_norm": "洗碗皂",
+   "category": "日用清洁",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 3.79,
+   "amount": 3.79,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Safeway",
+  "purchased_at": "2026-12-10",
+  "currency": "CAD",
+  "subtotal": 23.76,
+  "gst": 0.41,
+  "pst": 0.58,
+  "total": 24.75,
+  "items": [
+   {
+    "name_raw": "CHICKEN WINGS",
+    "name_norm": "鸡翅",
+    "category": "肉类",
+    "subcategory": "鸡肉",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": null,
+    "amount": 9.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "TORTILLA CHIPS",
+    "name_norm": "玉米片",
+    "category": "零食饮料",
+    "subcategory": "零食",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": null,
+    "amount": 4.49,
+    "taxable": true
+   },
+   {
+    "name_raw": "SALSA",
+    "name_norm": "莎莎酱",
+    "category": "调味品",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "罐",
+    "unit_price": null,
+    "amount": 3.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "LIME 3CT",
+    "name_norm": "青柠",
+    "category": "水果",
+    "subcategory": null,
+    "qty": 3,
+    "unit": "个",
+    "unit_price": null,
+    "amount": 1.5,
+    "taxable": false
+   },
+   {
+    "name_raw": "DISH SOAP",
+    "name_norm": "洗碗皂",
+    "category": "日用清洁",
+    "subcategory": null,
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": null,
+    "amount": 3.79,
+    "taxable": true
+   }
+  ]
+ }
+}

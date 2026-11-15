@@ -1,0 +1,167 @@
+{
+ "ok": true,
+ "id": "holdout-deg-01",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2905,
+ "apiMs": 2905,
+ "dataset": "dataset-holdout.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 602,
+  "total_tokens": 1500,
+  "cost": 0.001756656,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0017744,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.001505
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "Costco",
+  "purchased_at": "2026-05-06",
+  "currency": "CAD",
+  "subtotal": 120.46,
+  "gst": 0.56,
+  "pst": 0.78,
+  "total": 121.8
+ },
+ "items": [
+  {
+   "name_raw": "B 100000 SPARKLING WATER",
+   "name_norm": "气泡水",
+   "category": "零食饮料",
+   "subcategory": "饮用水",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 11.1,
+   "amount": 11.1,
+   "taxable": 1
+  },
+  {
+   "name_raw": "107919 KS BEEF RIBEYE",
+   "name_norm": "牛肉眼肉",
+   "category": "肉类",
+   "subcategory": "牛肉",
+   "qty": 0.798,
+   "unit": "kg",
+   "unit_price": 24.03,
+   "amount": 19.18,
+   "taxable": 0
+  },
+  {
+   "name_raw": "123757 CHICKEN BRST",
+   "name_norm": "鸡胸肉",
+   "category": "肉类",
+   "subcategory": "鸡肉",
+   "qty": 4,
+   "unit": "份",
+   "unit_price": 17.65,
+   "amount": 70.6,
+   "taxable": 0
+  },
+  {
+   "name_raw": "139595 MILK 4L",
+   "name_norm": "牛奶 4升",
+   "category": "乳制品蛋类",
+   "subcategory": "牛奶",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 6.91,
+   "amount": 6.91,
+   "taxable": 0
+  },
+  {
+   "name_raw": "147514 KS BUTTER",
+   "name_norm": "黄油",
+   "category": "乳制品蛋类",
+   "subcategory": "黄油",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 12.67,
+   "amount": 12.67,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "Costco",
+  "purchased_at": "2026-05-06",
+  "currency": "CAD",
+  "subtotal": 120.46,
+  "gst": 0.56,
+  "pst": 0.78,
+  "total": 121.8,
+  "items": [
+   {
+    "name_raw": "B 100000 SPARKLING WATER",
+    "name_norm": "气泡水",
+    "category": "零食饮料",
+    "subcategory": "饮用水",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": null,
+    "amount": 11.1,
+    "taxable": true
+   },
+   {
+    "name_raw": "107919 KS BEEF RIBEYE",
+    "name_norm": "牛肉眼肉",
+    "category": "肉类",
+    "subcategory": "牛肉",
+    "qty": 0.798,
+    "unit": "kg",
+    "unit_price": 24.03,
+    "amount": 19.18,
+    "taxable": false
+   },
+   {
+    "name_raw": "123757 CHICKEN BRST",
+    "name_norm": "鸡胸肉",
+    "category": "肉类",
+    "subcategory": "鸡肉",
+    "qty": 4,
+    "unit": "份",
+    "unit_price": 17.65,
+    "amount": 70.6,
+    "taxable": false
+   },
+   {
+    "name_raw": "139595 MILK 4L",
+    "name_norm": "牛奶 4升",
+    "category": "乳制品蛋类",
+    "subcategory": "牛奶",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": null,
+    "amount": 6.91,
+    "taxable": false
+   },
+   {
+    "name_raw": "147514 KS BUTTER",
+    "name_norm": "黄油",
+    "category": "乳制品蛋类",
+    "subcategory": "黄油",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": null,
+    "amount": 12.67,
+    "taxable": false
+   }
+  ]
+ }
+}
