@@ -106,3 +106,16 @@ describe('/api/config 不再对匿名开放', () => {
     expect((await res.json()).categories.length).toBeGreaterThan(0);
   });
 });
+
+describe('落地页如实说明保存时的事件记录(save_events)', () => {
+  it('中英文都说明只记字段名、不记内容，并写明保留期与 CLAUDE.md/代码一致(90 天)', async () => {
+    const { COPY: copy } = await import('@/components/landing/copy.js');
+    const zh = JSON.stringify(copy.zh), en = JSON.stringify(copy.en);
+    expect(zh).toMatch(/只记字段名/);
+    expect(zh).toMatch(/90 天/);
+    expect(en).toMatch(/field names only/);
+    expect(en).toMatch(/90 days/);
+    const db = (await import('node:fs')).readFileSync('src/db.cjs', 'utf8');
+    expect(db).toMatch(/SAVE_EVENT_KEEP_DAYS\s*=\s*90\b/);
+  });
+});

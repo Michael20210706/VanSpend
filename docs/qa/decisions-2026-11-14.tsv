@@ -32,3 +32,6 @@ ts	phase	decision	why	evidence	result
 2026-11-15T10:15:44Z	audit	补记: w2 的接手 worker 运行在 Opus 5.5 上(当时会话被切到该模型)，其余接手 worker 在 Fable 5.2 上；提交尾注因此不一致，未改写历史	如实记录是谁做的	w2 提交 5ec36e9 e6ba53f 的尾注	noted
 2026-11-15T10:21:22Z	review	跨模型审查(Opus)交回 13 条标记，其中 1 条高: 差额行在'小费已被提成明细且小计照抄'和'小计读短'两种形状下重复计入；我离线复现属实	独立审查发现了验收规则没检验到的缺陷；H-R1 的验收第一条按构造必然成立	审查报告(本会话)；node -e normalize 形状 A/B 的输出；eval/results/baseline/deg-04.1.json	H-R1 as built is defective
 2026-11-15T10:21:22Z	H-R1b	不合并现有的差额行实现；先写 H-R1b 的假设与验收规则(差额改为对明细之和计算，加实时对不上提示)，提交后再改代码；任一条不满足就撤掉差额行只留日期标记	修正的方向来自不变量(total=明细之和+税)，不是对数据调参；保留集已看过结果，只作回归检查	docs/qa/2026-11-14-optimization-round.md 第 3b 节	pre-registered
+2026-11-15T19:26:14Z	H-R1b	H-R1b 五条验收全部满足: 差额改为对明细之和计算，after 批上的重复差额行 4→0，deg-04 的差额从 12.00 改为真实的 1.12；核对界面加实时'对不上'提示	按第 3b 节事先写好的规则；修正方向来自不变量 total=明细之和+税	tests/normalize.test.js(修正前 3 failed)；replay baseline/after/models-lite-holdout；e2e/recognition-hints.spec.js(去掉提示 1 failed)	accepted
+2026-11-15T19:26:14Z	review	处理审查意见: 落地页中英文披露保存事件记录(只记字段名，保留 90 天)并加测试守护；更正第 5 节的撤销方法与上线状态措辞	审查标记 13(低)、5(中)、7(中)	components/landing/copy.js；tests/landing-copy.test.js；docs/qa/2026-11-14-optimization-round.md H-R1b 结果节	done
+2026-11-15T19:26:14Z	review	未处理的审查意见: 小费被填进 pst(cn-02 类)仍无提示；税填 0 又漏小费时税与小费合成一条差额；样本量小(餐厅 2-3 张)；部分原始压测数据不在仓库	这些在第 3b 节已事先声明为本轮不处理，或属于证据留存问题	审查标记 3、4、11、12	deferred

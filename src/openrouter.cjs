@@ -187,13 +187,15 @@ function normalize(p) {
     }
   }
 
-  // 税规则之后印出的 total 仍比 subtotal+gst+pst 多出超过 2 分(餐厅小费、漏读的一行): 加一条"未识别差额"明细让人在核对表里改名或删除，
-  // subtotal 跟着明细之和走(与编辑规则一致)，印出的 total 不动；差额为负(多读了一行)不动
+  // 税规则之后，印出的 total 仍比"明细之和 + gst + pst"多出超过 2 分(漏掉的小费、漏读的一行): 加一条"未识别差额"明细让人在核对表里
+  // 改名或删除，subtotal 设为加完之后的明细之和，印出的 total 不动。差额对明细之和算，不对模型给的 subtotal 算: 模型已把小费提成
+  // 明细却照抄印出的小计、或小计读短而明细齐全时，对 subtotal 算会把同一笔钱再加一遍。差额为负(多读了一行)不动
   if (printedTotal > 0 && items.length) {
-    const residual = +(printedTotal - receipt.subtotal - receipt.gst - receipt.pst).toFixed(2);
+    const itemSum = items.reduce((s, i) => s + i.amount, 0);
+    const residual = +(printedTotal - itemSum - receipt.gst - receipt.pst).toFixed(2);
     if (residual > 0.02) {
       items.push({ name_raw: '未识别差额(请核对)', name_norm: null, category: '其他', subcategory: null, qty: 1, unit: null, unit_price: residual, amount: residual, taxable: 0 });
-      receipt.subtotal = +(receipt.subtotal + residual).toFixed(2);
+      receipt.subtotal = +(itemSum + residual).toFixed(2);
       receipt.residual_added = true;
     }
   }

@@ -83,12 +83,12 @@ describe('normalize(): 印出的 total 比 subtotal+gst+pst 多出超过 0.02 �
     expect(receipt.residual_added).toBe(false);
   });
   it('合计税规则先跑: gst=pst=0、差额在 12% 内先拆成 5:7，不会被当成差额行', () => {
-    const { receipt, items } = run({ subtotal: 100, gst: 0, pst: 0, total: 112 });
+    const { receipt, items } = run({ items: [{ ...dish, unit_price: 100, amount: 100 }], subtotal: 100, gst: 0, pst: 0, total: 112 });
     expect(items).toHaveLength(1);
     expect(receipt).toMatchObject({ residual_added: false, gst: 5, pst: 7 });
   });
   it('gst=pst=0 且差额超过 12%(税规则不拆) → 整个差额成为差额行', () => {
-    const { receipt, items } = run({ subtotal: 100, gst: 0, pst: 0, total: 120 });
+    const { receipt, items } = run({ items: [{ ...dish, unit_price: 100, amount: 100 }], subtotal: 100, gst: 0, pst: 0, total: 120 });
     expect(items).toHaveLength(2);
     expect(items[1].amount).toBe(20);
     expect(receipt).toMatchObject({ residual_added: true, gst: 0, pst: 0, subtotal: 120, total: 120 });
@@ -162,3 +162,40 @@ describe('normalize(): 模型把整笔合计税填进 pst、gst 留 0 时按 5:7
     expect(run({ subtotal: 100, gst: 0, pst: 7, total: 107.03 })).toMatchObject({ gst: 0, pst: 7 });
   });
 });
+
+describe('normalize(): 差额对"明细之和"计算，不对模型给的 subtotal 计算(H-R1b)', () => {
+  const base = { store: 'R', purchased_at: '2026-05-10' };
+  const run = (p) => openrouterLib.normalize({ ...base, ...p });
+  const residualRows = (items) => items.filter((i) => i.name_raw === '未识别差额(请核对)');
+  const sum = (items) => +items.reduce((s, i) => s + i.amount, 0).toFixed(2);
+
+  it('A 模型已把小费提成明细、subtotal 照抄印出值 → 不再加差额行，明细不变', () => {
+    const { receipt, items } = run({ subtotal: 55, gst: 2.75, pst: 0, total: 67.25, items: [{ name_raw: 'Food', amount: 55 }, { name_raw: 'Tip', amount: 9.5 }] });
+    expect(residualRows(items)).toHaveLength(0);
+    expect(sum(items)).toBe(64.5);
+    expect(receipt.residual_added).toBe(false);
+  });
+  it('B subtotal 读短、明细齐全 → 不加差额行(以前会多加一条 12)', () => {
+    const { receipt, items } = run({ subtotal: 88, gst: 5, pst: 7, total: 112, items: [{ name_raw: 'a', amount: 88 }, { name_raw: 'b', amount: 12 }] });
+    expect(residualRows(items)).toHaveLength(0);
+    expect(sum(items)).toBe(100);
+    expect(receipt.residual_added).toBe(false);
+  });
+  it('C 漏了一条 12 的明细、subtotal 正确 → 加一条 12，明细之和 + 税 = 实付', () => {
+    const { receipt, items } = run({ subtotal: 100, gst: 5, pst: 7, total: 112, items: [{ name_raw: 'a', amount: 88 }] });
+    expect(residualRows(items).map((i) => i.amount)).toEqual([12]);
+    expect(+(sum(items) + receipt.gst + receipt.pst).toFixed(2)).toBe(112);
+    expect(receipt).toMatchObject({ residual_added: true, subtotal: 100 });
+  });
+  it('D 漏了小费(设计集的形状) → 加一条 9.5，subtotal = 加完后的明细之和 64.5', () => {
+    const { receipt, items } = run({ subtotal: 55, gst: 2.75, pst: 0, total: 67.25, items: [{ name_raw: 'Food', amount: 55 }] });
+    expect(residualRows(items).map((i) => i.amount)).toEqual([9.5]);
+    expect(receipt).toMatchObject({ residual_added: true, subtotal: 64.5, total: 67.25 });
+  });
+  it('明细之和 + 税 比实付多(多读了一行) → 不动', () => {
+    const { receipt, items } = run({ subtotal: 100, gst: 5, pst: 7, total: 112, items: [{ name_raw: 'a', amount: 88 }, { name_raw: 'b', amount: 30 }] });
+    expect(residualRows(items)).toHaveLength(0);
+    expect(receipt.residual_added).toBe(false);
+  });
+});
+

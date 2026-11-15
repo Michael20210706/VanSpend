@@ -6,6 +6,7 @@ import { makeUser, loginApi, TINY_PNG } from './support/helpers.js';
 const DATE_HINT = '日期未识别，已填今天，请核对';
 const RESIDUAL_HINT = '有一条未识别差额，请核对';
 const RESIDUAL_NAME = '未识别差额(请核对)';
+const GAP_HINT = /明细合计加税与实付相差/;
 const today = () => new Date().toISOString().slice(0, 10);
 
 function payload({ store, date = '2026-05-01', dateGuessed = false, residual = false }) {
@@ -78,5 +79,28 @@ test.describe('未识别差额行', () => {
     const residual = detail.items.find((i) => i.name_raw === RESIDUAL_NAME);
     expect(residual).toMatchObject({ category: '其他', taxable: 0 });
     expect(Number(residual.amount)).toBe(9.5);
+  });
+
+  test('删掉差额行后明细与实付对不上: 出现实时提示并写明相差多少；把这笔钱补回一行后提示消失', async ({ page }) => {
+    const user = await makeUser();
+    await loginApi(page, user);
+    const review = await scanWith(page, payload({ store: 'E2E-差额删除-' + Date.now(), residual: true }));
+    await expect(review.getByText(GAP_HINT)).toHaveCount(0); // 带差额行时明细合计 + 税 = 实付
+    const rows = review.locator('tbody tr');
+    await rows.nth(2).getByRole('button', { name: '×' }).click();
+    await expect(rows).toHaveCount(2);
+    await expect(review.getByText('明细合计加税与实付相差 9.50，请核对')).toBeVisible();
+    await review.getByRole('button', { name: '+ 添加一行' }).click();
+    await expect(rows).toHaveCount(3);
+    await rows.nth(2).locator('input[type=number]').last().fill('9.5');
+    await expect(review.getByText(GAP_HINT)).toHaveCount(0);
+  });
+
+  test('没有差额的小票: 不出现对不上的提示', async ({ page }) => {
+    const user = await makeUser();
+    await loginApi(page, user);
+    const review = await scanWith(page, payload({ store: 'E2E-对得上-' + Date.now() }));
+    await expect(review.locator('tbody tr')).toHaveCount(2);
+    await expect(review.getByText(GAP_HINT)).toHaveCount(0);
   });
 });
