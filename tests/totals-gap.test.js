@@ -1,6 +1,6 @@
 // lib/totalsGap.js: 核对界面的"明细合计 + 税 ≠ 实付"提示
 import { describe, it, expect } from 'vitest';
-import { totalsGap, gapIsMismatch } from '@/lib/totalsGap.js';
+import { totalsGap, gapIsMismatch, taxOverCeiling } from '@/lib/totalsGap.js';
 
 describe('totalsGap', () => {
   const rows = [{ amount: 15 }, { amount: '5' }];
@@ -25,5 +25,29 @@ describe('totalsGap', () => {
     expect(totalsGap(rows, 0, 0, 0)).toBe(0);
     expect(totalsGap(rows, '', '', '')).toBe(0);
     expect(totalsGap([{ amount: 'abc' }], 0, 0, 10)).toBe(10);
+  });
+});
+
+// BC 的 GST 固定 5%，PST 最高 10%(酒类)；超过明细合计(正数行)的这个比例不可能是真的税，多半是把小费等算进了税
+describe('taxOverCeiling', () => {
+  const dishes = [{ amount: 120 }, { amount: 62.61 }];
+  it('小费被填进 pst(pst 远超 10%) → pst 报出', () => {
+    expect(taxOverCeiling(dishes, 9.13, 29.93)).toEqual({ gst: false, pst: true });
+  });
+  it('gst 超过 5% → gst 报出', () => {
+    expect(taxOverCeiling([{ amount: 100 }], 7, 0)).toEqual({ gst: true, pst: false });
+  });
+  it('正常的 5% / 7%、酒类 10% PST 都不报', () => {
+    expect(taxOverCeiling([{ amount: 100 }], 5, 7)).toEqual({ gst: false, pst: false });
+    expect(taxOverCeiling([{ amount: 100 }], 5, 10)).toEqual({ gst: false, pst: false });
+  });
+  it('上限按正数行合计算：大额折扣行不会让正常税额被误报', () => {
+    expect(taxOverCeiling([{ amount: 100 }, { amount: -60 }], 5, 7)).toEqual({ gst: false, pst: false });
+  });
+  it('5 分以内的取整不报；没有明细或输入为空串不报', () => {
+    expect(taxOverCeiling([{ amount: 100 }], 5.05, 10.05)).toEqual({ gst: false, pst: false });
+    expect(taxOverCeiling([{ amount: 100 }], 5.06, 10.06)).toEqual({ gst: true, pst: true });
+    expect(taxOverCeiling([], 5, 7)).toEqual({ gst: false, pst: false });
+    expect(taxOverCeiling([{ amount: '100' }], '', '')).toEqual({ gst: false, pst: false });
   });
 });
