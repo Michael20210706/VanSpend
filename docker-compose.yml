@@ -22,6 +22,9 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    # 进程失控时不拖垮同机的 MySQL。压测峰值 RSS 约 360 MB，1g 留出几张大图同时上传的余量
+    mem_limit: 1g
+    pids_limit: 256
     # 沿用镜像 Dockerfile 里的 HEALTHCHECK(只报告状态，不会因 unhealthy 自动重启)
     restart: unless-stopped
 

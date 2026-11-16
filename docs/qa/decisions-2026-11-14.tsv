@@ -38,3 +38,4 @@ ts	phase	decision	why	evidence	result
 2026-11-16T16:35:19Z	deploy	用户确认后合并 #51 并部署	用户说 合并并部署	备份 pre-deploy-7.sql；回滚标签 pre-round-20261116；healthy；计数不变	线上回归 28/28；事件只含字段名；edit-diff 只读可用；公网探测正常
 2026-11-16T16:35:19Z	finding	主机构建会对线上库执行迁移(违反约束)	部署前线上已有 save_events 与 duration_ms	db.cjs 导入即 initSchema；用假库名构建复现 7 次 Access denied	未修；只增不删，数据行与 11-13 备份一致；需要另开 PR
 2026-11-16T16:39:39Z	fix	构建期跳过 initSchema	用户说 修复并开 PR	假库名构建 [db] 7→0；next start 仍告警 1 次；新测试修复前红	单元 662、端到端 84 通过
+2026-11-16T21:28:09Z	deploy	merge+deploy #53	user approved; CI green	backup pre-deploy-8.sql, tag pre-remaining-20261116, no seedAdmin 72-byte warning in logs, 28/28 smoke, public probes 200/401/404/301	live, test rows cleaned, counts 1/1/35/0 unchanged
