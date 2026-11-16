@@ -35,3 +35,5 @@ ts	phase	decision	why	evidence	result
 2026-11-15T19:26:14Z	H-R1b	H-R1b 五条验收全部满足: 差额改为对明细之和计算，after 批上的重复差额行 4→0，deg-04 的差额从 12.00 改为真实的 1.12；核对界面加实时'对不上'提示	按第 3b 节事先写好的规则；修正方向来自不变量 total=明细之和+税	tests/normalize.test.js(修正前 3 failed)；replay baseline/after/models-lite-holdout；e2e/recognition-hints.spec.js(去掉提示 1 failed)	accepted
 2026-11-15T19:26:14Z	review	处理审查意见: 落地页中英文披露保存事件记录(只记字段名，保留 90 天)并加测试守护；更正第 5 节的撤销方法与上线状态措辞	审查标记 13(低)、5(中)、7(中)	components/landing/copy.js；tests/landing-copy.test.js；docs/qa/2026-11-14-optimization-round.md H-R1b 结果节	done
 2026-11-15T19:26:14Z	review	未处理的审查意见: 小费被填进 pst(cn-02 类)仍无提示；税填 0 又漏小费时税与小费合成一条差额；样本量小(餐厅 2-3 张)；部分原始压测数据不在仓库	这些在第 3b 节已事先声明为本轮不处理，或属于证据留存问题	审查标记 3、4、11、12	deferred
+2026-11-16T16:35:19Z	deploy	用户确认后合并 #51 并部署	用户说 合并并部署	备份 pre-deploy-7.sql；回滚标签 pre-round-20261116；healthy；计数不变	线上回归 28/28；事件只含字段名；edit-diff 只读可用；公网探测正常
+2026-11-16T16:35:19Z	finding	主机构建会对线上库执行迁移(违反约束)	部署前线上已有 save_events 与 duration_ms	db.cjs 导入即 initSchema；用假库名构建复现 7 次 Access denied	未修；只增不删，数据行与 11-13 备份一致；需要另开 PR
