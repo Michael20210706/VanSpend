@@ -405,7 +405,9 @@ async function initSchema() {
     console.warn('[db] 自动建表失败(账号可能无 DDL 权限)，请确认已手动执行 sql/schema.sql:', e.message);
   }
 }
-const ready = initSchema();
+// next build 收集页面数据时会导入本文件，并带着主检出目录的 .env(可能指向线上库)。
+// 构建期不建表、不迁移、不建管理员，这些只在运行时做，否则迁移会先于部署前备份落到线上。
+const ready = process.env.NEXT_PHASE === 'phase-production-build' ? Promise.resolve() : initSchema();
 
 // ---- 用户 ----
 // signupSource: 'open' = 开放注册(无邀请码)，同时落到 scan_tier='open' 档；缺省/其他 = 邀请注册档(列默认值)。

@@ -175,4 +175,4 @@
 
 - **原因**：`src/db.cjs` 在被导入时就执行 `initSchema()`；`next build` 收集页面数据时会导入它，并读取主检出目录的 `.env`，而 `.env` 指向线上库 `vanspend`(127.0.0.1:3307)。用不存在的库名做构建复现：构建输出了 7 次 `Access denied ... to database 'vanspend_buildprobe_x'`，证明构建期确实连库执行建表。**[测量]** 10:08 正好是整合时在主检出目录跑 `npm run build` 的时间。**[推断]**
 - **影响**：两项都是只增不删的迁移，数据行与 11-13 的备份逐字节相同(除了用户已批准删除的 `sessions` 表)。**[测量]** 但这违反了"不对线上做写入、部署前备份"：迁移先于备份落到了线上。之前几轮在主检出目录的构建很可能也是这样，只是迁移随后都被部署了，所以没有显露。**[推断]**
-- **状态**：本次没有修。修复方向是构建期(`NEXT_PHASE === 'phase-production-build'`)不执行 `initSchema()`，需要另走 PR、CI 与端到端。
+- **修复**：构建期(`NEXT_PHASE === 'phase-production-build'`，Next 只在 `next build` 里这样设置)不执行 `initSchema()`，因此也不迁移、不建管理员。同样的假库名构建，`[db]` 行从 7 变为 0；`next start` 指向假库名时，第一次请求仍然告警 1 次，说明运行期照常建表。`tests/build-phase.test.js` 在修复前失败、修复后通过。**[测量]**
