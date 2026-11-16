@@ -1,0 +1,233 @@
+{
+ "ok": true,
+ "id": "holdout-costco-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 3869,
+ "apiMs": 3868,
+ "dataset": "dataset-holdout.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 858,
+  "total_tokens": 1756,
+  "cost": 0.002390256,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0024144,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.002145
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "Costco",
+  "purchased_at": "2026-01-11",
+  "currency": "CAD",
+  "subtotal": 219.9,
+  "gst": 2.71,
+  "pst": 3.8,
+  "total": 226.41
+ },
+ "items": [
+  {
+   "name_raw": "CHIPS VARIETY",
+   "name_norm": "混合薯片",
+   "category": "零食饮料",
+   "subcategory": "薯片",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 15.62,
+   "amount": 15.62,
+   "taxable": 1
+  },
+  {
+   "name_raw": "KS EGGS 24CT",
+   "name_norm": "鸡蛋",
+   "category": "乳制品蛋类",
+   "subcategory": "鸡蛋",
+   "qty": 24,
+   "unit": "个",
+   "unit_price": 0.5171,
+   "amount": 12.41,
+   "taxable": 0
+  },
+  {
+   "name_raw": "BLUEBERRIES",
+   "name_norm": "蓝莓",
+   "category": "水果",
+   "subcategory": "浆果",
+   "qty": 1,
+   "unit": "盒",
+   "unit_price": 9.35,
+   "amount": 9.35,
+   "taxable": 0
+  },
+  {
+   "name_raw": "KS BUTTER",
+   "name_norm": "黄油",
+   "category": "乳制品蛋类",
+   "subcategory": "黄油",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 14.3,
+   "amount": 14.3,
+   "taxable": 0
+  },
+  {
+   "name_raw": "KS ALMONDS",
+   "name_norm": "杏仁",
+   "category": "零食饮料",
+   "subcategory": "坚果",
+   "qty": 4,
+   "unit": "包",
+   "unit_price": 17.81,
+   "amount": 71.24,
+   "taxable": 0
+  },
+  {
+   "name_raw": "DISH SOAP 2PK",
+   "name_norm": "洗碗皂",
+   "category": "日用清洁",
+   "subcategory": "洗碗液",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 12.24,
+   "amount": 12.24,
+   "taxable": 1
+  },
+  {
+   "name_raw": "PAPER TOWEL 12",
+   "name_norm": "厨房纸巾",
+   "category": "日用清洁",
+   "subcategory": "纸巾",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 26.36,
+   "amount": 26.36,
+   "taxable": 1
+  },
+  {
+   "name_raw": "KS OLIVE OIL",
+   "name_norm": "橄榄油",
+   "category": "主食粮油",
+   "subcategory": "食用油",
+   "qty": 3,
+   "unit": "瓶",
+   "unit_price": 19.46,
+   "amount": 58.38,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "Costco",
+  "purchased_at": "2026-01-11",
+  "currency": "CAD",
+  "subtotal": 219.9,
+  "gst": 2.71,
+  "pst": 3.8,
+  "total": 226.41,
+  "items": [
+   {
+    "name_raw": "CHIPS VARIETY",
+    "name_norm": "混合薯片",
+    "category": "零食饮料",
+    "subcategory": "薯片",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": null,
+    "amount": 15.62,
+    "taxable": true
+   },
+   {
+    "name_raw": "KS EGGS 24CT",
+    "name_norm": "鸡蛋",
+    "category": "乳制品蛋类",
+    "subcategory": "鸡蛋",
+    "qty": 24,
+    "unit": "个",
+    "unit_price": null,
+    "amount": 12.41,
+    "taxable": false
+   },
+   {
+    "name_raw": "BLUEBERRIES",
+    "name_norm": "蓝莓",
+    "category": "水果",
+    "subcategory": "浆果",
+    "qty": 1,
+    "unit": "盒",
+    "unit_price": null,
+    "amount": 9.35,
+    "taxable": false
+   },
+   {
+    "name_raw": "KS BUTTER",
+    "name_norm": "黄油",
+    "category": "乳制品蛋类",
+    "subcategory": "黄油",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": null,
+    "amount": 14.3,
+    "taxable": false
+   },
+   {
+    "name_raw": "KS ALMONDS",
+    "name_norm": "杏仁",
+    "category": "零食饮料",
+    "subcategory": "坚果",
+    "qty": 4,
+    "unit": "包",
+    "unit_price": 17.81,
+    "amount": 71.24,
+    "taxable": false
+   },
+   {
+    "name_raw": "DISH SOAP 2PK",
+    "name_norm": "洗碗皂",
+    "category": "日用清洁",
+    "subcategory": "洗碗液",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": null,
+    "amount": 12.24,
+    "taxable": true
+   },
+   {
+    "name_raw": "PAPER TOWEL 12",
+    "name_norm": "厨房纸巾",
+    "category": "日用清洁",
+    "subcategory": "纸巾",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": null,
+    "amount": 26.36,
+    "taxable": true
+   },
+   {
+    "name_raw": "KS OLIVE OIL",
+    "name_norm": "橄榄油",
+    "category": "主食粮油",
+    "subcategory": "食用油",
+    "qty": 3,
+    "unit": "瓶",
+    "unit_price": 19.46,
+    "amount": 58.38,
+    "taxable": false
+   }
+  ]
+ }
+}

@@ -66,9 +66,12 @@ function extractJson(text) {
 }
 
 // dataUrl: "data:image/jpeg;base64,...."
-async function scanReceipt(dataUrl) {
+// opts.onMeta(评测用，App 不传): 收到 { id, model, provider, usage, ms }，model 是 API 回报的实际模型，usage 是 OpenRouter 返回的 token 计数(带钩子时请求会要求附上费用)。返回值结构不变。
+async function scanReceipt(dataUrl, opts = {}) {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new Error('未设置 OPENROUTER_API_KEY（请在 .env 中填写）');
+  const onMeta = typeof opts.onMeta === 'function' ? opts.onMeta : null;
+  const t0 = Date.now();
 
   const body = {
     model: config.model,
@@ -83,6 +86,7 @@ async function scanReceipt(dataUrl) {
       }
     ]
   };
+  if (onMeta) body.usage = { include: true };
 
   const resp = await fetch(`${config.openrouterBaseUrl}/chat/completions`, {
     method: 'POST',
@@ -101,6 +105,7 @@ async function scanReceipt(dataUrl) {
   }
 
   const json = await resp.json();
+  if (onMeta) onMeta({ id: json.id ?? null, model: json.model ?? null, provider: json.provider ?? null, usage: json.usage ?? null, ms: Date.now() - t0 });
   const content = json.choices?.[0]?.message?.content;
   const parsed = extractJson(typeof content === 'string' ? content : JSON.stringify(content));
   return normalize(parsed);
@@ -138,9 +143,13 @@ function normalize(p) {
     }
   }
 
+  // 日期读不到时填今天，但要标出来(date_guessed)让核对界面提示，否则用户看到的是一个看似合法的错日期
+  const dateRead = /^\d{4}-\d{2}-\d{2}$/.test(p.purchased_at);
   const receipt = {
     store: (p.store || '未知').toString().trim() || '未知',
-    purchased_at: /^\d{4}-\d{2}-\d{2}$/.test(p.purchased_at) ? p.purchased_at : today,
+    purchased_at: dateRead ? p.purchased_at : today,
+    date_guessed: !dateRead,
+    residual_added: false,
     currency: (p.currency || config.currency).toString().trim() || config.currency,
     subtotal: num(p.subtotal),
     gst: num(p.gst),
@@ -175,6 +184,19 @@ function normalize(p) {
       const combined = receipt.pst;
       receipt.gst = +((combined * 5) / 12).toFixed(2);
       receipt.pst = +(combined - receipt.gst).toFixed(2);
+    }
+  }
+
+  // 税规则之后，印出的 total 仍比"明细之和 + gst + pst"多出超过 2 分(漏掉的小费、漏读的一行): 加一条"未识别差额"明细让人在核对表里
+  // 改名或删除，subtotal 设为加完之后的明细之和，印出的 total 不动。差额对明细之和算，不对模型给的 subtotal 算: 模型已把小费提成
+  // 明细却照抄印出的小计、或小计读短而明细齐全时，对 subtotal 算会把同一笔钱再加一遍。差额为负(多读了一行)不动
+  if (printedTotal > 0 && items.length) {
+    const itemSum = items.reduce((s, i) => s + i.amount, 0);
+    const residual = +(printedTotal - itemSum - receipt.gst - receipt.pst).toFixed(2);
+    if (residual > 0.02) {
+      items.push({ name_raw: '未识别差额(请核对)', name_norm: null, category: '其他', subcategory: null, qty: 1, unit: null, unit_price: residual, amount: residual, taxable: 0 });
+      receipt.subtotal = +(itemSum + residual).toFixed(2);
+      receipt.residual_added = true;
     }
   }
 

@@ -66,7 +66,7 @@ export const COPY = {
       title: ['数据放在哪，', '说清楚。'],
       lede: 'VanSpend 是自托管的应用，你用的这个站点由它的运营者部署：小票原图存在运营者服务器的 uploads/ 目录，结构化明细存在它的 MySQL。没有广告，不卖数据，也不接第三方记账服务。',
       cards: [
-        { t: '识别会发给外部模型', d: '识别那一步会把小票图片发给运营者配置的 OpenRouter 模型，除此之外不外传。' },
+        { t: '识别会发给外部模型', d: '识别那一步会把小票图片发给运营者配置的 OpenRouter 模型，除此之外不外传。保存识别结果时，站点会记下你改了哪些字段（只记字段名，不记内容和金额）和用了多久，用来改进识别，保留 90 天。' },
         { t: '谁能看到你的小票', d: '同一家庭的成员能互相看到；站点管理员可以查看、删除任何账号的小票；其他用户看不到。' },
         { t: '想走就能清空', d: '小票随时可以删；注销账号会连带删除你的小票、明细和原图。' },
       ],
@@ -180,7 +180,7 @@ export const COPY = {
       title: ['Where your data lives,', 'stated plainly.'],
       lede: 'VanSpend is self-hosted, and this site is run by whoever deployed it: receipt photos sit in the uploads/ folder on the operator’s server, and the structured detail lives in its MySQL. No ads, no data selling, no third-party bookkeeping service.',
       cards: [
-        { t: 'Reading goes to an external model', d: 'The scan step sends the receipt image to the OpenRouter model the operator configured. Nothing else goes out.' },
+        { t: 'Reading goes to an external model', d: 'The scan step sends the receipt image to the OpenRouter model the operator configured. Nothing else goes out. When you save a scan, the site records which fields you corrected (field names only, never the values or amounts) and how long it took, to improve recognition; these records are kept for 90 days.' },
         { t: 'Who can see your receipts', d: 'Members of the same family see each other’s; the site admin can view and delete any account’s receipts; other users cannot.' },
         { t: 'You can clear it out', d: 'Delete receipts any time; deleting your account removes your receipts, items and original images.' },
       ],

@@ -1,0 +1,189 @@
+{
+ "ok": true,
+ "id": "holdout-deg-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2566,
+ "apiMs": 2566,
+ "dataset": "dataset-holdout.json",
+ "requestedModel": "google/gemini-2.5-flash-lite",
+ "model": "google/gemini-2.5-flash-lite",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 671,
+  "total_tokens": 1569,
+  "cost": 0.000354618,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0003582,
+   "upstream_inference_prompt_cost": 0.0000898,
+   "upstream_inference_completions_cost": 0.0002684
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "Walmart",
+  "purchased_at": "2026-06-23",
+  "currency": "CAD",
+  "subtotal": 26.16,
+  "gst": 0.55,
+  "pst": 0.77,
+  "total": 27.48
+ },
+ "items": [
+  {
+   "name_raw": "MILK 2L",
+   "name_norm": "牛奶",
+   "category": "乳制品蛋类",
+   "subcategory": "牛奶",
+   "qty": 1,
+   "unit": "L",
+   "unit_price": 4.99,
+   "amount": 4.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "DISH SOAP",
+   "name_norm": "洗洁精",
+   "category": "日用清洁",
+   "subcategory": "清洁剂",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 3.53,
+   "amount": 3.53,
+   "taxable": 1
+  },
+  {
+   "name_raw": "SPARKLING JUICE",
+   "name_norm": "气泡果汁",
+   "category": "零食饮料",
+   "subcategory": "饮料",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 3.43,
+   "amount": 3.43,
+   "taxable": 1
+  },
+  {
+   "name_raw": "BREAD",
+   "name_norm": "面包",
+   "category": "主食粮油",
+   "subcategory": "烘焙食品",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 4.18,
+   "amount": 4.18,
+   "taxable": 0
+  },
+  {
+   "name_raw": "APPLES GALA",
+   "name_norm": "嘎啦苹果",
+   "category": "水果",
+   "subcategory": "苹果",
+   "qty": 1.657,
+   "unit": "kg",
+   "unit_price": 3.65,
+   "amount": 6.05,
+   "taxable": 0
+  },
+  {
+   "name_raw": "CANDY BAG",
+   "name_norm": "糖果袋",
+   "category": "零食饮料",
+   "subcategory": "糖果",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 3.98,
+   "amount": 3.98,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Walmart",
+  "purchased_at": "2026-06-23",
+  "currency": "CAD",
+  "subtotal": 26.16,
+  "gst": 0.55,
+  "pst": 0.77,
+  "total": 27.48,
+  "items": [
+   {
+    "name_raw": "MILK 2L",
+    "name_norm": "牛奶",
+    "category": "乳制品蛋类",
+    "subcategory": "牛奶",
+    "qty": 1,
+    "unit": "L",
+    "unit_price": 4.99,
+    "amount": 4.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "DISH SOAP",
+    "name_norm": "洗洁精",
+    "category": "日用清洁",
+    "subcategory": "清洁剂",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 3.53,
+    "amount": 3.53,
+    "taxable": true
+   },
+   {
+    "name_raw": "SPARKLING JUICE",
+    "name_norm": "气泡果汁",
+    "category": "零食饮料",
+    "subcategory": "饮料",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 3.43,
+    "amount": 3.43,
+    "taxable": true
+   },
+   {
+    "name_raw": "BREAD",
+    "name_norm": "面包",
+    "category": "主食粮油",
+    "subcategory": "烘焙食品",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 4.18,
+    "amount": 4.18,
+    "taxable": false
+   },
+   {
+    "name_raw": "APPLES GALA",
+    "name_norm": "嘎啦苹果",
+    "category": "水果",
+    "subcategory": "苹果",
+    "qty": 1.657,
+    "unit": "kg",
+    "unit_price": 3.65,
+    "amount": 6.05,
+    "taxable": false
+   },
+   {
+    "name_raw": "CANDY BAG",
+    "name_norm": "糖果袋",
+    "category": "零食饮料",
+    "subcategory": "糖果",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 3.98,
+    "amount": 3.98,
+    "taxable": true
+   }
+  ]
+ }
+}

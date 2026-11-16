@@ -1,0 +1,189 @@
+{
+ "ok": true,
+ "id": "mix-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 3311,
+ "apiMs": 3310,
+ "dataset": "dataset.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 654,
+  "total_tokens": 1552,
+  "cost": 0.001885356,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0019044,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.001635
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "Safeway",
+  "purchased_at": "2026-10-25",
+  "currency": "CAD",
+  "subtotal": 41.45,
+  "gst": 1.37,
+  "pst": 0.91,
+  "total": 43.73
+ },
+ "items": [
+  {
+   "name_raw": "KIDS SOCKS 5PK",
+   "name_norm": "儿童袜子",
+   "category": "日用清洁",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 9.99,
+   "amount": 9.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "APPLES GALA",
+   "name_norm": "嘎啦苹果",
+   "category": "水果",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 5.49,
+   "amount": 5.49,
+   "taxable": 0
+  },
+  {
+   "name_raw": "COOKIES CHOC",
+   "name_norm": "巧克力曲奇",
+   "category": "零食饮料",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 4.99,
+   "amount": 4.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "CHEESE CHEDDAR",
+   "name_norm": "切达奶酪",
+   "category": "乳制品蛋类",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 8.49,
+   "amount": 8.49,
+   "taxable": 0
+  },
+  {
+   "name_raw": "GREETING CARD",
+   "name_norm": "贺卡",
+   "category": "其他",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "个",
+   "unit_price": 4.5,
+   "amount": 4.5,
+   "taxable": 1
+  },
+  {
+   "name_raw": "SODA 12PK",
+   "name_norm": "汽水",
+   "category": "零食饮料",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 7.99,
+   "amount": 7.99,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Safeway",
+  "purchased_at": "2026-10-25",
+  "currency": "CAD",
+  "subtotal": 41.45,
+  "gst": 1.37,
+  "pst": 0.91,
+  "total": 43.73,
+  "items": [
+   {
+    "name_raw": "KIDS SOCKS 5PK",
+    "name_norm": "儿童袜子",
+    "category": "日用清洁",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 9.99,
+    "amount": 9.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "APPLES GALA",
+    "name_norm": "嘎啦苹果",
+    "category": "水果",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 5.49,
+    "amount": 5.49,
+    "taxable": false
+   },
+   {
+    "name_raw": "COOKIES CHOC",
+    "name_norm": "巧克力曲奇",
+    "category": "零食饮料",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 4.99,
+    "amount": 4.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "CHEESE CHEDDAR",
+    "name_norm": "切达奶酪",
+    "category": "乳制品蛋类",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 8.49,
+    "amount": 8.49,
+    "taxable": false
+   },
+   {
+    "name_raw": "GREETING CARD",
+    "name_norm": "贺卡",
+    "category": "其他",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "个",
+    "unit_price": 4.5,
+    "amount": 4.5,
+    "taxable": true
+   },
+   {
+    "name_raw": "SODA 12PK",
+    "name_norm": "汽水",
+    "category": "零食饮料",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 7.99,
+    "amount": 7.99,
+    "taxable": true
+   }
+  ]
+ }
+}

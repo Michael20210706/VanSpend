@@ -1,0 +1,211 @@
+{
+ "ok": true,
+ "id": "cn-03",
+ "run": 1,
+ "attempts": 1,
+ "ms": 3457,
+ "apiMs": 3457,
+ "dataset": "dataset.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 760,
+  "total_tokens": 1658,
+  "cost": 0.002147706,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0021694,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.0019
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "百汇生鲜超市",
+  "purchased_at": "2026-11-08",
+  "currency": "CAD",
+  "subtotal": 68.4,
+  "gst": 0.85,
+  "pst": 0.28,
+  "total": 69.53
+ },
+ "items": [
+  {
+   "name_raw": "鲜虾仁",
+   "name_norm": "鲜虾仁",
+   "category": "海鲜",
+   "subcategory": "虾",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 12.99,
+   "amount": 12.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "鸡蛋 12枚",
+   "name_norm": "鸡蛋",
+   "category": "乳制品蛋类",
+   "subcategory": "鸡蛋",
+   "qty": 12,
+   "unit": "枚",
+   "unit_price": 0.4158,
+   "amount": 4.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "牛奶 2L",
+   "name_norm": "牛奶",
+   "category": "乳制品蛋类",
+   "subcategory": "牛奶",
+   "qty": 2,
+   "unit": "L",
+   "unit_price": 2.645,
+   "amount": 5.29,
+   "taxable": 0
+  },
+  {
+   "name_raw": "方便面",
+   "name_norm": "方便面",
+   "category": "主食粮油",
+   "subcategory": "方便面",
+   "qty": 4,
+   "unit": "包",
+   "unit_price": 1.29,
+   "amount": 5.16,
+   "taxable": 0
+  },
+  {
+   "name_raw": "洗洁精",
+   "name_norm": "洗洁精",
+   "category": "日用清洁",
+   "subcategory": "洗涤剂",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 3.99,
+   "amount": 3.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "维生素C",
+   "name_norm": "维生素C",
+   "category": "个护健康",
+   "subcategory": "保健品",
+   "qty": 1,
+   "unit": "瓶",
+   "unit_price": 12.99,
+   "amount": 12.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "大米 10kg",
+   "name_norm": "大米",
+   "category": "主食粮油",
+   "subcategory": "大米",
+   "qty": 10,
+   "unit": "kg",
+   "unit_price": 2.299,
+   "amount": 22.99,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "百汇生鲜超市",
+  "purchased_at": "2026-11-08",
+  "currency": "CAD",
+  "subtotal": 68.4,
+  "gst": 0.85,
+  "pst": 0.28,
+  "total": 69.53,
+  "items": [
+   {
+    "name_raw": "鲜虾仁",
+    "name_norm": "鲜虾仁",
+    "category": "海鲜",
+    "subcategory": "虾",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 12.99,
+    "amount": 12.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "鸡蛋 12枚",
+    "name_norm": "鸡蛋",
+    "category": "乳制品蛋类",
+    "subcategory": "鸡蛋",
+    "qty": 12,
+    "unit": "枚",
+    "unit_price": null,
+    "amount": 4.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "牛奶 2L",
+    "name_norm": "牛奶",
+    "category": "乳制品蛋类",
+    "subcategory": "牛奶",
+    "qty": 2,
+    "unit": "L",
+    "unit_price": null,
+    "amount": 5.29,
+    "taxable": false
+   },
+   {
+    "name_raw": "方便面",
+    "name_norm": "方便面",
+    "category": "主食粮油",
+    "subcategory": "方便面",
+    "qty": 4,
+    "unit": "包",
+    "unit_price": 1.29,
+    "amount": 5.16,
+    "taxable": false
+   },
+   {
+    "name_raw": "洗洁精",
+    "name_norm": "洗洁精",
+    "category": "日用清洁",
+    "subcategory": "洗涤剂",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 3.99,
+    "amount": 3.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "维生素C",
+    "name_norm": "维生素C",
+    "category": "个护健康",
+    "subcategory": "保健品",
+    "qty": 1,
+    "unit": "瓶",
+    "unit_price": 12.99,
+    "amount": 12.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "大米 10kg",
+    "name_norm": "大米",
+    "category": "主食粮油",
+    "subcategory": "大米",
+    "qty": 10,
+    "unit": "kg",
+    "unit_price": null,
+    "amount": 22.99,
+    "taxable": false
+   }
+  ]
+ }
+}

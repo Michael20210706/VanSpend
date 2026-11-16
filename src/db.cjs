@@ -212,9 +212,28 @@ const SCHEMA_STATEMENTS = [
     user_id       INT UNSIGNED  NOT NULL,
     model         VARCHAR(100),
     success       TINYINT(1),
+    duration_ms   INT,
     created_at    TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_scan_user_time (user_id, created_at),
     CONSTRAINT fk_scan_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
+  // 保存事件(给"识别在哪里让人改"做统计用): 每次带 meta 的保存一行。edited_fields 是字段**名**的 JSON 数组
+  // (receipt.store、item[2].amount、item[+]/item[-])；这张表绝不存任何值、品名、金额或图片。90 天前的行在写入时清掉。
+  // 小票或扫描记录被删时事件留下(对应的 id 置空)，账号被删时连带删除
+  `CREATE TABLE IF NOT EXISTS save_events (
+    id              BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id         INT UNSIGNED    NOT NULL,
+    receipt_id      INT UNSIGNED,
+    scan_log_id     BIGINT UNSIGNED,
+    edited_fields   TEXT            NOT NULL,
+    items_ai        INT,
+    items_saved     INT             NOT NULL,
+    scan_to_save_ms INT,
+    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_save_events_time (created_at),
+    CONSTRAINT fk_save_events_user    FOREIGN KEY (user_id)     REFERENCES users(id)    ON DELETE CASCADE,
+    CONSTRAINT fk_save_events_receipt FOREIGN KEY (receipt_id)  REFERENCES receipts(id) ON DELETE SET NULL,
+    CONSTRAINT fk_save_events_scan    FOREIGN KEY (scan_log_id) REFERENCES scan_log(id) ON DELETE SET NULL
   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4`,
 ];
 
@@ -329,6 +348,13 @@ async function migrateUsersFamilyJoinedAt(conn) {
   }
 }
 
+// 升级路径: 已有 scan_log 表没有 duration_ms(一次识别调用的耗时，毫秒)。老记录保持 NULL
+async function migrateScanLogDuration(conn) {
+  if (!(await columnExists(conn, 'scan_log', 'duration_ms'))) {
+    await conn.query('ALTER TABLE scan_log ADD COLUMN duration_ms INT NULL DEFAULT NULL AFTER success');
+  }
+}
+
 // 初始化管理员账号: 只在 ADMIN_USERNAME/ADMIN_PASSWORD 都配置了、且该用户名还不存在时创建一次；
 // 已存在的账号(不管是不是管理员)不会被覆盖密码/角色
 async function seedAdmin() {
@@ -370,6 +396,7 @@ async function initSchema() {
       await migrateUsersInviteColumns(conn);
       await migrateUsersPasswordFlag(conn);
       await migrateUsersFamilyJoinedAt(conn);
+      await migrateScanLogDuration(conn);
     } finally {
       conn.release();
     }
@@ -596,9 +623,25 @@ async function reserveScan(userId, model, limit, openGlobalLimit = null) {
   return { ok: true, id: info.insertId };
 }
 
-async function finishScan(id, success) {
+// durationMs: 这次识别调用花了多久(毫秒)，成功失败都记；不传则留 NULL
+async function finishScan(id, success, durationMs = null) {
   await ready;
-  await pool.execute('UPDATE scan_log SET success = :success WHERE id = :id', { id, success: success ? 1 : 0 });
+  await pool.execute('UPDATE scan_log SET success = :success, duration_ms = :durationMs WHERE id = :id', { id, success: success ? 1 : 0, durationMs });
+}
+
+// ---- 保存事件 / save_events ----
+const SAVE_EVENT_KEEP_DAYS = 90;
+
+// 记一次保存。参数里只有 id、计数、毫秒数和字段名数组(路由层已按字段名语法校验)——没有任何能装下值的入口。
+// scanId 只有确实是这个用户自己的扫描记录才会被关联，否则 scan_log_id 为 NULL。写之前顺手清掉 90 天前的行
+async function recordSaveEvent({ userId, receiptId, scanId, editedFields, itemsAi, itemsSaved, scanToSaveMs }) {
+  await ready;
+  await pool.execute(`DELETE FROM save_events WHERE created_at < NOW() - INTERVAL ${SAVE_EVENT_KEEP_DAYS} DAY`);
+  await pool.execute(`
+    INSERT INTO save_events (user_id, receipt_id, scan_log_id, edited_fields, items_ai, items_saved, scan_to_save_ms)
+    VALUES (:userId, :receiptId, (SELECT id FROM scan_log WHERE id = :scanId AND user_id = :userId),
+            :editedFields, :itemsAi, :itemsSaved, :scanToSaveMs)
+  `, { userId, receiptId, scanId, editedFields: JSON.stringify(editedFields), itemsAi, itemsSaved, scanToSaveMs });
 }
 
 // 管理员调整某用户的额度档位。返回 false = 用户不存在。
@@ -1296,8 +1339,11 @@ async function listReceipts({ limit = 200, from, to, search, scope } = {}) {
     params.search = '%' + likeEscape(search) + '%';
   }
   const whereClause = clauses.length ? 'WHERE ' + clauses.join(' AND ') : '';
+  // 只取列表界面(ReceiptsTab、admin/ReceiptsPanel)用到的列。raw_json 等其余列只在详情(getReceipt)里返回:
+  // 带上它时 200 行的响应约 370 KB，其中九成是界面从不显示的 raw_json
   const [rows] = await pool.execute(`
-    SELECT r.*, u.username AS owner_username, (SELECT COUNT(*) FROM items i WHERE i.receipt_id = r.id) AS item_count
+    SELECT r.id, r.user_id, r.store, r.purchased_at, r.subtotal, r.gst, r.pst, r.total,
+           u.username AS owner_username, (SELECT COUNT(*) FROM items i WHERE i.receipt_id = r.id) AS item_count
     FROM receipts r LEFT JOIN users u ON u.id = r.user_id
     ${whereClause} ORDER BY r.purchased_at DESC, r.id DESC LIMIT ${lim}
   `, params);
@@ -1634,8 +1680,8 @@ const api = {
   createUser, findUserByUsername, findUserById, countUsers, backfillOwnerlessReceipts,
   updatePassword, getSessionUser, findImageOwner,
   createInviteCode, listInviteCodes, revokeInviteCode, peekInviteCode, registerWithInvite,
-  reserveScan, finishScan, setScanTier,
-  migrateUsersInviteColumns, migrateUsersPasswordFlag, migrateUsersFamilyJoinedAt, // 导出仅供测试(升级路径)
+  reserveScan, finishScan, setScanTier, recordSaveEvent,
+  migrateUsersInviteColumns, migrateUsersPasswordFlag, migrateUsersFamilyJoinedAt, migrateScanLogDuration, initSchema, // 导出仅供测试(升级路径)
   countRecentLoginFailures, isLoginLocked, recordLoginFailure, deleteLoginAttempt, clearLoginFailures,
   isPasswordLocked, recordPasswordFailure, countPasswordFailures, deletePasswordFailure, clearPasswordFailures,
   consumeCaptcha, reserveOpenSignup, listUsers, deleteUser, deleteUserFull, deleteOwnAccount, resetUserPassword, adminDeleteReceipt, listAuditLog, statsByUser,

@@ -1,0 +1,211 @@
+{
+ "ok": true,
+ "id": "holdout-tnt-01",
+ "run": 1,
+ "attempts": 1,
+ "ms": 2715,
+ "apiMs": 2711,
+ "dataset": "dataset-holdout.json",
+ "requestedModel": "google/gemini-2.5-flash-lite",
+ "model": "google/gemini-2.5-flash-lite",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 793,
+  "total_tokens": 1691,
+  "cost": 0.00040293,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.000407,
+   "upstream_inference_prompt_cost": 0.0000898,
+   "upstream_inference_completions_cost": 0.0003172
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "T&T Supermarket",
+  "purchased_at": "2026-08-20",
+  "currency": "CAD",
+  "subtotal": 125.34,
+  "gst": 0.8,
+  "pst": 1.12,
+  "total": 127.26
+ },
+ "items": [
+  {
+   "name_raw": "SPARKLING WATER 12PK",
+   "name_norm": "气泡水",
+   "category": "零食饮料",
+   "subcategory": "饮料",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 7.22,
+   "amount": 7.22,
+   "taxable": 1
+  },
+  {
+   "name_raw": "CANDY ASSORTED",
+   "name_norm": "糖果",
+   "category": "零食饮料",
+   "subcategory": "糖果",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 5.54,
+   "amount": 5.54,
+   "taxable": 1
+  },
+  {
+   "name_raw": "PORK BELLY SLICED",
+   "name_norm": "五花肉片",
+   "category": "肉类",
+   "subcategory": "猪肉",
+   "qty": 1.543,
+   "unit": "lb",
+   "unit_price": 9.72,
+   "amount": 15,
+   "taxable": 0
+  },
+  {
+   "name_raw": "RICE 8KG",
+   "name_norm": "大米",
+   "category": "主食粮油",
+   "subcategory": "大米",
+   "qty": 4,
+   "unit": "kg",
+   "unit_price": 20.77,
+   "amount": 83.08,
+   "taxable": 0
+  },
+  {
+   "name_raw": "EGG 12CT",
+   "name_norm": "鸡蛋",
+   "category": "乳制品蛋类",
+   "subcategory": "鸡蛋",
+   "qty": 1,
+   "unit": "盒",
+   "unit_price": 5.17,
+   "amount": 5.17,
+   "taxable": 0
+  },
+  {
+   "name_raw": "INSTANT NOODLE 5PK",
+   "name_norm": "方便面",
+   "category": "主食粮油",
+   "subcategory": "面食",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 6.04,
+   "amount": 6.04,
+   "taxable": 0
+  },
+  {
+   "name_raw": "SOY MILK",
+   "name_norm": "豆奶",
+   "category": "乳制品蛋类",
+   "subcategory": "豆制品",
+   "qty": 1,
+   "unit": "盒",
+   "unit_price": 3.29,
+   "amount": 3.29,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "T&T Supermarket",
+  "purchased_at": "2026-08-20",
+  "currency": "CAD",
+  "subtotal": 125.34,
+  "gst": 0,
+  "pst": 1.92,
+  "total": 127.26,
+  "items": [
+   {
+    "name_raw": "SPARKLING WATER 12PK",
+    "name_norm": "气泡水",
+    "category": "零食饮料",
+    "subcategory": "饮料",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 7.22,
+    "amount": 7.22,
+    "taxable": true
+   },
+   {
+    "name_raw": "CANDY ASSORTED",
+    "name_norm": "糖果",
+    "category": "零食饮料",
+    "subcategory": "糖果",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 5.54,
+    "amount": 5.54,
+    "taxable": true
+   },
+   {
+    "name_raw": "PORK BELLY SLICED",
+    "name_norm": "五花肉片",
+    "category": "肉类",
+    "subcategory": "猪肉",
+    "qty": 1.543,
+    "unit": "lb",
+    "unit_price": 9.72,
+    "amount": 15,
+    "taxable": false
+   },
+   {
+    "name_raw": "RICE 8KG",
+    "name_norm": "大米",
+    "category": "主食粮油",
+    "subcategory": "大米",
+    "qty": 4,
+    "unit": "kg",
+    "unit_price": 20.77,
+    "amount": 83.08,
+    "taxable": false
+   },
+   {
+    "name_raw": "EGG 12CT",
+    "name_norm": "鸡蛋",
+    "category": "乳制品蛋类",
+    "subcategory": "鸡蛋",
+    "qty": 1,
+    "unit": "盒",
+    "unit_price": 5.17,
+    "amount": 5.17,
+    "taxable": false
+   },
+   {
+    "name_raw": "INSTANT NOODLE 5PK",
+    "name_norm": "方便面",
+    "category": "主食粮油",
+    "subcategory": "面食",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 6.04,
+    "amount": 6.04,
+    "taxable": false
+   },
+   {
+    "name_raw": "SOY MILK",
+    "name_norm": "豆奶",
+    "category": "乳制品蛋类",
+    "subcategory": "豆制品",
+    "qty": 1,
+    "unit": "盒",
+    "unit_price": 3.29,
+    "amount": 3.29,
+    "taxable": true
+   }
+  ]
+ }
+}

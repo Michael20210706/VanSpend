@@ -1,0 +1,167 @@
+{
+ "ok": true,
+ "id": "deg-03",
+ "run": 1,
+ "attempts": 1,
+ "ms": 3178,
+ "apiMs": 3178,
+ "dataset": "dataset.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 577,
+  "total_tokens": 1475,
+  "cost": 0.001694781,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0017119,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.0014425
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "Costco",
+  "purchased_at": "2026-09-29",
+  "currency": "CAD",
+  "subtotal": 63.45,
+  "gst": 0.95,
+  "pst": 1.33,
+  "total": 65.73
+ },
+ "items": [
+  {
+   "name_raw": "KS WATER 40PK",
+   "name_norm": "Kirkland 瓶装水",
+   "category": "零食饮料",
+   "subcategory": "饮用水",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 4.99,
+   "amount": 4.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "ROTISSERIE CHICKEN",
+   "name_norm": "烤鸡",
+   "category": "肉类",
+   "subcategory": "鸡肉",
+   "qty": 1,
+   "unit": "只",
+   "unit_price": 7.99,
+   "amount": 7.99,
+   "taxable": 0
+  },
+  {
+   "name_raw": "TRASH BAGS",
+   "name_norm": "垃圾袋",
+   "category": "日用清洁",
+   "subcategory": "垃圾袋",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 18.99,
+   "amount": 18.99,
+   "taxable": 1
+  },
+  {
+   "name_raw": "TOMATOES",
+   "name_norm": "番茄",
+   "category": "蔬菜",
+   "subcategory": null,
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 6.49,
+   "amount": 6.49,
+   "taxable": 0
+  },
+  {
+   "name_raw": "KS COFFEE",
+   "name_norm": "Kirkland 咖啡",
+   "category": "零食饮料",
+   "subcategory": "咖啡",
+   "qty": 1,
+   "unit": "包",
+   "unit_price": 24.99,
+   "amount": 24.99,
+   "taxable": 0
+  }
+ ],
+ "raw": {
+  "store": "Costco",
+  "purchased_at": "2026-09-29",
+  "currency": "CAD",
+  "subtotal": 63.45,
+  "gst": 0.95,
+  "pst": 1.33,
+  "total": 65.73,
+  "items": [
+   {
+    "name_raw": "KS WATER 40PK",
+    "name_norm": "Kirkland 瓶装水",
+    "category": "零食饮料",
+    "subcategory": "饮用水",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 4.99,
+    "amount": 4.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "ROTISSERIE CHICKEN",
+    "name_norm": "烤鸡",
+    "category": "肉类",
+    "subcategory": "鸡肉",
+    "qty": 1,
+    "unit": "只",
+    "unit_price": 7.99,
+    "amount": 7.99,
+    "taxable": false
+   },
+   {
+    "name_raw": "TRASH BAGS",
+    "name_norm": "垃圾袋",
+    "category": "日用清洁",
+    "subcategory": "垃圾袋",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 18.99,
+    "amount": 18.99,
+    "taxable": true
+   },
+   {
+    "name_raw": "TOMATOES",
+    "name_norm": "番茄",
+    "category": "蔬菜",
+    "subcategory": "",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 6.49,
+    "amount": 6.49,
+    "taxable": false
+   },
+   {
+    "name_raw": "KS COFFEE",
+    "name_norm": "Kirkland 咖啡",
+    "category": "零食饮料",
+    "subcategory": "咖啡",
+    "qty": 1,
+    "unit": "包",
+    "unit_price": 24.99,
+    "amount": 24.99,
+    "taxable": false
+   }
+  ]
+ }
+}

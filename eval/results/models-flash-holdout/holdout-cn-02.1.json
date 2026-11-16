@@ -1,0 +1,189 @@
+{
+ "ok": true,
+ "id": "holdout-cn-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 3755,
+ "apiMs": 3755,
+ "dataset": "dataset-holdout.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 664,
+  "total_tokens": 1562,
+  "cost": 0.001910106,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0019294,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.00166
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "老四川",
+  "purchased_at": "2026-08-17",
+  "currency": "CAD",
+  "subtotal": 182.61,
+  "gst": 9.13,
+  "pst": 0,
+  "total": 221.67
+ },
+ "items": [
+  {
+   "name_raw": "北京烤鸭(半只)",
+   "name_norm": "北京烤鸭",
+   "category": "餐厅外食",
+   "subcategory": "鸭肉",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 32.63,
+   "amount": 32.63,
+   "taxable": 1
+  },
+  {
+   "name_raw": "椒盐虾",
+   "name_norm": "椒盐虾",
+   "category": "餐厅外食",
+   "subcategory": "虾",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 24.26,
+   "amount": 24.26,
+   "taxable": 1
+  },
+  {
+   "name_raw": "清蒸鲈鱼",
+   "name_norm": "清蒸鲈鱼",
+   "category": "餐厅外食",
+   "subcategory": "鱼类",
+   "qty": 2,
+   "unit": "份",
+   "unit_price": 41.98,
+   "amount": 83.96,
+   "taxable": 1
+  },
+  {
+   "name_raw": "麻婆豆腐",
+   "name_norm": "麻婆豆腐",
+   "category": "餐厅外食",
+   "subcategory": "素菜",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 14.18,
+   "amount": 14.18,
+   "taxable": 1
+  },
+  {
+   "name_raw": "茉莉花茶",
+   "name_norm": "茉莉花茶",
+   "category": "餐厅外食",
+   "subcategory": "茶饮",
+   "qty": 2,
+   "unit": "份",
+   "unit_price": 3,
+   "amount": 6,
+   "taxable": 1
+  },
+  {
+   "name_raw": "蒜蓉粉丝蒸扇贝",
+   "name_norm": "蒜蓉粉丝蒸扇贝",
+   "category": "餐厅外食",
+   "subcategory": "贝类",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 21.58,
+   "amount": 21.58,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "老四川",
+  "purchased_at": "2026-08-17",
+  "currency": "CAD",
+  "subtotal": 182.61,
+  "gst": 9.13,
+  "pst": 0,
+  "total": 221.67,
+  "items": [
+   {
+    "name_raw": "北京烤鸭(半只)",
+    "name_norm": "北京烤鸭",
+    "category": "餐厅外食",
+    "subcategory": "鸭肉",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": null,
+    "amount": 32.63,
+    "taxable": true
+   },
+   {
+    "name_raw": "椒盐虾",
+    "name_norm": "椒盐虾",
+    "category": "餐厅外食",
+    "subcategory": "虾",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": null,
+    "amount": 24.26,
+    "taxable": true
+   },
+   {
+    "name_raw": "清蒸鲈鱼",
+    "name_norm": "清蒸鲈鱼",
+    "category": "餐厅外食",
+    "subcategory": "鱼类",
+    "qty": 2,
+    "unit": "份",
+    "unit_price": 41.98,
+    "amount": 83.96,
+    "taxable": true
+   },
+   {
+    "name_raw": "麻婆豆腐",
+    "name_norm": "麻婆豆腐",
+    "category": "餐厅外食",
+    "subcategory": "素菜",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": null,
+    "amount": 14.18,
+    "taxable": true
+   },
+   {
+    "name_raw": "茉莉花茶",
+    "name_norm": "茉莉花茶",
+    "category": "餐厅外食",
+    "subcategory": "茶饮",
+    "qty": 2,
+    "unit": "份",
+    "unit_price": 3,
+    "amount": 6,
+    "taxable": true
+   },
+   {
+    "name_raw": "蒜蓉粉丝蒸扇贝",
+    "name_norm": "蒜蓉粉丝蒸扇贝",
+    "category": "餐厅外食",
+    "subcategory": "贝类",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": null,
+    "amount": 21.58,
+    "taxable": true
+   }
+  ]
+ }
+}

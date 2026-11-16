@@ -3,6 +3,8 @@ import { useRef, useState } from 'react';
 import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
 import ItemsEditor, { makeRow, rowsToItems } from './ItemsEditor';
+import { buildSaveMeta } from '../lib/editDiff';
+import { totalsGap, gapIsMismatch } from '../lib/totalsGap';
 
 // 上传前压缩到的最大长边(像素)，见 readImage()
 const MAX_EDGE = 2000;
@@ -15,12 +17,16 @@ export default function ScanTab({ cfg }) {
   const [editVisible, setEditVisible] = useState(false);
   const [store, setStore] = useState('');
   const [date, setDate] = useState('');
+  const [dateGuessed, setDateGuessed] = useState(false);
+  const [residualAdded, setResidualAdded] = useState(false);
   const [subtotal, setSubtotal] = useState(0);
   const [gst, setGst] = useState(0);
   const [pst, setPst] = useState(0);
   const [total, setTotal] = useState(0);
   const [rows, setRows] = useState([]);
   const lastRawRef = useRef(null);
+  // 识别完成那一刻的 AI 结果快照: 保存时和表单比较，只把"改了哪些字段名"发给服务端(见 lib/editDiff.js)
+  const aiSnapshotRef = useRef(null);
   const fileInputRef = useRef(null);
 
   // 上传前把长边压缩到 MAX_EDGE 像素以内(重新编码为 JPEG)：手机原图常有 4000+ 像素、数 MB，
@@ -51,7 +57,7 @@ export default function ScanTab({ cfg }) {
     setScanning(true);
     setScanHint('AI 识别中，请稍候…');
     try {
-      const { receipt, items, raw } = await api('/api/scan', {
+      const { receipt, items, raw, scanId } = await api('/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: currentImage }),
@@ -60,11 +66,15 @@ export default function ScanTab({ cfg }) {
       setEditVisible(true);
       setStore(receipt.store || '');
       setDate(receipt.purchased_at || '');
+      setDateGuessed(!!receipt.date_guessed);
+      setResidualAdded(!!receipt.residual_added);
       setSubtotal(receipt.subtotal || 0);
       setGst(receipt.gst || 0);
       setPst(receipt.pst || 0);
       setTotal(receipt.total || 0);
-      setRows(items.map((it) => makeRow(it)));
+      const aiRows = items.map((it) => makeRow(it));
+      setRows(aiRows);
+      aiSnapshotRef.current = { scanId, at: Date.now(), receipt, rows: aiRows };
       setScanHint('识别完成，请核对');
     } catch (e) {
       setScanHint('');
@@ -74,6 +84,7 @@ export default function ScanTab({ cfg }) {
   }
 
   async function save() {
+    const meta = buildSaveMeta(aiSnapshotRef.current, { receipt: { store, purchased_at: date, subtotal, gst, pst, total }, rows });
     const items = rowsToItems(rows);
     const receipt = {
       store: store.trim() || '未知',
@@ -99,7 +110,7 @@ export default function ScanTab({ cfg }) {
       await api('/api/receipts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ receipt, items, image: currentImage, raw: lastRawRef.current }),
+        body: JSON.stringify({ receipt, items, image: currentImage, raw: lastRawRef.current, meta }),
       });
       showToast('已保存 ✓');
       setScanHint('');
@@ -112,6 +123,7 @@ export default function ScanTab({ cfg }) {
     }
   }
 
+  const gap = totalsGap(rows, gst, pst, total);
   return (
     <>
       <div className="card">
@@ -147,13 +159,16 @@ export default function ScanTab({ cfg }) {
         <h2>2 · 核对并保存</h2>
         <div className="row" style={{ marginBottom: 12 }}>
           <label>商家 <input style={{ width: 140 }} value={store} onChange={(e) => setStore(e.target.value)} /></label>
-          <label>日期 <input type="date" value={date} onChange={(e) => setDate(e.target.value)} /></label>
+          <label>日期 <input type="date" value={date} onChange={(e) => { setDate(e.target.value); setDateGuessed(false); }} /></label>
+          {dateGuessed ? <span className="muted">日期未识别，已填今天，请核对</span> : null}
           <label>税前 <input type="number" step="0.01" className="num" style={{ width: 90 }} value={subtotal} onChange={(e) => setSubtotal(e.target.value)} /></label>
           <label>GST <input type="number" step="0.01" className="num" style={{ width: 80 }} value={gst} onChange={(e) => setGst(e.target.value)} /></label>
           <label>PST <input type="number" step="0.01" className="num" style={{ width: 80 }} value={pst} onChange={(e) => setPst(e.target.value)} /></label>
           <label>实付 <input type="number" step="0.01" className="num" style={{ width: 90 }} value={total} onChange={(e) => setTotal(e.target.value)} /></label>
         </div>
         <ItemsEditor rows={rows} setRows={setRows} categories={cfg.categories} />
+        {residualAdded ? <div className="muted" style={{ marginTop: 8 }}>有一条未识别差额，请核对</div> : null}
+        {gapIsMismatch(gap) ? <div className="muted" style={{ marginTop: 8 }}>明细合计加税与实付相差 {gap.toFixed(2)}，请核对</div> : null}
         <div className="row" style={{ marginTop: 14 }}>
           <button onClick={save}>保存到账本</button>
         </div>

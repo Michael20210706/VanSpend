@@ -84,6 +84,8 @@ function receipt(spec) {
 }
 
 const E = 'E', G = 'G', T = 'T';
+module.exports = { receipt, makeTruth, truthJson, E, G, T };
+if (require.main !== module) return;
 const specs = [];
 const add = (s) => specs.push(s);
 

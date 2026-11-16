@@ -1,0 +1,37 @@
+ts	phase	decision	why	evidence	result
+2026-11-14T02:14:18Z	start	开始整晚的证据驱动优化轮	用户授权整晚自主运行，开放问题由代理决定	本会话；docs/qa/2026-11-14-optimization-round.md	open
+2026-11-14T02:14:18Z	frame	写下退出条件、证据清单、7 个开放问题的决定、8 个候选的排序、6 条假设与验收规则，全部在动手之前	没有假设和验收规则，事后无法判断改动是否该上线	docs/qa/2026-11-14-optimization-round.md 第 0 到 3 节	written
+2026-11-14T02:14:18Z	frame	本轮基于现有测量；真实使用证据为 0(users 1, receipts 1, scan_log 0, feedback 0)	整晚不会产生真实使用；但要把事件记录建好让下一轮有证据	线上库只读查询，2026-11-14 02:0x UTC	decided
+2026-11-14T03:33:35Z	workers	启动 4 个并行 worker: H-I 事件记录(w1)、H-R1/H-R2 识别(w2)、H-P1/H-P2 性能(w3)、H-M 模型对比(w4)，各自独立 worktree、测试库、E2E 端口，禁用 git stash	上一轮共享 stash 互相覆盖过；并行工作先分离共享状态	worktrees VanSpend-wt-w1..w4，简报 scratchpad/qa/COMMON-FIX3.md	open
+2026-11-14T03:33:35Z	workers	本轮不做: 登录 bcrypt 占主线程、taxable 靠猜(只测量不改)	频率极低或没有可靠的修法；排序见文档第 2 节	docs/qa/2026-11-14-optimization-round.md 第 2 节	decided
+2026-11-14T08:32:21Z	workers	4 个 worker 在中途被 API 用量上限(429)打断，各自 worktree 里留有未提交的半成品；用量恢复后让它们从断点继续，而不是新开	半成品在它们自己的检出里，新开会重做并可能和残留冲突	worktrees w1..w4 的 git status；w3 还留着 3433 端口的基线实例	resumed
+2026-11-14T13:32:02Z	workers	第二次被用量上限打断；改为两个 worker 一组串行恢复(先 w2 识别、w4 模型对比，再 w1、w3)	四个并行把 5 小时额度烧得太快，每次打断都丢进行中的一步；串行让进度更能落盘	任务通知 429 两次；worktree 状态见本行时间的 git status	resumed
+2026-11-14T23:55:55Z	workers	Fable 5.1 额度用尽，原 4 个 worker 无法恢复；改用新 worker 接手各自 worktree 的现有进度(w2 已启动)	恢复旧 worker 会撞同一个模型上限；进度都在磁盘上，新 worker 可以从 git log/diff 接续	w2 提交 b285295 5b69d4f e0a40d0；w4 提交 c090bb9	resumed
+2026-11-14T23:55:55Z	H-M	H-M 接手 worker 的启动被权限分类器拒绝(该任务会真实调用 OpenRouter)；不绕过，保留集已生成并提交，真实调用 0 次，留给用户决定	分类器的拒绝代表用户的权限边界；用户的硬约束也写了测试不真实调用除非给额度	w4 分支 c090bb9；eval/results/calls-models.json 不存在	blocked
+2026-11-15T00:05:17Z	H-R2	H-R2 日期标记通过验收，纳入上线	deg-04 被标记，其余 23 张不标；数值指标 0 处变化；我重跑 replay 一致	w2 提交 b285295；node eval/replay.cjs --old-ref main baseline	accepted
+2026-11-15T00:05:17Z	H-R1	H-R1 差额行四条验收全部满足(餐厅组 consistent 0/3→3/3, tipFound 0/4→3/4, 全对 8→11/24 无回归, 已自洽各组 0 条差额行)；我重跑一致	按事先写好的验收行判断	w2 提交 5b69d4f e0a40d0 5ec36e9 e6ba53f；replay 输出	acceptance met
+2026-11-15T00:05:17Z	H-R1	规则修订(事后): 护栏原文'subtotal、total 不改'与验收第一条逻辑上不能同时成立，是我写规则时的错误；改为'total 不改，subtotal 只随新增差额行同步'，H-R1 上线	应用自身的不变量是 subtotal=明细之和(编辑时重算)；字面版本实测 consistent 仍 0/3。这是看到数据后改规则，需用户知情并可 revert e0a40d0 5b69d4f	worker 报告中的字面版本实测；docs/qa/2026-11-11-recognition-eval.md 第三轮一节	amended, flagged for user
+2026-11-15T00:06:15Z	H-M	用户明确允许模型对比的真实 OpenRouter 调用；启动接手 worker，上限 120 次	之前被权限分类器拒绝，等到了用户的明确许可	用户消息'允许模型对比的真实调用'	unblocked
+2026-11-15T04:52:51Z	workers	第三次被 5 小时额度打断(三个并行)；只恢复 w1(事件记录)和 w4(模型对比)，w3(性能)排在它们之后	并行数越多越快耗尽额度；性能压测也需要机器安静	w1 提交 56082f8 ece74dd eeddb29；w4 仍只有 c090bb9，真实调用 0	resumed
+2026-11-15T04:59:06Z	H-I	H-I 事件记录全部验收行满足，纳入上线；我抽查了提交内容(无杂物)、表定义(9 列，无文本值列)、字段名语法，并重跑其 64 条测试	按事先写好的验收行；隐私规则靠字段名正则与固定列集合断言	w1 提交 56082f8 ece74dd eeddb29 8aa2530 db4fd43；tests/usage-events.test.js	accepted
+2026-11-15T04:59:06Z	H-I	P2 里'对线上库只读运行脚本'要在主机检出里跑(镜像不含 scripts/，MySQL 只在 127.0.0.1:3307)，部署后由我执行	worker 指出镜像里没有脚本；主机有 override 发布的 3307 端口	Dockerfile；docker-compose.override.yml	planned
+2026-11-15T04:59:06Z	workers	w3(性能)在 w1 完成后恢复，交由它处理自己留下的 3433 孤儿进程	压测需要机器安静；只停属于该 worktree 的进程	pid 42021 cwd=VanSpend-wt-w3	resumed
+2026-11-15T05:01:22Z	H-M	模型对比完成: 真实调用 49 次(上限 120)，合计 0.0776 美元；保留集整张全对 flash 4/12 对 flash-lite 3/12(差 +1，要求 +3)，每次费用 5.45 倍(要求 ≤2 倍)；两条都不满足，建议保持 flash-lite，线上模型不变	按事先提交的验收规则(2dbdc3b 早于第一批结果 9cddec1)	w4 分支 65ca3a8；eval/results/calls-models.json；docs/qa/2026-11-14-model-comparison.md；我重跑 node eval/models.cjs 一致	keep flash-lite
+2026-11-15T05:01:22Z	H-M	评测代码给 scanReceipt 加了应用不传的可选 onMeta 钩子，返回结构不变，纳入整合	记录 token 与费用需要 API 的 usage 字段；有单元测试守着返回结构	w4 提交 89b8400；tests/openrouter-meta.test.js	accepted
+2026-11-15T09:52:28Z	integrate	把 w2(识别)、w1(事件记录)、w4(模型对比)合并进本轮分支；CLAUDE.md 用词级三方合并，评估文档两侧都是追加，按顺序都保留；测试推迟到性能 worker 结束后跑	合并不占 CPU；测试和端到端会干扰性能 worker 的压测	本轮分支 git log；scratchpad/wordmerge.py	merged, untested
+2026-11-15T09:52:28Z	workers	第四次额度中断；恢复 w3(性能)，此时只有它一个 worker	H-P1 已提交 11d5d9b 且五组前后压测数据在盘上；H-P2 未做	scratchpad/w3/s1-base-*.jsonl s1-new-*.jsonl	resumed
+2026-11-15T10:06:56Z	H-P1	H-P1 列表去掉 raw_json 通过验收: 响应体 371,904→33,838 字节，S1 c=50 吞吐 948→1,605/s(×1.69)，p50 51.3→30.3 ms(-41%)，5 对交替运行，0 错误	两条数字门槛都满足；限制资源前后都是 Node 主线程，JSON 序列化从热点里消失	w3 提交 11d5d9b 298503a；docs/qa/2026-11-11-stress-test.md 第 8 节；scratchpad/w3/s1-*.jsonl	accepted
+2026-11-15T10:06:56Z	H-P2	H-P2 统计索引放弃: 个人范围已走 idx_receipts_user，家庭范围走 index merge；试加复合索引在默认视图无可测变化	事先的规则写明: 若已走索引则放弃。时间主要花在连接明细表而不是查 receipts	w3 提交 90ed3af；docs/qa/2026-11-11-stress-test.md 第 9 节	discarded
+2026-11-15T10:06:56Z	H-P2	记录但不做: items(receipt_id, category, amount) 覆盖索引在试验里让分类统计快约 40%	这是事后发现的新假设，没有事先的验收规则，写入代价没测；留给下一轮	worker 报告的超出范围发现 1	deferred
+2026-11-15T10:11:24Z	integrate	四个分支全部并入本轮分支；npm test 43 文件 649 条、评测 33 条、默认构建、端到端 82 条(两次)全部通过	整合后必须在合并结果上重新验证，不采信各分支单独的结果	本轮分支；E2E_PORT=3461 两次 82 passed	green locally
+2026-11-15T10:11:24Z	H-R1	在设计时没见过的保留集上验证差额行: 餐厅组自洽 0/2→2/2，tipFound 0/3→2/3，整张全对 3/12→5/12，无回归，其余各组 0 条差额行	保留集的模型输出来自 H-M 的真实调用，生成于规则写成之后且未参与设计	node eval/replay.cjs --old-ref main models-lite-holdout	confirmed on held-out
+2026-11-15T10:15:07Z	ship	PR #51 的 CI 通过(单元 649、构建、端到端 82 都真实执行)；合并被权限分类器拒绝，不绕过，交给用户决定	PR 是代理自己开的，用户没有点名合并；分类器的拒绝代表权限边界	PR 51；Actions run 43702900504	blocked on user
+2026-11-15T10:15:44Z	audit	更正中断编号: 用量上限共打断 5 次(第 7、8、9、15、22 行)；第 15 行写的'第三次'实为第四次，第 22 行写的'第四次'实为第五次	审计日志时发现编号与实际不符；只追加更正，不改旧行	本文件第 7 8 9 15 22 行；任务通知里的 5 次 429	supersedes numbering in rows 15 and 22
+2026-11-15T10:15:44Z	audit	补记: 整合后用合并后的 normalize 重新给模型对比打分，保留集整张全对由 flash 4/12 对 lite 3/12 变为 7/12 对 5/12，差 +2 仍不满足 +3，费用比不变，结论不变	差额行让两边带小费的小票都变对；第 19 行的数字是整合前的	node eval/models.cjs 在本轮分支上的输出；docs/qa/2026-11-14-optimization-round.md 第 5 节	verdict unchanged
+2026-11-15T10:15:44Z	audit	补记: 清理 4 个 worker 的 worktree 与临时库 vanspend_w1..w4_test，清理前确认各分支 HEAD 都是本轮分支的祖先且无未提交改动	避免残留；先核对再删	git merge-base --is-ancestor 四次均通过；SHOW DATABASES 只剩 vanspend 与 vanspend_test	done
+2026-11-15T10:15:44Z	audit	补记: w2 的接手 worker 运行在 Opus 5.5 上(当时会话被切到该模型)，其余接手 worker 在 Fable 5.2 上；提交尾注因此不一致，未改写历史	如实记录是谁做的	w2 提交 5ec36e9 e6ba53f 的尾注	noted
+2026-11-15T10:21:22Z	review	跨模型审查(Opus)交回 13 条标记，其中 1 条高: 差额行在'小费已被提成明细且小计照抄'和'小计读短'两种形状下重复计入；我离线复现属实	独立审查发现了验收规则没检验到的缺陷；H-R1 的验收第一条按构造必然成立	审查报告(本会话)；node -e normalize 形状 A/B 的输出；eval/results/baseline/deg-04.1.json	H-R1 as built is defective
+2026-11-15T10:21:22Z	H-R1b	不合并现有的差额行实现；先写 H-R1b 的假设与验收规则(差额改为对明细之和计算，加实时对不上提示)，提交后再改代码；任一条不满足就撤掉差额行只留日期标记	修正的方向来自不变量(total=明细之和+税)，不是对数据调参；保留集已看过结果，只作回归检查	docs/qa/2026-11-14-optimization-round.md 第 3b 节	pre-registered
+2026-11-15T19:26:14Z	H-R1b	H-R1b 五条验收全部满足: 差额改为对明细之和计算，after 批上的重复差额行 4→0，deg-04 的差额从 12.00 改为真实的 1.12；核对界面加实时'对不上'提示	按第 3b 节事先写好的规则；修正方向来自不变量 total=明细之和+税	tests/normalize.test.js(修正前 3 failed)；replay baseline/after/models-lite-holdout；e2e/recognition-hints.spec.js(去掉提示 1 failed)	accepted
+2026-11-15T19:26:14Z	review	处理审查意见: 落地页中英文披露保存事件记录(只记字段名，保留 90 天)并加测试守护；更正第 5 节的撤销方法与上线状态措辞	审查标记 13(低)、5(中)、7(中)	components/landing/copy.js；tests/landing-copy.test.js；docs/qa/2026-11-14-optimization-round.md H-R1b 结果节	done
+2026-11-15T19:26:14Z	review	未处理的审查意见: 小费被填进 pst(cn-02 类)仍无提示；税填 0 又漏小费时税与小费合成一条差额；样本量小(餐厅 2-3 张)；部分原始压测数据不在仓库	这些在第 3b 节已事先声明为本轮不处理，或属于证据留存问题	审查标记 3、4、11、12	deferred

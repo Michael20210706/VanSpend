@@ -1,0 +1,167 @@
+{
+ "ok": true,
+ "id": "holdout-rest-02",
+ "run": 1,
+ "attempts": 1,
+ "ms": 3031,
+ "apiMs": 3031,
+ "dataset": "dataset-holdout.json",
+ "requestedModel": "google/gemini-2.5-flash",
+ "model": "google/gemini-2.5-flash",
+ "provider": "Google AI Studio",
+ "usage": {
+  "prompt_tokens": 898,
+  "completion_tokens": 579,
+  "total_tokens": 1477,
+  "cost": 0.001699731,
+  "is_byok": false,
+  "prompt_tokens_details": {
+   "cached_tokens": 0,
+   "cache_write_tokens": 0,
+   "audio_tokens": 0,
+   "video_tokens": 0
+  },
+  "cost_details": {
+   "upstream_inference_cost": 0.0017169,
+   "upstream_inference_prompt_cost": 0.0002694,
+   "upstream_inference_completions_cost": 0.0014475
+  },
+  "completion_tokens_details": {
+   "reasoning_tokens": 0,
+   "image_tokens": 0,
+   "audio_tokens": 0
+  }
+ },
+ "receipt": {
+  "store": "Harbour Grill",
+  "purchased_at": "2026-10-09",
+  "currency": "CAD",
+  "subtotal": 58.9,
+  "gst": 2.95,
+  "pst": 0,
+  "total": 72.44
+ },
+ "items": [
+  {
+   "name_raw": "Green Curry",
+   "name_norm": "绿咖喱",
+   "category": "餐厅外食",
+   "subcategory": "主菜",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 18.21,
+   "amount": 18.21,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Caesar Salad",
+   "name_norm": "凯撒沙拉",
+   "category": "餐厅外食",
+   "subcategory": "沙拉",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 10.03,
+   "amount": 10.03,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Tiramisu",
+   "name_norm": "提拉米苏",
+   "category": "餐厅外食",
+   "subcategory": "甜点",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 9.25,
+   "amount": 9.25,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Fish Tacos",
+   "name_norm": "鱼肉玉米饼",
+   "category": "餐厅外食",
+   "subcategory": "主菜",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 15.79,
+   "amount": 15.79,
+   "taxable": 1
+  },
+  {
+   "name_raw": "Sparkling Water",
+   "name_norm": "气泡水",
+   "category": "餐厅外食",
+   "subcategory": "饮料",
+   "qty": 1,
+   "unit": "份",
+   "unit_price": 5.62,
+   "amount": 5.62,
+   "taxable": 1
+  }
+ ],
+ "raw": {
+  "store": "Harbour Grill",
+  "purchased_at": "2026-10-09",
+  "currency": "CAD",
+  "subtotal": 58.9,
+  "gst": 2.95,
+  "pst": 0,
+  "total": 72.44,
+  "items": [
+   {
+    "name_raw": "Green Curry",
+    "name_norm": "绿咖喱",
+    "category": "餐厅外食",
+    "subcategory": "主菜",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 18.21,
+    "amount": 18.21,
+    "taxable": true
+   },
+   {
+    "name_raw": "Caesar Salad",
+    "name_norm": "凯撒沙拉",
+    "category": "餐厅外食",
+    "subcategory": "沙拉",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 10.03,
+    "amount": 10.03,
+    "taxable": true
+   },
+   {
+    "name_raw": "Tiramisu",
+    "name_norm": "提拉米苏",
+    "category": "餐厅外食",
+    "subcategory": "甜点",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 9.25,
+    "amount": 9.25,
+    "taxable": true
+   },
+   {
+    "name_raw": "Fish Tacos",
+    "name_norm": "鱼肉玉米饼",
+    "category": "餐厅外食",
+    "subcategory": "主菜",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 15.79,
+    "amount": 15.79,
+    "taxable": true
+   },
+   {
+    "name_raw": "Sparkling Water",
+    "name_norm": "气泡水",
+    "category": "餐厅外食",
+    "subcategory": "饮料",
+    "qty": 1,
+    "unit": "份",
+    "unit_price": 5.62,
+    "amount": 5.62,
+    "taxable": true
+   }
+  ]
+ }
+}
