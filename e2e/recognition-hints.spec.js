@@ -104,3 +104,27 @@ test.describe('未识别差额行', () => {
     await expect(review.getByText(GAP_HINT)).toHaveCount(0);
   });
 });
+
+test.describe('税额超过 BC 上限', () => {
+  const PST_HINT = /PST 超过明细合计的 10%/;
+  test('小费被填进 PST: 出现提示；把 PST 改回合理值后提示消失', async ({ page }) => {
+    const user = await makeUser();
+    await loginApi(page, user);
+    const p = payload({ store: 'E2E-税超上限-' + Date.now() });
+    p.receipt.pst = 9.25; // 1.25 的税 + 8 元小费
+    p.receipt.total = 29.5;
+    const review = await scanWith(page, p);
+    await expect(review.getByText(PST_HINT)).toBeVisible();
+    await expect(review.getByText(GAP_HINT)).toHaveCount(0); // 明细合计加税仍等于实付，旧提示发现不了
+    await review.getByLabel('PST').fill('1.25');
+    await expect(review.getByText(PST_HINT)).toBeHidden();
+  });
+
+  test('正常税额: 不出现税额提示', async ({ page }) => {
+    const user = await makeUser();
+    await loginApi(page, user);
+    const review = await scanWith(page, payload({ store: 'E2E-税正常-' + Date.now() }));
+    await expect(review.locator('tbody tr')).toHaveCount(2);
+    await expect(review.getByText(/超过明细合计的/)).toHaveCount(0);
+  });
+});

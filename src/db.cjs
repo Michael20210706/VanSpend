@@ -366,6 +366,12 @@ async function seedAdmin() {
     console.warn('[db] ADMIN_PASSWORD 还是 .env.example 里的示例值 change-me-admin，未创建管理员账号；请设置一个自己的强密码');
     return;
   }
+  // bcrypt 只取前 72 字节: 超长时前 72 字节相同的任何密码都能登录。与注册、改密码的 PASSWORD_MAX_BYTES 一致。
+  // 放在查已有账号之前，已用超长密码建好的管理员每次启动也会看到这条告警。
+  if (Buffer.byteLength(password, 'utf8') > 72) {
+    console.warn('[db] ADMIN_PASSWORD 超过 72 字节(bcrypt 只取前 72 字节)，未创建管理员账号；请换一个不超过 72 字节的密码');
+    return;
+  }
   const [rows] = await pool.execute('SELECT id, is_admin FROM users WHERE username = :username', { username });
   if (rows.length) {
     if (!rows[0].is_admin) {
@@ -1683,7 +1689,7 @@ const api = {
   updatePassword, getSessionUser, findImageOwner,
   createInviteCode, listInviteCodes, revokeInviteCode, peekInviteCode, registerWithInvite,
   reserveScan, finishScan, setScanTier, recordSaveEvent,
-  migrateUsersInviteColumns, migrateUsersPasswordFlag, migrateUsersFamilyJoinedAt, migrateScanLogDuration, initSchema, // 导出仅供测试(升级路径)
+  migrateUsersInviteColumns, migrateUsersPasswordFlag, migrateUsersFamilyJoinedAt, migrateScanLogDuration, initSchema, seedAdmin, // 导出仅供测试(升级路径、管理员初始化)
   countRecentLoginFailures, isLoginLocked, recordLoginFailure, deleteLoginAttempt, clearLoginFailures,
   isPasswordLocked, recordPasswordFailure, countPasswordFailures, deletePasswordFailure, clearPasswordFailures,
   consumeCaptcha, reserveOpenSignup, listUsers, deleteUser, deleteUserFull, deleteOwnAccount, resetUserPassword, adminDeleteReceipt, listAuditLog, statsByUser,

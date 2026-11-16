@@ -4,7 +4,7 @@ import { api } from '../lib/api';
 import { showToast } from '../lib/toast';
 import ItemsEditor, { makeRow, rowsToItems } from './ItemsEditor';
 import { buildSaveMeta } from '../lib/editDiff';
-import { totalsGap, gapIsMismatch } from '../lib/totalsGap';
+import { totalsGap, gapIsMismatch, taxOverCeiling } from '../lib/totalsGap';
 
 // 上传前压缩到的最大长边(像素)，见 readImage()
 const MAX_EDGE = 2000;
@@ -124,6 +124,7 @@ export default function ScanTab({ cfg }) {
   }
 
   const gap = totalsGap(rows, gst, pst, total);
+  const taxOver = taxOverCeiling(rows, gst, pst);
   return (
     <>
       <div className="card">
@@ -169,6 +170,8 @@ export default function ScanTab({ cfg }) {
         <ItemsEditor rows={rows} setRows={setRows} categories={cfg.categories} />
         {residualAdded ? <div className="muted" style={{ marginTop: 8 }}>有一条未识别差额，请核对</div> : null}
         {gapIsMismatch(gap) ? <div className="muted" style={{ marginTop: 8 }}>明细合计加税与实付相差 {gap.toFixed(2)}，请核对</div> : null}
+        {taxOver.gst ? <div className="muted" style={{ marginTop: 8 }}>GST 超过明细合计的 5%，可能把小费等费用算进了税，请核对</div> : null}
+        {taxOver.pst ? <div className="muted" style={{ marginTop: 8 }}>PST 超过明细合计的 10%(BC 最高税率)，可能把小费等费用算进了税，请核对</div> : null}
         <div className="row" style={{ marginTop: 14 }}>
           <button onClick={save}>保存到账本</button>
         </div>
