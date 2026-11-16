@@ -20,12 +20,13 @@ RUN addgroup -S vanspend && adduser -S vanspend -G vanspend
 
 # standalone 输出自带一份按依赖裁剪过的 node_modules + 编译后的 server.js，
 # 但不含 .next/static 和 config/sql 这类运行时用 fs 直接读取(而非 import)的文件，需单独拷贝
-COPY --from=builder --chown=vanspend:vanspend /app/.next/standalone ./
-COPY --from=builder --chown=vanspend:vanspend /app/.next/static ./.next/static
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
 COPY config ./config
 COPY sql ./sql
 
-RUN mkdir -p uploads && chown -R vanspend:vanspend /app
+# 代码归 root，运行用户只能写 uploads 和 Next 的运行时缓存，进程被攻破也改不了自己的代码
+RUN mkdir -p uploads .next/cache && chown vanspend:vanspend uploads .next/cache
 USER vanspend
 
 EXPOSE 3000
